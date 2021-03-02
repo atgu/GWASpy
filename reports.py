@@ -1,6 +1,6 @@
 __author__ = 'Lindo Nkambule'
 
-from pylatex import Document, Section, Subsection, Command, Center, Tabular
+from pylatex import Document, Section, Subsection, Command, Center, Tabular, NewPage, Figure, SubFigure
 from pylatex.utils import NoEscape, bold
 
 
@@ -83,4 +83,50 @@ class MyDocument(Document):
                         table.add_row(('SNPs: HWE-cases < -10', self._conts['hwe_cas'][True]))
                         table.add_hline()
 
+    def individual_char(self, mt, mind_threshold, fstat_fig_path):
+        from annotations import id_call_rate
+
+        id_cr_plot = id_call_rate(mind=mind_threshold, pre_row_filter='pre_geno').plot(mt)
+        id_cr_plot[0].savefig('/tmp/id_con_pre.png', dpi=300)
+        id_cr_plot[1].savefig('/tmp/id_cas_pre.png', dpi=300)
+        id_cr_plot[2].savefig('/tmp/id_con_pos.png', dpi=300)
+        id_cr_plot[3].savefig('/tmp/id_cas_pos.png', dpi=300)
+
+        self.append(NewPage())
+
+        with self.create(Section('Per Individual Characteristics Analysis')):
+            with self.create(Subsection('Missing Rates - pre-QC')):
+                with self.create(Figure(position='h!')) as pre_images:
+                    self.append(Command('centering'))
+                    with self.create(
+                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as left_pre_images:
+                        left_pre_images.add_image('/tmp/id_con_pre.png', width=NoEscape(r'1\linewidth'))
+                with self.create(Figure(position='h!')) as pre_images:
+                    self.append(Command('centering'))
+                    with self.create(
+                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as right_pre_images:
+                        right_pre_images.add_image('/tmp/id_cas_pre.png', width=NoEscape(r'1\linewidth'))
+
+            self.append(NewPage())
+
+            with self.create(Subsection('Missing Rates - post-QC')):
+                with self.create(Figure(position='h!')) as pos_images:
+                    self.append(Command('centering'))
+                    with self.create(
+                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as left_pre_images:
+                        left_pre_images.add_image('/tmp/id_con_pos.png', width=NoEscape(r'1\linewidth'))
+                with self.create(Figure(position='h!')) as pos_images:
+                    self.append(Command('centering'))
+                    with self.create(
+                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as right_pre_images:
+                        right_pre_images.add_image('/tmp/id_cas_pos.png', width=NoEscape(r'1\linewidth'))
+
+            self.append(NewPage())
+
+            with self.create(Subsection('Fstat - Sex Violations')):
+                with self.create(Figure(position='h!')) as fstat_image:
+                    self.append(Command('centering'))
+                    with self.create(
+                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as fstat_fig:
+                        fstat_fig.add_image(fstat_fig_path, width=NoEscape(r'1\linewidth'))
 

@@ -1,13 +1,14 @@
+__author__ = 'Lindo Nkambule'
+
 from annotations import *
 from typing import Tuple, Any, Dict
 from in_out import read_mt, read_vcf, read_plink
 import argparse
 from reports import MyDocument
-from pylatex import Document, Section, Subsection, Command, SubFigure, Figure, NoEscape, NewPage
 import shutil
 import warnings
 
-warnings.simplefilter(action = "ignore", category = RuntimeWarning)
+warnings.simplefilter(action="ignore", category=RuntimeWarning)
 
 
 def summary_stats(mt: hl.MatrixTable) -> Tuple[hl.MatrixTable, Dict[str, Any]]:
@@ -112,41 +113,9 @@ def preimp_qc(mt, dirname, basename, pre_geno_thresh, mind_thresh, fhet_aut, fst
         print("Writing report")
         doc = MyDocument(basename=basename, pre_qc_conts=pre_qc_counts, post_qc_conts=pre_qc_counts, count_results=results)
         doc.general_info()
-        id_cr_plot = id_call_rate(mind=mind_thresh, pre_row_filter='pre_geno').plot(mt)
-        id_cr_plot[0].savefig('id_con_pre.png')
-        id_cr_plot[1].savefig('id_cas_pre.png')
-        id_cr_plot[2].savefig('id_con_pos.png')
-        id_cr_plot[3].savefig('id_cas_pos.png')
-
-        doc.append(NewPage())
-
-        with doc.create(Section('Per Individual Characteristics Analysis')):
-            with doc.create(Subsection('Missing Rates - pre-QC')):
-                with doc.create(Figure(position='h!')) as pre_images:
-                    doc.append(Command('centering'))
-                    with doc.create(
-                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as left_pre_images:
-                        left_pre_images.add_image('id_con_pre.png', width=NoEscape(r'1\linewidth'))
-                with doc.create(Figure(position='h!')) as pre_images:
-                    doc.append(Command('centering'))
-                    with doc.create(
-                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as right_pre_images:
-                        right_pre_images.add_image('id_cas_pre.png', width=NoEscape(r'1\linewidth'))
-
-            doc.append(NewPage())
-
-            with doc.create(Subsection('Missing Rates - post-QC')):
-                with doc.create(Figure(position='h!')) as pos_images:
-                    doc.append(Command('centering'))
-                    with doc.create(
-                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as left_pre_images:
-                        left_pre_images.add_image('id_con_pos.png', width=NoEscape(r'1\linewidth'))
-                with doc.create(Figure(position='h!')) as pos_images:
-                    doc.append(Command('centering'))
-                    with doc.create(
-                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as right_pre_images:
-                        right_pre_images.add_image('id_cas_pos.png', width=NoEscape(r'1\linewidth'))
-
+        fstat_fig = fhet_sex(pre_row_filter='pre_geno', fstat_x=fstat_x, fstat_y=fstat_y, figsize=(15, 20)).plot(mt)
+        fstat_fig.savefig('/tmp/fstat_fig.png', dpi=300)
+        doc.individual_char(mt, mind_threshold=mind_thresh, fstat_fig_path='/tmp/fstat_fig.png')
         doc.generate_pdf('report', clean_tex=False)
 
 
