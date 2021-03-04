@@ -20,9 +20,9 @@ def plt_hist(expression: hl.Expression, bins: int = 50, range: list = None, thre
         plt.axvline(x=threshold, color='red', linestyle='--')
     if range is not None:
         plt.xlim(xmin=range[0], xmax=range[1])
-    plt.title(title)
-    plt.ylabel(y_label if y_label else 'Frequency')
-    plt.xlabel(x_label if x_label else '')
+    plt.title(title, fontsize=20)
+    plt.ylabel(y_label if y_label else 'Frequency', fontsize=15)
+    plt.xlabel(x_label if x_label else '', fontsize=15)
     plt.close()
 
     return fig
