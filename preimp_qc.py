@@ -101,9 +101,12 @@ def preimp_qc(mt, dirname, basename, pre_geno_thresh, mind_thresh, fhet_aut, fst
         results[filt] = cont
 
     filters = ['pre_geno', 'mind', 'fstat', 'sex_violations', 'sex_warnings', 'geno', 'cr_diff',
-               'monomorphic_var', 'maf', 'hwe_con', 'hwe_cas']
+               'monomorphic_var', 'hwe_con', 'hwe_cas']
 
     for i in filters:
+        # some filters will have zero snps/id filtered, and there won't be a True, so add it
+        if True not in results[i]:
+            results[i][True] = 0
         for key, value in results.items():
             if i == key:
                 print(key, ': ', value)
@@ -136,9 +139,9 @@ def preimp_qc(mt, dirname, basename, pre_geno_thresh, mind_thresh, fhet_aut, fst
     # report
     if report:
         print("Writing report")
-        doc = MyDocument(basename=basename, pre_qc_conts=pre_qc_counts, post_qc_conts=pos_qc_counts,
+        doc = MyDocument(basename=basename)
+        doc.general_info(pre_qc_conts=pre_qc_counts, post_qc_conts=pos_qc_counts,
                          count_results=results)
-        doc.general_info()
         doc.individual_char(id_con_pre_path='/tmp/id_con_pre.png', id_cas_pre_path='/tmp/id_cas_pre.png',
                             id_con_pos_path='/tmp/id_con_pos.png', id_cas_pos_path='/tmp/id_cas_pos.png',
                             fstat_fig_path='/tmp/fstat_fig.png')
