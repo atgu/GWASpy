@@ -141,7 +141,9 @@ def preimp_qc(mt, dirname, basename, pre_geno_thresh, mind_thresh, fhet_aut, fst
         print("Writing report")
         doc = MyDocument(basename=basename)
         doc.general_info(pre_qc_conts=pre_qc_counts, post_qc_conts=pos_qc_counts,
-                         count_results=results)
+                         count_results=results, pre_filter=pre_geno_thresh, id_cr=mind_thresh, fhet_thresh=fhet_aut,
+                         var_cr=geno_thresh, miss_diff=cr_diff_thresh, hwe_con=hwe_th_con_thresh,
+                         hwe_cas=hwe_th_cas_thresh)
         doc.individual_char(id_con_pre_path='/tmp/id_con_pre.png', id_cas_pre_path='/tmp/id_cas_pre.png',
                             id_con_pos_path='/tmp/id_con_pos.png', id_cas_pos_path='/tmp/id_cas_pos.png',
                             fstat_fig_path='/tmp/fstat_fig.png')
