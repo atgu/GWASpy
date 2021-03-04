@@ -5,7 +5,7 @@ from pylatex.utils import NoEscape, bold
 
 
 class MyDocument(Document):
-    def __init__(self, basename, pre_qc_conts, post_qc_conts, count_results):
+    def __init__(self, basename):
         super().__init__()
 
         self.preamble.append(Command('title', 'QC Report of {}'.format(basename)))
@@ -13,33 +13,29 @@ class MyDocument(Document):
         self.preamble.append(Command('date', NoEscape(r'\today')))
         self.append(NoEscape(r'\maketitle'))
 
-        self._pre_counts = pre_qc_conts
-        self._post_counts = post_qc_conts
-        self._conts = count_results
+    def general_info(self, pre_qc_conts, post_qc_conts, count_results):
+        pre_pheno_counts = str(pre_qc_conts['is_case_counts']['case']) + ', ' + \
+                           str(pre_qc_conts['is_case_counts']['control']) + ', ' + \
+                           str(pre_qc_conts['is_case_counts']['unknown'])
 
-    def general_info(self):
-        pre_pheno_counts = str(self._pre_counts['is_case_counts']['case']) + ', ' + \
-                           str(self._pre_counts['is_case_counts']['control']) + ', ' + \
-                           str(self._pre_counts['is_case_counts']['unknown'])
+        pre_sex_counts = str(pre_qc_conts['is_female_counts']['male']) + ', ' + \
+                         str(pre_qc_conts['is_female_counts']['female']) + ', ' + \
+                         str(pre_qc_conts['is_female_counts']['unknown'])
 
-        pre_sex_counts = str(self._pre_counts['is_female_counts']['male']) + ', ' + \
-                         str(self._pre_counts['is_female_counts']['female']) + ', ' + \
-                         str(self._pre_counts['is_female_counts']['unknown'])
+        post_pheno_counts = str(post_qc_conts['is_case_counts']['case']) + ', ' + \
+                            str(post_qc_conts['is_case_counts']['control']) + ', ' + \
+                            str(post_qc_conts['is_case_counts']['unknown'])
 
-        post_pheno_counts = str(self._post_counts['is_case_counts']['case']) + ', ' + \
-                            str(self._post_counts['is_case_counts']['control']) + ', ' + \
-                            str(self._post_counts['is_case_counts']['unknown'])
+        post_sex_counts = str(post_qc_conts['is_female_counts']['male']) + ', ' + \
+                          str(post_qc_conts['is_female_counts']['female']) + ', ' + \
+                          str(post_qc_conts['is_female_counts']['unknown'])
 
-        post_sex_counts = str(self._post_counts['is_female_counts']['male']) + ', ' + \
-                          str(self._post_counts['is_female_counts']['female']) + ', ' + \
-                          str(self._post_counts['is_female_counts']['unknown'])
-
-        pheno_diffs = str(self._pre_counts['is_case_counts']['case']-self._post_counts['is_case_counts']['case']) + ', '\
-                      + str(self._pre_counts['is_case_counts']['control']-self._post_counts['is_case_counts']['control']) +\
-                      ', ' + str(self._pre_counts['is_case_counts']['unknown']-self._post_counts['is_case_counts']['unknown'])
-        sex_diffs = str(self._pre_counts['is_female_counts']['male']-self._post_counts['is_female_counts']['male']) + ', '\
-                    + str(self._pre_counts['is_female_counts']['female']-self._post_counts['is_female_counts']['female']) +\
-                    ', ' + str(self._pre_counts['is_female_counts']['unknown']-self._post_counts['is_female_counts']['unknown'])
+        pheno_diffs = str(pre_qc_conts['is_case_counts']['case']-post_qc_conts['is_case_counts']['case']) + ', '\
+                      + str(pre_qc_conts['is_case_counts']['control']-post_qc_conts['is_case_counts']['control']) +\
+                      ', ' + str(pre_qc_conts['is_case_counts']['unknown']-post_qc_conts['is_case_counts']['unknown'])
+        sex_diffs = str(pre_qc_conts['is_female_counts']['male']-post_qc_conts['is_female_counts']['male']) + ', '\
+                    + str(pre_qc_conts['is_female_counts']['female']-post_qc_conts['is_female_counts']['female']) +\
+                    ', ' + str(pre_qc_conts['is_female_counts']['unknown']-post_qc_conts['is_female_counts']['unknown'])
 
         with self.create(Section('Flag')):
             self.append('A flags table should be here (STILL WORKING ON IT)')
@@ -57,9 +53,9 @@ class MyDocument(Document):
                         table.add_row(('Males, Females, Unspec', pre_sex_counts,
                                        post_sex_counts, sex_diffs))
                         table.add_hline()
-                        table.add_row(('SNPs', self._pre_counts['n_variants'],
-                                       self._post_counts['n_variants'],
-                                       self._pre_counts['n_variants'] - self._post_counts['n_variants']))
+                        table.add_row(('SNPs', pre_qc_conts['n_variants'],
+                                       post_qc_conts['n_variants'],
+                                       pre_qc_conts['n_variants'] - post_qc_conts['n_variants']))
                         table.add_hline()
 
             with self.create(Subsection('Exclusion overview')):
@@ -68,19 +64,19 @@ class MyDocument(Document):
                         table.add_hline()
                         table.add_row((bold('Filter'), bold('N')))
                         table.add_hline()
-                        table.add_row(('SNPs: call rate < 0.950 (pre - filter)', self._conts['pre_geno'][True]))
-                        table.add_row(('IDs: call rate (cases/controls) < 0.980', self._conts['mind'][True]))
-                        table.add_row(('IDs: FHET outside +- 0.20 (cases/controls)', self._conts['fstat'][True]))
-                        table.add_row(('IDs: Sex violations -excluded- (N-tested)', self._conts['sex_violations'][True]))
+                        table.add_row(('SNPs: call rate < 0.950 (pre - filter)', count_results['pre_geno'][True]))
+                        table.add_row(('IDs: call rate (cases/controls) < 0.980', count_results['mind'][True]))
+                        table.add_row(('IDs: FHET outside +- 0.20 (cases/controls)', count_results['fstat'][True]))
+                        table.add_row(('IDs: Sex violations -excluded- (N-tested)', count_results['sex_violations'][True]))
                         table.add_row(
                             ('IDs: Sex warnings (undefined phenotype / ambiguous genotypes)',
-                             0))
-                        table.add_row(('SNPs: call rate < 0.980', self._conts['geno'][True]))
-                        table.add_row(('SNPs: missing diference > 0.020', self._conts['cr_diff'][True]))
+                             count_results['sex_warnings'][True]))
+                        table.add_row(('SNPs: call rate < 0.980', count_results['geno'][True]))
+                        table.add_row(('SNPs: missing diference > 0.020', count_results['cr_diff'][True]))
                         table.add_row(('SNPs: without valid association p-value (invariant)',
-                                       self._conts['monomorphic_var'][True]))
-                        table.add_row(('SNPs: HWE-controls < -6', self._conts['hwe_con'][True]))
-                        table.add_row(('SNPs: HWE-cases < -10', self._conts['hwe_cas'][True]))
+                                       count_results['monomorphic_var'][True]))
+                        table.add_row(('SNPs: HWE-controls < -6', count_results['hwe_con'][True]))
+                        table.add_row(('SNPs: HWE-cases < -10', count_results['hwe_cas'][True]))
                         table.add_hline()
 
     def individual_char(self, id_con_pre_path, id_cas_pre_path, id_con_pos_path, id_cas_pos_path, fstat_fig_path):
