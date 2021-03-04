@@ -13,7 +13,8 @@ class MyDocument(Document):
         self.preamble.append(Command('date', NoEscape(r'\today')))
         self.append(NoEscape(r'\maketitle'))
 
-    def general_info(self, pre_qc_conts, post_qc_conts, count_results):
+    def general_info(self, pre_qc_conts, post_qc_conts, count_results, pre_filter, id_cr, fhet_thresh, var_cr,
+                     miss_diff, hwe_con, hwe_cas):
         pre_pheno_counts = str(pre_qc_conts['is_case_counts']['case']) + ', ' + \
                            str(pre_qc_conts['is_case_counts']['control']) + ', ' + \
                            str(pre_qc_conts['is_case_counts']['unknown'])
@@ -64,19 +65,22 @@ class MyDocument(Document):
                         table.add_hline()
                         table.add_row((bold('Filter'), bold('N')))
                         table.add_hline()
-                        table.add_row(('SNPs: call rate < 0.950 (pre - filter)', count_results['pre_geno'][True]))
-                        table.add_row(('IDs: call rate (cases/controls) < 0.980', count_results['mind'][True]))
-                        table.add_row(('IDs: FHET outside +- 0.20 (cases/controls)', count_results['fstat'][True]))
+                        table.add_row(('SNPs: call rate < {} (pre - filter)'.format(pre_filter),
+                                       count_results['pre_geno'][True]))
+                        table.add_row(('IDs: call rate (cases/controls) < {}'.format(id_cr),
+                                       count_results['mind'][True]))
+                        table.add_row(('IDs: FHET outside +- {} (cases/controls)'.format(fhet_thresh),
+                                       count_results['fstat'][True]))
                         table.add_row(('IDs: Sex violations -excluded- (N-tested)', count_results['sex_violations'][True]))
                         table.add_row(
                             ('IDs: Sex warnings (undefined phenotype / ambiguous genotypes)',
                              count_results['sex_warnings'][True]))
-                        table.add_row(('SNPs: call rate < 0.980', count_results['geno'][True]))
-                        table.add_row(('SNPs: missing diference > 0.020', count_results['cr_diff'][True]))
+                        table.add_row(('SNPs: call rate < {}'.format(var_cr), count_results['geno'][True]))
+                        table.add_row(('SNPs: missing diference > {}'.format(miss_diff), count_results['cr_diff'][True]))
                         table.add_row(('SNPs: without valid association p-value (invariant)',
                                        count_results['monomorphic_var'][True]))
-                        table.add_row(('SNPs: HWE-controls < -6', count_results['hwe_con'][True]))
-                        table.add_row(('SNPs: HWE-cases < -10', count_results['hwe_cas'][True]))
+                        table.add_row(('SNPs: HWE-controls < {}'.format(hwe_con), count_results['hwe_con'][True]))
+                        table.add_row(('SNPs: HWE-cases < {}'.format(hwe_cas), count_results['hwe_cas'][True]))
                         table.add_hline()
 
     def individual_char(self, id_con_pre_path, id_cas_pre_path, id_con_pos_path, id_cas_pos_path, fstat_fig_path):
