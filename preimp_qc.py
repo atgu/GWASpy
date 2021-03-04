@@ -108,15 +108,43 @@ def preimp_qc(mt, dirname, basename, pre_geno_thresh, mind_thresh, fhet_aut, fst
             if i == key:
                 print(key, ': ', value)
 
+    if report:
+        fstat_fig = fhet_sex(pre_row_filter='pre_geno', fstat_x=fstat_x, fstat_y=fstat_y, figsize=(15, 20)).plot(mt)
+        fstat_fig.savefig('/tmp/fstat_fig.png', dpi=300)
+
+        id_cr_plot = id_call_rate(mind=mind_thresh, pre_row_filter='pre_geno').plot(mt)
+        id_cr_plot[0].savefig('/tmp/id_con_pre.png', dpi=300)
+        id_cr_plot[1].savefig('/tmp/id_cas_pre.png', dpi=300)
+        id_cr_plot[2].savefig('/tmp/id_con_pos.png', dpi=300)
+        id_cr_plot[3].savefig('/tmp/id_cas_pos.png', dpi=300)
+
+    # hl.hadoop_open() to read file from gs
+
+    # FILTER OUT ALL SNPs and IDs THAT FAIL QC
+    for row in row_filters:
+        mt = mt.filter_rows(mt[row].filters == True, keep=False)
+    for col in column_filters:
+        mt = mt.filter_cols(mt[col].filters == True, keep=False)
+    # mt = mt.filter_rows(hl.anymt[row].filters == True, keep=False)
+
+    mt.repartition(100).write('/tmp/filtered.mt', overwrite=True)
+    mt_filtered = hl.read_matrix_table('/tmp/filtered.mt')
+    mt_filtered, pos_qc_counts = summary_stats(mt_filtered)
+
+    # output format: mt, plink, or vcf
+
     # report
     if report:
         print("Writing report")
-        doc = MyDocument(basename=basename, pre_qc_conts=pre_qc_counts, post_qc_conts=pre_qc_counts, count_results=results)
+        doc = MyDocument(basename=basename, pre_qc_conts=pre_qc_counts, post_qc_conts=pos_qc_counts,
+                         count_results=results)
         doc.general_info()
-        fstat_fig = fhet_sex(pre_row_filter='pre_geno', fstat_x=fstat_x, fstat_y=fstat_y, figsize=(15, 20)).plot(mt)
-        fstat_fig.savefig('/tmp/fstat_fig.png', dpi=300)
-        doc.individual_char(mt, mind_threshold=mind_thresh, fstat_fig_path='/tmp/fstat_fig.png')
+        doc.individual_char(id_con_pre_path='/tmp/id_con_pre.png', id_cas_pre_path='/tmp/id_cas_pre.png',
+                            id_con_pos_path='/tmp/id_con_pos.png', id_cas_pos_path='/tmp/id_cas_pos.png',
+                            fstat_fig_path='/tmp/fstat_fig.png')
         doc.generate_pdf('report', clean_tex=False)
+
+    # hl.export_plink(mt_filtered)
 
 
 def main():
