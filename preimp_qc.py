@@ -55,6 +55,13 @@ def summary_stats(mt: hl.MatrixTable) -> Tuple[hl.MatrixTable, Dict[str, Any]]:
 
 def preimp_qc(mt, dirname, basename, pre_geno_thresh, mind_thresh, fhet_aut, fstat_x, fstat_y, geno_thresh,
               cr_diff_thresh, maf_thresh, hwe_th_con_thresh, hwe_th_cas_thresh, report: bool = True):
+
+    gwas_pre, n_sig_var_pre = manhattan(qqtitle="Pre-QC QQ Plot", mantitle="Pre-QC Manhattan Plot").filter(mt)
+    qqplt_pre, lambda_gc_pre, manplt_pre = manhattan(qqtitle="Pre-QC QQ Plot",
+                                                     mantitle="Pre-QC Manhattan Plot").plot(gwas_pre)
+    qqplt_pre.savefig('/tmp/qq_pre.png', dpi=300)
+    manplt_pre.savefig('/tmp/man_pre.png', dpi=300)
+
     mt = mt.annotate_rows(exclude_row=False)
     mt = mt.annotate_cols(exclude_col=False)
 
@@ -134,6 +141,14 @@ def preimp_qc(mt, dirname, basename, pre_geno_thresh, mind_thresh, fhet_aut, fst
     mt_filtered = hl.read_matrix_table('/tmp/filtered.mt')
     mt_filtered, pos_qc_counts = summary_stats(mt_filtered)
 
+    gwas_pos, n_sig_var_pos = manhattan(qqtitle="Post-QC QQ Plot", mantitle="Post-QC Manhattan Plot").filter(mt)
+    qqplt_pos, lambda_gc_pos, manplt_pos = manhattan(qqtitle="Post-QC QQ Plot",
+                                                     mantitle="Post-QC Manhattan Plot").plot(gwas_pos)
+    qqplt_pos.savefig('/tmp/qq_pos.png', dpi=300)
+    manplt_pos.savefig('/tmp/man_pos.png', dpi=300)
+
+    man_table_results = [n_sig_var_pre, n_sig_var_pos, lambda_gc_pre, lambda_gc_pos]
+
     # output format: mt, plink, or vcf
 
     # report
@@ -144,6 +159,9 @@ def preimp_qc(mt, dirname, basename, pre_geno_thresh, mind_thresh, fhet_aut, fst
                          count_results=results, pre_filter=pre_geno_thresh, id_cr=mind_thresh, fhet_thresh=fhet_aut,
                          var_cr=geno_thresh, miss_diff=cr_diff_thresh, hwe_con=hwe_th_con_thresh,
                          hwe_cas=hwe_th_cas_thresh)
+        doc.manhattan_sec(qq_pre_path='/tmp/qq_pre.png', qq_pos_path='/tmp/qq_pos.png',
+                          man_pre_path='/tmp/man_pre.png', man_pos_path='/tmp/man_pos.png',
+                          table_results=man_table_results)
         doc.individual_char(id_con_pre_path='/tmp/id_con_pre.png', id_cas_pre_path='/tmp/id_cas_pre.png',
                             id_con_pos_path='/tmp/id_con_pos.png', id_cas_pos_path='/tmp/id_cas_pos.png',
                             fstat_fig_path='/tmp/fstat_fig.png')
