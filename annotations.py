@@ -1,8 +1,8 @@
 __author__ = 'Lindo Nkambule & Zan Koenig'
 
 import hail as hl
-from aggregators import agg_call_rate, variant_qc_aggregator, impute_sex_aggregator, allele_types
-from plots import plt_hist, fstat_plot
+from aggregators import agg_call_rate, variant_qc_aggregator, impute_sex_aggregator
+from plots import plt_hist, fstat_plot, qqplot, manhattan_plot
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -336,3 +336,22 @@ class hwe_cas(BaseFilter):
 
     def plot(self, mt):
         pass
+
+
+class manhattan(BaseFilter):
+    def __init__(self, qqtitle, mantitle):
+        super().__init__()
+        self._qqtitle = qqtitle
+        self._mantitle = mantitle
+
+    def filter(self, mt):
+        gwas = hl.linear_regression_rows(y=mt.is_case, x=mt.GT.n_alt_alleles(), covariates=[1.0])
+        n_sig_variants = gwas.filter(gwas.p_value < 5E-8).count()
+
+        return gwas, n_sig_variants
+
+    def plot(self, ht):
+        qq_plot, lambda_gc = qqplot(ht.p_value, title=self._qqtitle)
+        man_plot = manhattan_plot(ht.p_value, title=self._mantitle)
+
+        return qq_plot, lambda_gc, man_plot
