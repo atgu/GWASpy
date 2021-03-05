@@ -2,7 +2,7 @@ __author__ = 'Lindo Nkambule & Zan Koenig'
 
 import hail as hl
 from aggregators import agg_call_rate, variant_qc_aggregator, impute_sex_aggregator, allele_types
-from plots import plt_hist
+from plots import plt_hist, fstat_plot
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -152,21 +152,8 @@ class fhet_sex(BaseFilter):
         df_xy = pd.DataFrame(exprs_xy)
         df_xx = pd.DataFrame(exprs_xx)
 
-        fig, axs = plt.subplots(2, figsize=self._figsize)
-        axs[0].hist(df_xy['filters'], bins=30, histtype='bar', alpha=0.8, fill=True, color='tab:blue', edgecolor="k")
-        axs[0].axvline(x=self._fstat_y, color='red', linestyle='--')
-        axs[0].set_title('Female Fstat', fontsize=20)
-        axs[0].set_xlabel(xlabel='Fstat', fontsize=15)
-        axs[0].set_ylabel(ylabel='Frequency', fontsize=15)
-        axs[0].tick_params(axis='both', which='major', labelsize=12)
-        axs[1].hist(df_xx['filters'], bins=40, histtype='bar', alpha=0.8, fill=True, color='tab:blue', edgecolor="k")
-        axs[1].axvline(x=self._fstat_x, color='red', linestyle='--')
-        axs[1].set_title('Male Fstat', fontsize=20)
-        axs[1].set_xlabel(xlabel='Fstat', fontsize=15)
-        axs[1].set_ylabel(ylabel='Frequency', fontsize=15)
-        axs[1].tick_params(axis='both', which='major', labelsize=12)
-        fig.tight_layout(rect=[0, 0.03, 1, 0.95])
-        plt.close()
+        fig = fstat_plot(df_female=df_xy, df_male=df_xx, f_stat_y=self._fstat_y, f_stat_x=self._fstat_x,
+                         figsize=self._figsize)
 
         return fig
 
