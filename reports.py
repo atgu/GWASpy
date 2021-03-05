@@ -83,6 +83,50 @@ class MyDocument(Document):
                         table.add_row(('SNPs: HWE-cases < {}'.format(hwe_cas), count_results['hwe_cas'][True]))
                         table.add_hline()
 
+    def manhattan_sec(self, qq_pre_path, qq_pos_path, man_pre_path, man_pos_path, table_results):
+        self.append(NewPage())
+
+        with self.create(Section('Manhattan')):
+            with self.create(Subsection('Basic stats')):
+                with self.create(Center()) as centered:
+                    with centered.create(Tabular('|c|c|c|')) as table:
+                        table.add_hline()
+                        table.add_row((bold('Description'), bold('Pre-QC'), bold('Post-QC')))
+                        table.add_hline()
+                        table.add_row(('Number of GWAS hits', table_results[0], table_results[1]))
+                        table.add_hline()
+                        table.add_row(('Lambda GC', table_results[2], table_results[3]))
+                        table.add_hline()
+                        # calculate lambda 1000
+                        table.add_row(('Lambda 1000', 0, 0))
+                        table.add_hline()
+
+            with self.create(Subsection('Manhattan Plot - pre-QC')):
+                with self.create(Figure(position='h!')) as pre_images:
+                    self.append(Command('centering'))
+                    with self.create(
+                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as left_pre_images:
+                        left_pre_images.add_image(man_pre_path, width=NoEscape(r'1\linewidth'))
+                with self.create(Figure(position='h!')) as pre_images:
+                    self.append(Command('centering'))
+                    with self.create(
+                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as right_pre_images:
+                        right_pre_images.add_image(qq_pre_path, width=NoEscape(r'1\linewidth'))
+
+            self.append(NewPage())
+
+            with self.create(Subsection('Manhattan Plot - post-QC')):
+                with self.create(Figure(position='h!')) as pos_images:
+                    self.append(Command('centering'))
+                    with self.create(
+                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as left_pre_images:
+                        left_pre_images.add_image(man_pos_path, width=NoEscape(r'1\linewidth'))
+                with self.create(Figure(position='h!')) as pos_images:
+                    self.append(Command('centering'))
+                    with self.create(
+                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as right_pre_images:
+                        right_pre_images.add_image(qq_pos_path, width=NoEscape(r'1\linewidth'))
+
     def individual_char(self, id_con_pre_path, id_cas_pre_path, id_con_pos_path, id_cas_pos_path, fstat_fig_path):
         self.append(NewPage())
 
