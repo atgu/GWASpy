@@ -101,61 +101,63 @@ class MyDocument(Document):
                         table.add_row(('Lambda 1000', 0, 0))
                         table.add_hline()
 
+            self.append(NewPage())
+
             with self.create(Subsection('Manhattan Plot - pre-QC')):
-                with self.create(Figure(position='h!')) as pre_images:
+                with self.create(Figure(position='h!')) as pre_man_images:
                     self.append(Command('centering'))
                     with self.create(
-                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as left_pre_images:
-                        left_pre_images.add_image(man_pre_path, width=NoEscape(r'1\linewidth'))
-                with self.create(Figure(position='h!')) as pre_images:
+                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as man_pre_images:
+                        man_pre_images.add_image(man_pre_path, width=NoEscape(r'1\linewidth'))
+                with self.create(Figure(position='h!')) as pre_man_images:
                     self.append(Command('centering'))
                     with self.create(
-                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as right_pre_images:
-                        right_pre_images.add_image(qq_pre_path, width=NoEscape(r'1\linewidth'))
+                            SubFigure(position='c', width=NoEscape(r'0.85\linewidth'))) as qq_pre_images:
+                        qq_pre_images.add_image(qq_pre_path, width=NoEscape(r'0.85\linewidth'))
 
             self.append(NewPage())
 
             with self.create(Subsection('Manhattan Plot - post-QC')):
-                with self.create(Figure(position='h!')) as pos_images:
+                with self.create(Figure(position='h!')) as pos_man_images:
                     self.append(Command('centering'))
                     with self.create(
-                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as left_pre_images:
-                        left_pre_images.add_image(man_pos_path, width=NoEscape(r'1\linewidth'))
-                with self.create(Figure(position='h!')) as pos_images:
+                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as man_pos_images:
+                        man_pos_images.add_image(man_pos_path, width=NoEscape(r'1\linewidth'))
+                with self.create(Figure(position='h!')) as pos_man_images:
                     self.append(Command('centering'))
                     with self.create(
-                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as right_pre_images:
-                        right_pre_images.add_image(qq_pos_path, width=NoEscape(r'1\linewidth'))
+                            SubFigure(position='c', width=NoEscape(r'0.85\linewidth'))) as qq_pos_images:
+                        qq_pos_images.add_image(qq_pos_path, width=NoEscape(r'0.85\linewidth'))
 
     def individual_char(self, id_con_pre_path, id_cas_pre_path, id_con_pos_path, id_cas_pos_path, fstat_fig_path):
         self.append(NewPage())
 
         with self.create(Section('Per Individual Characteristics Analysis')):
             with self.create(Subsection('Missing Rates - pre-QC')):
-                with self.create(Figure(position='h!')) as pre_images:
+                with self.create(Figure(position='h!')) as pre_idcr_images:
                     self.append(Command('centering'))
                     with self.create(
-                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as left_pre_images:
-                        left_pre_images.add_image(id_con_pre_path, width=NoEscape(r'1\linewidth'))
-                with self.create(Figure(position='h!')) as pre_images:
+                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as idcr_con_pre_images:
+                        idcr_con_pre_images.add_image(id_con_pre_path, width=NoEscape(r'1\linewidth'))
+                with self.create(Figure(position='h!')) as pre_idcr_images:
                     self.append(Command('centering'))
                     with self.create(
-                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as right_pre_images:
-                        right_pre_images.add_image(id_cas_pre_path, width=NoEscape(r'1\linewidth'))
+                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as idcr_cas_pre_images:
+                        idcr_cas_pre_images.add_image(id_cas_pre_path, width=NoEscape(r'1\linewidth'))
 
             self.append(NewPage())
 
             with self.create(Subsection('Missing Rates - post-QC')):
-                with self.create(Figure(position='h!')) as pos_images:
+                with self.create(Figure(position='h!')) as pos_idcr_images:
                     self.append(Command('centering'))
                     with self.create(
-                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as left_pre_images:
-                        left_pre_images.add_image(id_con_pos_path, width=NoEscape(r'1\linewidth'))
-                with self.create(Figure(position='h!')) as pos_images:
+                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as idcr_con_pos_images:
+                        idcr_con_pos_images.add_image(id_con_pos_path, width=NoEscape(r'1\linewidth'))
+                with self.create(Figure(position='h!')) as pos_idcr_images:
                     self.append(Command('centering'))
                     with self.create(
-                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as right_pre_images:
-                        right_pre_images.add_image(id_cas_pos_path, width=NoEscape(r'1\linewidth'))
+                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as idcr_cas_pos_images:
+                        idcr_cas_pos_images.add_image(id_cas_pos_path, width=NoEscape(r'1\linewidth'))
 
             self.append(NewPage())
 
