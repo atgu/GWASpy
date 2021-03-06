@@ -49,7 +49,7 @@ def fstat_plot(df_female, df_male, f_stat_x: float = 0.4, f_stat_y: float = 0.8,
     return fig
 
 
-def qqplot(pvals, title: str = None, figsize: tuple = (8, 8)):
+def qqplot(pvals, title: str = None, figsize: tuple = (10, 10)):
     source = pvals._indices.source
     if isinstance(source, Table):
         ht = source.select(p_value=pvals)
@@ -77,9 +77,9 @@ def qqplot(pvals, title: str = None, figsize: tuple = (8, 8)):
     plt.plot((0, mini), (0, mini), 'red')
     plt.xlim([0, maxi + 0.5])
     plt.ylim([0, maxi + 0.5])
-    plt.title(title)
-    plt.ylabel('Observed -log10(' + r'$p$' + ')')
-    plt.xlabel('Expected -log10(' + r'$p$' + ')')
+    plt.title(title, fontsize=20)
+    plt.ylabel('Observed -log10(' + r'$p$' + ')', fontsize=15)
+    plt.xlabel('Expected -log10(' + r'$p$' + ')', fontsize=15)
     plt.close()
 
     return fig, round(lambda_gc, 3)
@@ -106,8 +106,6 @@ def manhattan_plot(pvals, significance_threshold: float = -np.log10(5E-08), titl
     data['ind'] = range(len(data))
     data_grouped = data.groupby(('chromosome'))
 
-    print(data['-log10(p_value)'].max())
-
     title = f'{title}' if title else 'Manhattan Plot'
 
     fig = plt.figure(figsize=figsize)
@@ -129,17 +127,18 @@ def manhattan_plot(pvals, significance_threshold: float = -np.log10(5E-08), titl
     # ax.set_xlim([0, len(data)])
     ax.margins(0.05)
     # ax.set_ylim([0, data['-log10(p_value)'].max() + 1])
-    ax.set_xlabel('Chromosome')
-    plt.title(title)
+    ax.set_xlabel('Chromosome', fontsize=15)
+    ax.set_ylabel('-log10(p_value)', fontsize=15)
+    plt.title(title, fontsize=20)
     plt.axhline(y=significance_threshold, color='red', linestyle='--', linewidth=2)
-    plt.xticks(fontsize=9, rotation=90)
-    plt.yticks(fontsize=7)
+    plt.xticks(fontsize=10, rotation=90)
+    plt.yticks(fontsize=10)
     if annotate_sig is True:
         for index, row in data.iterrows():
             if row['-log10(p_value)'] >= significance_threshold:
                 ax.annotate('{}:{}'.format(row['chromosome'], row['position']),
                             xy=(index, row['-log10(p_value)'] + 0.1),
-                            bbox=dict(boxstyle="round", fc="0.8"), fontsize=8)
+                            bbox=dict(boxstyle="round", fc="0.8"))
     plt.close()
 
     return fig
