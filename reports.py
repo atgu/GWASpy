@@ -13,6 +13,30 @@ class MyDocument(Document):
         self.preamble.append(Command('date', NoEscape(r'\today')))
         self.append(NoEscape(r'\maketitle'))
 
+    def flags_table(self, tbl):
+        with self.create(Section('Flags')):
+            with self.create(Center()) as centered:
+                with centered.create(Tabular('|c|c|c|c|c|c|')) as table:
+                    table.add_hline()
+                    table.add_row((bold('Flagname'), bold('Value'), bold('yellow-th'), bold('red-th'), bold('flag'),
+                                   bold('color')))
+                    table.add_hline()
+                    table.add_row(tbl[0][0], tbl[0][1], tbl[0][2], tbl[0][3], tbl[0][4], tbl[0][5])
+                    table.add_hline()
+                    table.add_row(tbl[1][0], tbl[1][1], tbl[1][2], tbl[1][3], tbl[1][4], tbl[1][5])
+                    table.add_hline()
+                    table.add_row(tbl[2][0], tbl[2][1], tbl[2][2], tbl[2][3], tbl[2][4], tbl[2][5])
+                    table.add_hline()
+                    table.add_row(tbl[3][0], tbl[3][1], tbl[3][2], tbl[3][3], tbl[3][4], tbl[3][5])
+                    table.add_hline()
+                    table.add_row(tbl[4][0], tbl[4][1], tbl[4][2], tbl[4][3], tbl[4][4], tbl[4][5])
+                    table.add_hline()
+                    table.add_row(tbl[5][0], tbl[5][1], tbl[5][2], tbl[5][3], tbl[5][4], tbl[5][5])
+                    table.add_hline()
+                    table.add_row(tbl[6][0], tbl[6][1], tbl[6][2], tbl[6][3], tbl[6][4], tbl[6][5])
+                    table.add_hline()
+                    table.add_row(tbl[7][0], tbl[7][1], tbl[7][2], tbl[7][3], tbl[7][4], tbl[7][5])
+
     def general_info(self, pre_qc_conts, post_qc_conts, count_results, pre_filter, id_cr, fhet_thresh, var_cr,
                      miss_diff, hwe_con, hwe_cas):
         pre_pheno_counts = str(pre_qc_conts['is_case_counts']['case']) + ', ' + \
@@ -38,8 +62,7 @@ class MyDocument(Document):
                     + str(pre_qc_conts['is_female_counts']['female']-post_qc_conts['is_female_counts']['female']) +\
                     ', ' + str(pre_qc_conts['is_female_counts']['unknown']-post_qc_conts['is_female_counts']['unknown'])
 
-        with self.create(Section('Flag')):
-            self.append('A flags table should be here (STILL WORKING ON IT)')
+        self.append(NewPage())
 
         with self.create(Section('General Info')):
             with self.create(Subsection('Size of sample')):
