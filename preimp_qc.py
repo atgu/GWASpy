@@ -149,12 +149,61 @@ def preimp_qc(mt, dirname, basename, pre_geno_thresh, mind_thresh, fhet_aut, fst
 
     man_table_results = [n_sig_var_pre, n_sig_var_pos, lambda_gc_pre, lambda_gc_pos]
 
+    cas_con_ratio = round(pos_qc_counts['is_case_counts']['case'] / pos_qc_counts['is_case_counts']['control'], 4)
+    nids_lost = (pre_qc_counts['n_samples'] - pos_qc_counts['n_samples']) / pre_qc_counts['n_samples']
+    nids_sex_check = results['sex_warnings'][True] / pre_qc_counts['n_samples']
+
+    flags_table_results = [['nsnps-postqc', pos_qc_counts['n_variants'], 250000, 200000, 0, 'green'],
+                           ['ncases-postqc', pos_qc_counts['is_case_counts']['case'], 100, 50, 0, 'green'],
+                           ['ncontrols-postqc', pos_qc_counts['is_case_counts']['control'], 100, 50, 0, 'green'],
+                           ['case-control-ratio-postqc', cas_con_ratio, 0.0625, 0.0278, 0, 'green'],
+                           ['nids-lost-ratio', nids_lost, 0.01, 0.1, 0, 'green'],
+                           ['nids-sexcheck-ratio', nids_sex_check, 0.005, 0.0025, 0, 'green'],
+                           ['lambda-postqc', lambda_gc_pos, 1.1, 1.2, 0, 'green'],
+                           ['nsnps-gws', n_sig_var_pos, 0, 1, 0, 'green']]
+
+    for i in flags_table_results:
+        if (i[0] == 'nsnps-postqc') | (i[0] == 'ncases-postqc') | (i[0] == 'ncontrols-postqc') | (
+                i[0] == 'case-control-ratio-postqc'):
+            if (i[1] <= i[2]) & (i[1] > i[3]):
+                i[4] = 1
+                i[5] = 'yellow'
+            elif i[1] < i[3]:
+                i[4] = 2
+                i[5] = 'red'
+            else:
+                i[4] = 0
+                i[5] = 'green'
+
+        if i[0] == 'nids-lost-ratio':
+            if (i[1] > i[2]) & (i[1] <= i[3]):
+                i[4] = 1
+                i[5] = 'yellow'
+            elif i[1] > i[3]:
+                i[4] = 2
+                i[5] = 'red'
+            else:
+                i[4] = 0
+                i[5] = 'green'
+
+        if (i[0] == 'nids-sexcheck-ratio') | (i[0] == 'lambda-postqc') | (i[0] == 'nsnps-gws'):
+            if (i[1] >= i[2]) & (i[1] < i[3]):
+                i[4] = 1
+                i[5] = 'yellow'
+            elif i[1] > i[3]:
+                i[4] = 2
+                i[5] = 'red'
+            else:
+                i[4] = 0
+                i[5] = 'green'
+
     # output format: mt, plink, or vcf
 
     # report
     if report:
         print("Writing report")
         doc = MyDocument(basename=basename)
+        doc.flags_table(flags_table_results)
         doc.general_info(pre_qc_conts=pre_qc_counts, post_qc_conts=pos_qc_counts,
                          count_results=results, pre_filter=pre_geno_thresh, id_cr=mind_thresh, fhet_thresh=fhet_aut,
                          var_cr=geno_thresh, miss_diff=cr_diff_thresh, hwe_con=hwe_th_con_thresh,
