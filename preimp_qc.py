@@ -167,7 +167,7 @@ def preimp_qc(mt, dirname, basename, pre_geno_thresh, mind_thresh, fhet_aut, fst
                 i[0] == 'case-control-ratio-postqc'):
             if (i[1] <= i[2]) & (i[1] > i[3]):
                 i[4] = 1
-                i[5] = 'yellow'
+                i[5] = 'orange'
             elif i[1] < i[3]:
                 i[4] = 2
                 i[5] = 'red'
@@ -178,7 +178,7 @@ def preimp_qc(mt, dirname, basename, pre_geno_thresh, mind_thresh, fhet_aut, fst
         if i[0] == 'nids-lost-ratio':
             if (i[1] > i[2]) & (i[1] <= i[3]):
                 i[4] = 1
-                i[5] = 'yellow'
+                i[5] = 'orange'
             elif i[1] > i[3]:
                 i[4] = 2
                 i[5] = 'red'
@@ -189,7 +189,7 @@ def preimp_qc(mt, dirname, basename, pre_geno_thresh, mind_thresh, fhet_aut, fst
         if (i[0] == 'nids-sexcheck-ratio') | (i[0] == 'lambda-postqc') | (i[0] == 'nsnps-gws'):
             if (i[1] >= i[2]) & (i[1] < i[3]):
                 i[4] = 1
-                i[5] = 'yellow'
+                i[5] = 'orange'
             elif i[1] > i[3]:
                 i[4] = 2
                 i[5] = 'red'
