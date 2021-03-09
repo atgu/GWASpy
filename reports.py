@@ -13,7 +13,67 @@ class MyDocument(Document):
         self.preamble.append(Command('date', NoEscape(r'\today')))
         self.append(NoEscape(r'\maketitle'))
 
-    def flags_table(self, tbl):
+    def flags_table(self, pre_qc_counts, pos_qc_counts, results, lambda_gc, sig_vars):
+        cas_con_ratio = round(pos_qc_counts['is_case_counts']['case'] / pos_qc_counts['is_case_counts']['control'], 4)
+        nids_lost = (pre_qc_counts['n_samples'] - pos_qc_counts['n_samples']) / pre_qc_counts['n_samples']
+        nids_sex_check = results['sex_warnings'][True] / pre_qc_counts['n_samples']
+
+        tbl = [['nsnps-postqc', pos_qc_counts['n_variants'], 250000, 200000, 0, 'green'],
+               ['ncases-postqc', pos_qc_counts['is_case_counts']['case'], 100, 50, 0, 'green'],
+               ['ncontrols-postqc', pos_qc_counts['is_case_counts']['control'], 100, 50, 0, 'green'],
+               ['case-control-ratio-postqc', cas_con_ratio, 0.0625, 0.0278, 0, 'green'],
+               ['nids-lost-ratio', nids_lost, 0.01, 0.1, 0, 'green'],
+               ['n-nopt-postqc', pos_qc_counts['is_case_counts']['unknown'], 0, 10, 0, 'green'],
+               ['nids-sexcheck-ratio', nids_sex_check, 0.005, 0.0025, 0, 'green'],
+               ['lambda-postqc', lambda_gc, 1.1, 1.2, 0, 'green'],
+               ['nsnps-gws', sig_vars, 0, 1, 0, 'green']]
+
+        for i in tbl:
+            if (i[0] == 'nsnps-postqc') | (i[0] == 'ncases-postqc') | (i[0] == 'ncontrols-postqc') | (
+                    i[0] == 'case-control-ratio-postqc'):
+                if (i[1] <= i[2]) & (i[1] >= i[3]):
+                    i[4] = 1
+                    i[5] = 'orange'
+                elif i[1] < i[3]:
+                    i[4] = 2
+                    i[5] = 'red'
+                else:
+                    i[4] = 0
+                    i[5] = 'green'
+
+            if i[0] == 'nids-lost-ratio':
+                if (i[1] > i[2]) & (i[1] <= i[3]):
+                    i[4] = 1
+                    i[5] = 'orange'
+                elif i[1] > i[3]:
+                    i[4] = 2
+                    i[5] = 'red'
+                else:
+                    i[4] = 0
+                    i[5] = 'green'
+
+            if (i[0] == 'nids-sexcheck-ratio') | (i[0] == 'lambda-postqc'):
+                if (i[1] >= i[2]) & (i[1] <= i[3]):
+                    i[4] = 1
+                    i[5] = 'orange'
+                elif i[1] > i[3]:
+                    i[4] = 2
+                    i[5] = 'red'
+                else:
+                    i[4] = 0
+                    i[5] = 'green'
+
+            if (i[0] == 'nsnps-gws') | (i[0] == 'n-nopt-postqc'):
+                if i[1] == i[2]:
+                    i[4] = 0
+                    i[5] = 'green'
+                elif (i[1] > i[2]) & (i[1] <= i[3]):
+                    i[4] = 1
+                    i[5] = 'orange'
+                else:
+                    i[4] = 2
+                    i[5] = 'red'
+
         with self.create(Section('Flags')):
             with self.create(Center()) as centered:
                 with centered.create(Tabular('|l|c|c|c|c|c|')) as table:
@@ -36,6 +96,9 @@ class MyDocument(Document):
                     table.add_row(tbl[6][0], tbl[6][1], tbl[6][2], tbl[6][3], tbl[6][4], TextColor(tbl[6][5],tbl[6][5]))
                     table.add_hline()
                     table.add_row(tbl[7][0], tbl[7][1], tbl[7][2], tbl[7][3], tbl[7][4], TextColor(tbl[7][5],tbl[7][5]))
+                    table.add_hline()
+                    table.add_row(tbl[8][0], tbl[8][1], tbl[8][2], tbl[8][3], tbl[8][4],
+                                  TextColor(tbl[8][5], tbl[8][5]))
                     table.add_hline()
 
     def general_info(self, pre_qc_conts, post_qc_conts, count_results, pre_filter, id_cr, fhet_thresh, var_cr,
