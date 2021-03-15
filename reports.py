@@ -102,7 +102,7 @@ class MyDocument(Document):
                     table.add_hline()
 
     def general_info(self, pre_qc_conts, post_qc_conts, count_results, pre_filter, id_cr, fhet_thresh, var_cr,
-                     miss_diff, hwe_con, hwe_cas):
+                     miss_diff, hwe_con, hwe_cas, data_type):
         pre_pheno_counts = str(pre_qc_conts['is_case_counts']['case']) + ', ' + \
                            str(pre_qc_conts['is_case_counts']['control']) + ', ' + \
                            str(pre_qc_conts['is_case_counts']['unknown'])
@@ -166,9 +166,16 @@ class MyDocument(Document):
                         table.add_row(('SNPs: missing diference > {}'.format(miss_diff), count_results['cr_diff'][True]))
                         table.add_row(('SNPs: without valid association p-value (invariant)',
                                        count_results['monomorphic_var'][True]))
-                        table.add_row(('SNPs: HWE-controls < {}'.format(hwe_con), count_results['hwe_con'][True]))
-                        table.add_row(('SNPs: HWE-cases < {}'.format(hwe_cas), count_results['hwe_cas'][True]))
-                        table.add_hline()
+                        if data_type == "Case-only":
+                            table.add_row(('SNPs: HWE-cases < {}'.format(hwe_cas), count_results['hwe_cas'][True]))
+                            table.add_hline()
+                        if data_type == "Control-only":
+                            table.add_row(('SNPs: HWE-controls < {}'.format(hwe_con), count_results['hwe_con'][True]))
+                            table.add_hline()
+                        if data_type == "Case-Control":
+                            table.add_row(('SNPs: HWE-controls < {}'.format(hwe_con), count_results['hwe_con'][True]))
+                            table.add_row(('SNPs: HWE-cases < {}'.format(hwe_cas), count_results['hwe_cas'][True]))
+                            table.add_hline()
 
     def manhattan_sec(self, qq_pre_path, qq_pos_path, man_pre_path, man_pos_path, table_results):
         self.append(NewPage())
@@ -216,37 +223,71 @@ class MyDocument(Document):
                             SubFigure(position='c', width=NoEscape(r'0.85\linewidth'))) as qq_pos_images:
                         qq_pos_images.add_image(qq_pos_path, width=NoEscape(r'0.85\linewidth'))
 
-    def individual_char(self, id_con_pre_path, id_cas_pre_path, id_con_pos_path, id_cas_pos_path, fstat_fig_path):
+    def individual_char(self, id_con_pre_path, id_cas_pre_path, id_con_pos_path, id_cas_pos_path, fstat_fig_path,
+                        data_type):
         self.append(NewPage())
 
         with self.create(Section('Per Individual Characteristics Analysis')):
             with self.create(Subsection('Missing Rates - pre-QC')):
-                with self.create(Figure(position='h!')) as pre_idcr_images:
-                    self.append(Command('centering'))
-                    with self.create(
-                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as idcr_con_pre_images:
-                        idcr_con_pre_images.add_image(id_con_pre_path, width=NoEscape(r'1\linewidth'))
-                with self.create(Figure(position='h!')) as pre_idcr_images:
-                    self.append(Command('centering'))
-                    with self.create(
-                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as idcr_cas_pre_images:
-                        idcr_cas_pre_images.add_image(id_cas_pre_path, width=NoEscape(r'1\linewidth'))
+                if data_type == "Case-only":
+                    with self.create(Figure(position='h!')) as pre_idcr_images:
+                        self.append(Command('centering'))
+                        with self.create(
+                                SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as idcr_cas_pre_images:
+                            idcr_cas_pre_images.add_image(id_cas_pre_path, width=NoEscape(r'1\linewidth'))
+                    self.append(NewPage())
 
-            self.append(NewPage())
+                if data_type == "Control-only":
+                    with self.create(Figure(position='h!')) as pre_idcr_images:
+                        self.append(Command('centering'))
+                        with self.create(
+                                SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as idcr_con_pre_images:
+                            idcr_con_pre_images.add_image(id_con_pre_path, width=NoEscape(r'1\linewidth'))
+                    self.append(NewPage())
+
+                if data_type == "Case-Control":
+                    with self.create(Figure(position='h!')) as pre_idcr_images:
+                        self.append(Command('centering'))
+                        with self.create(
+                                SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as idcr_con_pre_images:
+                            idcr_con_pre_images.add_image(id_con_pre_path, width=NoEscape(r'1\linewidth'))
+                    with self.create(Figure(position='h!')) as pre_idcr_images:
+                        self.append(Command('centering'))
+                        with self.create(
+                                SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as idcr_cas_pre_images:
+                            idcr_cas_pre_images.add_image(id_cas_pre_path, width=NoEscape(r'1\linewidth'))
+                    self.append(NewPage())
 
             with self.create(Subsection('Missing Rates - post-QC')):
-                with self.create(Figure(position='h!')) as pos_idcr_images:
-                    self.append(Command('centering'))
-                    with self.create(
-                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as idcr_con_pos_images:
-                        idcr_con_pos_images.add_image(id_con_pos_path, width=NoEscape(r'1\linewidth'))
-                with self.create(Figure(position='h!')) as pos_idcr_images:
-                    self.append(Command('centering'))
-                    with self.create(
-                            SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as idcr_cas_pos_images:
-                        idcr_cas_pos_images.add_image(id_cas_pos_path, width=NoEscape(r'1\linewidth'))
+                if data_type == "Case-only":
+                    with self.create(Figure(position='h!')) as pos_idcr_images:
+                        self.append(Command('centering'))
+                        with self.create(
+                                SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as idcr_cas_pos_images:
+                            idcr_cas_pos_images.add_image(id_cas_pos_path, width=NoEscape(r'1\linewidth'))
+                    self.append(NewPage())
 
-            self.append(NewPage())
+                if data_type == "Control-only":
+                    with self.create(Figure(position='h!')) as pos_idcr_images:
+                        self.append(Command('centering'))
+                        with self.create(
+                                SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as idcr_con_pos_images:
+                            idcr_con_pos_images.add_image(id_con_pos_path, width=NoEscape(r'1\linewidth'))
+                    self.append(NewPage())
+
+                if data_type == "Case-Control":
+                    with self.create(Figure(position='h!')) as pos_idcr_images:
+                        self.append(Command('centering'))
+                        with self.create(
+                                SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as idcr_con_pos_images:
+                            idcr_con_pos_images.add_image(id_con_pos_path, width=NoEscape(r'1\linewidth'))
+                    with self.create(Figure(position='h!')) as pos_idcr_images:
+                        self.append(Command('centering'))
+                        with self.create(
+                                SubFigure(position='c', width=NoEscape(r'1\linewidth'))) as idcr_cas_pos_images:
+                            idcr_cas_pos_images.add_image(id_cas_pos_path, width=NoEscape(r'1\linewidth'))
+
+                    self.append(NewPage())
 
             with self.create(Subsection('Fstat - Sex Violations')):
                 with self.create(Figure(position='h!')) as fstat_image:
