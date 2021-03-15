@@ -56,7 +56,7 @@ def summary_stats(mt: hl.MatrixTable) -> Tuple[hl.MatrixTable, Dict[str, Any]]:
 def preimp_qc(mt, dirname, basename, pre_geno_thresh, mind_thresh, fhet_aut, fstat_x, fstat_y, geno_thresh,
               cr_diff_thresh, maf_thresh, hwe_th_con_thresh, hwe_th_cas_thresh, report: bool = True):
 
-    global row_filters
+    global row_filters, filters
 
     gwas_pre, n_sig_var_pre = manhattan(qqtitle="Pre-QC QQ Plot", mantitle="Pre-QC Manhattan Plot").filter(mt)
     qqplt_pre, lambda_gc_pre, manplt_pre = manhattan(qqtitle="Pre-QC QQ Plot",
@@ -71,6 +71,7 @@ def preimp_qc(mt, dirname, basename, pre_geno_thresh, mind_thresh, fhet_aut, fst
 
     mt = pre_geno(pre_geno_cr=pre_geno_thresh).filter(mt)
     mt = id_call_rate(mind=mind_thresh, pre_row_filter='pre_geno').filter(mt)
+
     mt = fhet_autosomes(pre_row_filter='pre_geno', fhet_thresh=fhet_aut).filter(mt)
     mt = fhet_sex(pre_row_filter='pre_geno', fstat_x=fstat_x, fstat_y=fstat_y).filter(mt)
     mt = fhet_sex_warnings(pre_row_filter='pre_geno', pre_col_filter='sex_violations').filter(mt)
@@ -89,22 +90,32 @@ def preimp_qc(mt, dirname, basename, pre_geno_thresh, mind_thresh, fhet_aut, fst
     # check if data is case-/control-only, case-control, or trio
     # (a) Case-Only
     if (pre_qc_counts['is_case_counts']['case'] > 0) & (pre_qc_counts['is_case_counts']['control'] == 0):
-        print("Case-only")
+        data_type = "Case-only"
+        print(data_type)
         mt = hwe_cas(pre_col_filter='id_pass', pre_row_filter='geno', hwe_th_ca=1e-6).filter(mt)
         row_filters = ['pre_geno', 'geno', 'cr_diff', 'monomorphic_var', 'hwe_cas']
+        filters = ['pre_geno', 'mind', 'fstat', 'sex_violations', 'sex_warnings', 'geno', 'cr_diff',
+                   'monomorphic_var', 'hwe_cas']
     # (b) Control-Only
     elif (pre_qc_counts['is_case_counts']['control'] > 0) & (pre_qc_counts['is_case_counts']['case'] == 0):
-        print("Control-only")
+        data_type = "Control-only"
+        print(data_type)
         mt = hwe_con(pre_col_filter='id_pass', pre_row_filter='geno', hwe_th_co=1e-6).filter(mt)
         row_filters = ['pre_geno', 'geno', 'cr_diff', 'monomorphic_var', 'hwe_con']
+        filters = ['pre_geno', 'mind', 'fstat', 'sex_violations', 'sex_warnings', 'geno', 'cr_diff',
+                   'monomorphic_var', 'hwe_con']
     elif (pre_qc_counts['is_case_counts']['case'] > 0) & (pre_qc_counts['is_case_counts']['control'] > 0):
-        print("Case-Control")
+        data_type = "Case-Control"
+        print(data_type)
         mt = hwe_cas(pre_col_filter='id_pass', pre_row_filter='geno', hwe_th_ca=hwe_th_cas_thresh).filter(mt)
         mt = hwe_con(pre_col_filter='id_pass', pre_row_filter='geno', hwe_th_co=hwe_th_con_thresh).filter(mt)
         row_filters = ['pre_geno', 'geno', 'cr_diff', 'monomorphic_var', 'hwe_con', 'hwe_cas']
+        filters = ['pre_geno', 'mind', 'fstat', 'sex_violations', 'sex_warnings', 'geno', 'cr_diff',
+                   'monomorphic_var', 'hwe_con', 'hwe_cas']
     else:
         # trio data
-        print("Trio data")
+        data_type = "Trio"
+        print(data_type)
 
     results = {}
     column_filters = ['mind', 'fstat', 'sex_violations', 'sex_warnings']
@@ -126,9 +137,6 @@ def preimp_qc(mt, dirname, basename, pre_geno_thresh, mind_thresh, fhet_aut, fst
     for filt, cont in zip(row_filters, row_aggregations):
         results[filt] = cont
 
-    filters = ['pre_geno', 'mind', 'fstat', 'sex_violations', 'sex_warnings', 'geno', 'cr_diff',
-               'monomorphic_var', 'hwe_con', 'hwe_cas']
-
     for i in filters:
         # some filters will have zero snps/id filtered, and there won't be a True, so add it
         if True not in results[i]:
@@ -141,11 +149,20 @@ def preimp_qc(mt, dirname, basename, pre_geno_thresh, mind_thresh, fhet_aut, fst
         fstat_fig = fhet_sex(pre_row_filter='pre_geno', fstat_x=fstat_x, fstat_y=fstat_y, figsize=(15, 20)).plot(mt)
         fstat_fig.savefig('/tmp/fstat_fig.png', dpi=300)
 
-        id_cr_plot = id_call_rate(mind=mind_thresh, pre_row_filter='pre_geno').plot(mt)
-        id_cr_plot[0].savefig('/tmp/id_con_pre.png', dpi=300)
-        id_cr_plot[1].savefig('/tmp/id_cas_pre.png', dpi=300)
-        id_cr_plot[2].savefig('/tmp/id_con_pos.png', dpi=300)
-        id_cr_plot[3].savefig('/tmp/id_cas_pos.png', dpi=300)
+        id_cr_plot = id_call_rate(mind=mind_thresh, pre_row_filter='pre_geno').plot(mt, data_type=data_type)
+        if data_type == "Case-only":
+            id_cr_plot[0].savefig('/tmp/id_cas_pre.png', dpi=300)
+            id_cr_plot[1].savefig('/tmp/id_cas_pos.png', dpi=300)
+
+        if data_type == "Control-only":
+            id_cr_plot[0].savefig('/tmp/id_con_pre.png', dpi=300)
+            id_cr_plot[1].savefig('/tmp/id_con_pos.png', dpi=300)
+
+        if data_type == "Case-Control":
+            id_cr_plot[0].savefig('/tmp/id_con_pre.png', dpi=300)
+            id_cr_plot[1].savefig('/tmp/id_cas_pre.png', dpi=300)
+            id_cr_plot[2].savefig('/tmp/id_con_pos.png', dpi=300)
+            id_cr_plot[3].savefig('/tmp/id_cas_pos.png', dpi=300)
 
     # hl.hadoop_open() to read file from gs
 
@@ -179,13 +196,22 @@ def preimp_qc(mt, dirname, basename, pre_geno_thresh, mind_thresh, fhet_aut, fst
         doc.general_info(pre_qc_conts=pre_qc_counts, post_qc_conts=pos_qc_counts,
                          count_results=results, pre_filter=pre_geno_thresh, id_cr=mind_thresh, fhet_thresh=fhet_aut,
                          var_cr=geno_thresh, miss_diff=cr_diff_thresh, hwe_con=hwe_th_con_thresh,
-                         hwe_cas=hwe_th_cas_thresh)
+                         hwe_cas=hwe_th_cas_thresh, data_type=data_type)
         doc.manhattan_sec(qq_pre_path='/tmp/qq_pre.png', qq_pos_path='/tmp/qq_pos.png',
                           man_pre_path='/tmp/man_pre.png', man_pos_path='/tmp/man_pos.png',
                           table_results=man_table_results)
-        doc.individual_char(id_con_pre_path='/tmp/id_con_pre.png', id_cas_pre_path='/tmp/id_cas_pre.png',
-                            id_con_pos_path='/tmp/id_con_pos.png', id_cas_pos_path='/tmp/id_cas_pos.png',
-                            fstat_fig_path='/tmp/fstat_fig.png')
+        if data_type == "Case-only":
+            doc.individual_char(id_con_pre_path='nothing here', id_cas_pre_path='/tmp/id_cas_pre.png',
+                                id_con_pos_path='nothing here', id_cas_pos_path='/tmp/id_cas_pos.png',
+                                fstat_fig_path='/tmp/fstat_fig.png', data_type=data_type)
+        if data_type == "Control-only":
+            doc.individual_char(id_con_pre_path='/tmp/id_con_pre.png', id_cas_pre_path='nothing here',
+                                id_con_pos_path='/tmp/id_con_pos.png', id_cas_pos_path='nothing here',
+                                fstat_fig_path='/tmp/fstat_fig.png', data_type=data_type)
+        if data_type == "Case-Control":
+            doc.individual_char(id_con_pre_path='/tmp/id_con_pre.png', id_cas_pre_path='/tmp/id_cas_pre.png',
+                                id_con_pos_path='/tmp/id_con_pos.png', id_cas_pos_path='/tmp/id_cas_pos.png',
+                                fstat_fig_path='/tmp/fstat_fig.png', data_type=data_type)
         doc.generate_pdf('report', clean_tex=False)
 
     # hl.export_plink(mt_filtered)
