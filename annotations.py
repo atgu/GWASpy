@@ -61,21 +61,35 @@ class id_call_rate(BaseFilter):
 
         return mt
 
-    def plot(self, mt):
+    def plot(self, mt, data_type):
+        global id_call_rate_plts
         mt = mt.annotate_cols(
             mind_cr_pre=hl.agg.filter(mt.pre_geno.filters == False, agg_call_rate(mt)),
             mind_cr_post=hl.agg.filter(mt.mind.filters == False, agg_call_rate(mt)))
 
-        mt_controls: hl.MatrixTable = mt.filter_cols(mt.is_case == False)
-        mt_cases: hl.MatrixTable = mt.filter_cols(mt.is_case == True)
+        if data_type == "Case-only":
+            mt_cases: hl.MatrixTable = mt.filter_cols(mt.is_case == True)
+            cas_pre = plt_hist(mt_cases.mind_cr_pre, title="Cases", threshold=self._mind, x_label='Call Rate')
+            cas_post = plt_hist(mt_cases.mind_cr_post, title="Controls", threshold=0.98, x_label='Call Rate')
+            id_call_rate_plts = [cas_pre, cas_post]
 
-        con_pre = plt_hist(mt_controls.mind_cr_pre, title="Controls", threshold=self._mind, x_label='Call Rate')
-        cas_pre = plt_hist(mt_cases.mind_cr_pre, title="Cases", threshold=self._mind, x_label='Call Rate')
+        if data_type == "Control-only":
+            mt_controls: hl.MatrixTable = mt.filter_cols(mt.is_case == False)
+            con_pre = plt_hist(mt_controls.mind_cr_pre, title="Controls", threshold=self._mind, x_label='Call Rate')
+            con_post = plt_hist(mt_controls.mind_cr_post, title="Controls", threshold=0.98, x_label='Call Rate')
+            id_call_rate_plts = [con_pre, con_post]
 
-        con_post = plt_hist(mt_controls.mind_cr_post, title="Controls", threshold=0.98, x_label='Call Rate')
-        cas_post = plt_hist(mt_cases.mind_cr_post, title="Controls", threshold=0.98, x_label='Call Rate')
+        if data_type == "Case-Control":
+            mt_controls: hl.MatrixTable = mt.filter_cols(mt.is_case == False)
+            mt_cases: hl.MatrixTable = mt.filter_cols(mt.is_case == True)
 
-        id_call_rate_plts = [con_pre, cas_pre, con_post, cas_post]
+            con_pre = plt_hist(mt_controls.mind_cr_pre, title="Controls", threshold=self._mind, x_label='Call Rate')
+            cas_pre = plt_hist(mt_cases.mind_cr_pre, title="Cases", threshold=self._mind, x_label='Call Rate')
+
+            con_post = plt_hist(mt_controls.mind_cr_post, title="Controls", threshold=0.98, x_label='Call Rate')
+            cas_post = plt_hist(mt_cases.mind_cr_post, title="Cases", threshold=0.98, x_label='Call Rate')
+
+            id_call_rate_plts = [con_pre, cas_pre, con_post, cas_post]
 
         return id_call_rate_plts
 
