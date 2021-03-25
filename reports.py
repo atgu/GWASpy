@@ -192,7 +192,7 @@ class MyDocument(Document):
                         table.add_row(('Lambda GC', table_results[2], table_results[3]))
                         table.add_hline()
                         # calculate lambda 1000
-                        table.add_row(('Lambda 1000', 0, 0))
+                        table.add_row(('Lambda 1000', table_results[4], table_results[5]))
                         table.add_hline()
 
             self.append(NewPage())

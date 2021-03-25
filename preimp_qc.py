@@ -180,10 +180,19 @@ def preimp_qc(mt, dirname, basename, pre_geno_thresh, mind_thresh, fhet_aut, fst
     gwas_pos, n_sig_var_pos = manhattan(qqtitle="Post-QC QQ Plot", mantitle="Post-QC Manhattan Plot").filter(mt)
     qqplt_pos, lambda_gc_pos, manplt_pos = manhattan(qqtitle="Post-QC QQ Plot",
                                                      mantitle="Post-QC Manhattan Plot").plot(gwas_pos)
+
+    ncas_pre = pre_qc_counts['is_case_counts']['case']
+    ncas_pos = pos_qc_counts['is_case_counts']['case']
+    ncon_pre = pre_qc_counts['is_case_counts']['control']
+    ncon_pos = pos_qc_counts['is_case_counts']['control']
+    lambda_thous_pre = 1 + (lambda_gc_pre-1)*(1/ncas_pre+1/ncon_pre)/(1/1000+1/1000)
+    lambda_thous_pos = 1 + (lambda_gc_pos-1)*(1/ncas_pos+1/ncon_pos)/(1/1000+1/1000)
+
     qqplt_pos.savefig('/tmp/qq_pos.png', dpi=300)
     manplt_pos.savefig('/tmp/man_pos.png', dpi=300)
 
-    man_table_results = [n_sig_var_pre, n_sig_var_pos, lambda_gc_pre, lambda_gc_pos]
+    man_table_results = [n_sig_var_pre, n_sig_var_pos, lambda_gc_pre, lambda_gc_pos, round(lambda_thous_pre, 3),
+                         round(lambda_thous_pos, 3)]
 
     # output format: mt, plink, or vcf
 
