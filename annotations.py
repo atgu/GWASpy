@@ -43,11 +43,12 @@ class pre_geno(BaseFilter):
 
 
 class id_call_rate(BaseFilter):
-    def __init__(self, mind: float = 0.98, pre_row_filter: str = None, pre_col_filter: str = None):
+    def __init__(self, mind: float = 0.98, pre_row_filter: str = None, pre_col_filter: str = None, data_type: str = None):
         super().__init__()
         self._mind = mind
         self._row_filter = pre_row_filter
         self._col_filter = pre_col_filter
+        self._data_type = data_type
 
     def filter(self, mt):
         row_filter = mt[self._row_filter].filters if self._row_filter else mt.exclude_row
@@ -61,35 +62,29 @@ class id_call_rate(BaseFilter):
 
         return mt
 
-    def plot(self, mt, data_type):
+    def plot(self, mt):
         global id_call_rate_plts
         mt = mt.annotate_cols(
-            mind_cr_pre=hl.agg.filter(mt.pre_geno.filters == False, agg_call_rate(mt)),
-            mind_cr_post=hl.agg.filter(mt.mind.filters == False, agg_call_rate(mt)))
+            mind_cr_pre=hl.agg.filter(mt.pre_geno.filters == False, agg_call_rate(mt)))
 
-        if data_type == "Case-only":
+        if self._data_type == "Case-only":
             mt_cases: hl.MatrixTable = mt.filter_cols(mt.is_case == True)
             cas_pre = plt_hist(mt_cases.mind_cr_pre, title="Cases", threshold=self._mind, x_label='Call Rate')
-            cas_post = plt_hist(mt_cases.mind_cr_post, title="Controls", threshold=0.98, x_label='Call Rate')
-            id_call_rate_plts = [cas_pre, cas_post]
+            id_call_rate_plts = [cas_pre]
 
-        if data_type == "Control-only":
+        if self._data_type == "Control-only":
             mt_controls: hl.MatrixTable = mt.filter_cols(mt.is_case == False)
             con_pre = plt_hist(mt_controls.mind_cr_pre, title="Controls", threshold=self._mind, x_label='Call Rate')
-            con_post = plt_hist(mt_controls.mind_cr_post, title="Controls", threshold=0.98, x_label='Call Rate')
-            id_call_rate_plts = [con_pre, con_post]
+            id_call_rate_plts = [con_pre]
 
-        if data_type == "Case-Control":
+        if self._data_type == "Case-Control":
             mt_controls: hl.MatrixTable = mt.filter_cols(mt.is_case == False)
             mt_cases: hl.MatrixTable = mt.filter_cols(mt.is_case == True)
 
             con_pre = plt_hist(mt_controls.mind_cr_pre, title="Controls", threshold=self._mind, x_label='Call Rate')
             cas_pre = plt_hist(mt_cases.mind_cr_pre, title="Cases", threshold=self._mind, x_label='Call Rate')
 
-            con_post = plt_hist(mt_controls.mind_cr_post, title="Controls", threshold=0.98, x_label='Call Rate')
-            cas_post = plt_hist(mt_cases.mind_cr_post, title="Cases", threshold=0.98, x_label='Call Rate')
-
-            id_call_rate_plts = [con_pre, cas_pre, con_post, cas_post]
+            id_call_rate_plts = [con_pre, cas_pre]
 
         return id_call_rate_plts
 
@@ -206,11 +201,12 @@ class fhet_sex_warnings(BaseFilter):
 
 class geno(BaseFilter):
     def __init__(self, geno_thresh: float = 0.98, pre_row_filter: str = None,
-                 pre_col_filter: str = None):
+                 pre_col_filter: str = None, data_type: str = None):
         super().__init__()
         self._geno = geno_thresh
         self._row_filter = pre_row_filter
         self._col_filter = pre_col_filter
+        self._data_type = data_type
 
     def filter(self, mt):
         row_filter = mt[self._row_filter].filters if self._row_filter else mt.exclude_row
@@ -226,7 +222,30 @@ class geno(BaseFilter):
         return mt
 
     def plot(self, mt):
-        pass
+        global var_call_rate_plts
+        mt = mt.annotate_rows(
+            var_cr_pre=hl.agg.filter(mt.pre_geno.filters == False, agg_call_rate(mt)))
+
+        if self._data_type == "Case-only":
+            mt_cases: hl.MatrixTable = mt.filter_cols(mt.is_case == True)
+            cas_pre = plt_hist(mt_cases.var_cr_pre, title="Cases", threshold=self._geno, x_label='Call Rate')
+            var_call_rate_plts = [cas_pre]
+
+        if self._data_type == "Control-only":
+            mt_controls: hl.MatrixTable = mt.filter_cols(mt.is_case == False)
+            con_pre = plt_hist(mt_controls.var_cr_pre, title="Controls", threshold=self._geno, x_label='Call Rate')
+            var_call_rate_plts = [con_pre]
+
+        if self._data_type == "Case-Control":
+            mt_controls: hl.MatrixTable = mt.filter_cols(mt.is_case == False)
+            mt_cases: hl.MatrixTable = mt.filter_cols(mt.is_case == True)
+
+            con_pre = plt_hist(mt_controls.var_cr_pre, title="Controls", threshold=self._geno, x_label='Call Rate')
+            cas_pre = plt_hist(mt_cases.var_cr_pre, title="Cases", threshold=self._geno, x_label='Call Rate')
+
+            var_call_rate_plts = [con_pre, cas_pre]
+
+        return var_call_rate_plts
 
 
 class call_rate_diff(BaseFilter):
