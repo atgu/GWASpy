@@ -6,13 +6,11 @@ A Python package for performing GWAS QC, PCA, and genotype imputation.
 Installation
 ------------
 
-For now you can install preimp_qc using the command below. In the near future, it will be uploaded to pypi
+For now you can install preimp_qc and its dependencies using the command below. In the near future, it will be uploaded to pypi
 
 .. code:: bash
 
-   pip install -r requirements.txt
-   python setup.py sdist
-   pip install dist/preimp_qc-0.1.0.tar.gz
+   bash env-setup.sh
 
 Usage
 -----
