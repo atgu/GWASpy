@@ -1,10 +1,9 @@
 __author__ = 'Lindo Nkambule & Zan Koenig'
 
 import hail as hl
-from aggregators import agg_call_rate, variant_qc_aggregator, impute_sex_aggregator
-from plots import plt_hist, fstat_plot, qqplot, manhattan_plot
+from preimp_qc.aggregators import agg_call_rate, variant_qc_aggregator, impute_sex_aggregator
+from preimp_qc.plots import plt_hist, fstat_plot, qqplot, manhattan_plot
 import pandas as pd
-import matplotlib.pyplot as plt
 
 
 class BaseFilter:

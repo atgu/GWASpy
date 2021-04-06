@@ -1,10 +1,10 @@
 __author__ = 'Lindo Nkambule'
 
-from annotations import *
+from preimp_qc.annotations import *
 from typing import Tuple, Any, Dict
-from in_out import read_mt, read_vcf, read_plink
+from preimp_qc.in_out import read_mt, read_vcf, read_plink
 import argparse
-from reports import MyDocument
+from preimp_qc.report import MyDocument
 import shutil
 import warnings
 
