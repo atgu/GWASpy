@@ -39,9 +39,6 @@ Arguments and Options
 +------------------------+--------------------------------------------+
 | ``--reference``        | Reference genome build e.g. GRCh37, GRCh38 |
 +------------------------+--------------------------------------------+
-| ``--qc_round``         | The number of times QC has been performed  |
-|                        | on the data. Use 1 if it's the first round |
-+------------------------+--------------------------------------------+
 | ``--pre-geno``         | include only SNPs with missing-rate < NUM  |
 |                        | (before ID filter), important for post     |
 |                        | merge of multiple platforms                |
