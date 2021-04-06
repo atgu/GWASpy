@@ -19,8 +19,8 @@ Usage
 
 .. code:: bash
 
-   $ preimp_qc --dirname TestData/ --basename Basename --inputType plink --reference GRCh37
-   in the example above, inside the directory TestData, there must be three PLINK file Basename.*{bed,bim,fam}
+   $ preimp_qc --dirname data/ --basename sim_sim2a_eur_sa_merge.miss --input-type plink
+   # in the example above, inside the directory data/, there will be 3 PLINK file sim_sim2a_eur_sa_merge.*{bed,bim,fam}
 
 Arguments and Options
 ---------------------
@@ -32,7 +32,7 @@ Arguments and Options
 +------------------------+--------------------------------------------+
 | ``--basename``         | Data basename                              |
 +------------------------+--------------------------------------------+
-| ``--inputType``        | Input type, plink or vcf                   |
+| ``--input-type``       | Input type, plink or vcf                   |
 +------------------------+--------------------------------------------+
 | ``--annotations``      | Annotations file to be used for annotating |
 |                        | the VCF file (ONLY for VCF input)          |
