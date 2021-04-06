@@ -3,6 +3,8 @@
 set -ex
 
 # Install preimp_qc and its dependencies
+git clone https://github.com/atgu/preimp_qc
+cd preimp_qc/
 pip install -r requirements.txt
 python setup.py sdist
 pip install dist/preimp_qc-0.1.0.tar.gz
