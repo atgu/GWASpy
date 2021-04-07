@@ -8,9 +8,22 @@ Installation
 
 For now you can install preimp_qc and its dependencies using the command below. In the near future, it will be uploaded to pypi
 
+1. Install non-Python dependencies. The above command assumes the user already has `Homebrew`_ (MacOS) or `apt-get`_ (Linux) installed.
+
 .. code:: bash
 
-   bash env-setup.sh
+   curl https://raw.githubusercontent.com/atgu/preimp_qc/main/env-setup.sh | bash
+
+2. Clone the repo and install preimp_qc and the required packages. Once the package is on `pypi`_, it won't be ncessary to run ``pip install -r requirements.txt``
+
+.. code:: bash
+
+   # Install preimp_qc and its dependencies
+   git clone https://github.com/atgu/preimp_qc
+   cd preimp_qc/
+   pip install -r requirements.txt
+   python setup.py sdist
+   pip install dist/preimp_qc-0.1.0.tar.gz
 
 Usage
 -----
@@ -62,3 +75,7 @@ Arguments and Options
 +------------------------+--------------------------------------------+
 | ``--hwe-th-cas``       | HWE_cases < NUM                            |
 +------------------------+--------------------------------------------+
+
+.. _Homebrew: https://brew.sh/
+.. _apt-get: https://linux.die.net/man/8/apt-get
+.. _pypi: https://pypi.org/project/pydownsampler
