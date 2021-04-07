@@ -2,13 +2,6 @@
 
 set -ex
 
-# Install preimp_qc and its dependencies
-git clone https://github.com/atgu/preimp_qc
-cd preimp_qc/
-pip install -r requirements.txt
-python setup.py sdist
-pip install dist/preimp_qc-0.1.0.tar.gz
-
 PLATFORM="${OSTYPE}"
 
 # install pylatex depedencies
@@ -18,10 +11,20 @@ case "$PLATFORM" in
             brew install --cask mactex
             eval "$(/usr/libexec/path_helper)"
         }
+        install-git-lfs() {
+            brew install git-lfs
+            brew upgrade git-lfs
+            git config --global lfs.batch false
+            git lfs install
+        }
         ;;
     linux*)
         install-pylatex-dependencies() {
-            sudo apt-get install texlive-pictures texlive-science texlive-latex-extra latexmk
+            apt-get install texlive-pictures texlive-science texlive-latex-extra latexmk
+        }
+        install-git-lfs() {
+            curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
+            apt-get install git-lfs
         }
         ;;
     *)
@@ -30,3 +33,4 @@ case "$PLATFORM" in
 esac
 
 install-pylatex-dependencies
+install-git-lfs
