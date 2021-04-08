@@ -22,19 +22,21 @@ classifiers = [
     'Operating System :: MacOS'
 ]
 
-setup(name='preimp_qc',
+setup(name='GWASpy',
       version='0.1.0',
       author='Lindokuhle Nkambule',
       author_email='lnkambul (at) broadinstitute.org',
       url='https://github.com/LindoNkambule/pydownsampler',
-      description='A Python package for performing GWAS QC',
+      description='GWASpy: A Python package for performing GWAS QC, PCA, and genotype imputation.',
       long_description=long_description,
       long_description_content_type="text/x-rst",
       license='MIT',
       packages=find_packages(),
       entry_points={
           'console_scripts': [
-              'preimp_qc = preimp_qc.preimp_qc:main'
+              'preimp_qc = gwaspy.preimp_qc.preimp_qc:main',
+              'pca = gwaspy.pca.pca:main',
+              'imputation = gwaspy.imputation.imputation:main'
           ]
       },
       classifiers=classifiers,
