@@ -4,7 +4,7 @@ from gwaspy.preimp_qc.annotations import *
 from typing import Tuple, Any, Dict
 from gwaspy.preimp_qc.in_out import read_mt, read_vcf, read_plink
 import argparse
-from gwas_py.preimp_qc.report import MyDocument
+from gwaspy.preimp_qc.report import MyDocument
 import shutil
 import warnings
 
