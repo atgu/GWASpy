@@ -1,2 +1,2 @@
-from gwas_py.imputation import imputation
+from gwaspy.imputation import imputation
 __all__ = ['imputation']
