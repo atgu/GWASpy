@@ -1,7 +1,7 @@
-preimp_qc
+GWASpy
 =============
 
-A Python package for performing GWAS QC, PCA, and genotype imputation.
+Genome-wide association studies pypeline (gwas_py): A Python package for performing GWAS QC, PCA, and genotype imputation.
 
 Installation
 ------------
@@ -23,7 +23,7 @@ For now you can install preimp_qc and its dependencies using the command below. 
    cd preimp_qc/
    pip install -r requirements.txt
    python setup.py sdist
-   pip install dist/preimp_qc-0.1.0.tar.gz
+   pip install dist/GWASpy-0.1.0.tar.gz
 
 Usage
 -----
