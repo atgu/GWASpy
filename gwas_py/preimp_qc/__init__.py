@@ -1,2 +1,2 @@
-from preimp_qc import preimp_qc
+from gwas_py.preimp_qc import preimp_qc
 __all__ = ['preimp_qc']

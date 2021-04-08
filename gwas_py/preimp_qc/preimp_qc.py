@@ -1,10 +1,10 @@
 __author__ = 'Lindo Nkambule'
 
-from preimp_qc.annotations import *
+from gwas_py.preimp_qc.annotations import *
 from typing import Tuple, Any, Dict
-from preimp_qc.in_out import read_mt, read_vcf, read_plink
+from gwas_py.preimp_qc.in_out import read_mt, read_vcf, read_plink
 import argparse
-from preimp_qc.report import MyDocument
+from gwas_py.preimp_qc.report import MyDocument
 import shutil
 import warnings
 
