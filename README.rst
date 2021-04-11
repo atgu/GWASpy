@@ -1,7 +1,7 @@
 GWASpy
 =============
 
-Genome-wide association studies pypeline (gwas_py): A Python package for performing GWAS QC, PCA, and genotype imputation.
+Genome-wide association studies pypeline (GWASpy): A Python package for performing GWAS QC, PCA, and genotype imputation.
 
 Installation
 ------------
@@ -28,10 +28,21 @@ For now you can install preimp_qc and its dependencies using the command below. 
 Usage
 -----
 
+(1) preimp_qc
+-------------
+
+You can run pre-imputation using the ``preimp_qc`` module (1) via the command line and (2) inside a python script
+
 .. code:: bash
 
+   # (1) command line
    $ preimp_qc --dirname data/ --basename sim_sim2a_eur_sa_merge.miss --input-type plink
-   # in the example above, inside the directory data/, there will be 3 PLINK file sim_sim2a_eur_sa_merge.*{bed,bim,fam}
+
+   # (2) inside a python script
+   import gwaspy.preimp_qc as qc
+   qc.preimp_qc.preimp_qc(input_type="plink", dirname="data/", basename="sim_sim2a_eur_sa_merge.miss")
+
+   # in the examples above, inside the directory data/, there will be 3 PLINK file sim_sim2a_eur_sa_merge.*{bed,bim,fam}
 
 Arguments and Options
 ---------------------
@@ -75,6 +86,14 @@ Arguments and Options
 +------------------------+--------------------------------------------+
 | ``--hwe-th-cas``       | HWE_cases < NUM                            |
 +------------------------+--------------------------------------------+
+
+(2) Principal Component Analysis
+--------------------------------
+Coming...
+
+(3) Genotype imputation
+--------------------------------
+Coming...
 
 .. _Homebrew: https://brew.sh/
 .. _apt-get: https://linux.die.net/man/8/apt-get
