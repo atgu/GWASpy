@@ -1,7 +1,7 @@
 __author__ = 'Lindo Nkambule'
 
 from gwaspy.preimp_qc.annotations import *
-from typing import Tuple, Any, Dict
+from typing import Tuple, Any, Dict, Union
 from gwaspy.preimp_qc.in_out import read_mt, read_vcf, read_plink
 import argparse
 from gwaspy.preimp_qc.report import MyDocument
@@ -53,10 +53,25 @@ def summary_stats(mt: hl.MatrixTable) -> Tuple[hl.MatrixTable, Dict[str, Any]]:
     return mt, results
 
 
-def preimp_qc(mt, dirname, basename, pre_geno_thresh, mind_thresh, fhet_aut, fstat_x, fstat_y, geno_thresh,
-              cr_diff_thresh, maf_thresh, hwe_th_con_thresh, hwe_th_cas_thresh, report: bool = True):
+def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None, pre_geno_thresh: Union[int, float] = 0.95,
+              mind_thresh: Union[int, float] = 0.98, fhet_aut: Union[int, float] = 0.2, fstat_x: Union[int, float] = 0.5,
+              fstat_y: Union[int, float] = 0.5, geno_thresh: Union[int, float] = 0.98,
+              cr_diff_thresh: Union[int, float] = 0.02, maf_thresh: Union[int, float] = 0.01,
+              hwe_th_con_thresh: Union[int, float] = 1e-6, hwe_th_cas_thresh: Union[int, float] = 1e-10,
+              report: bool = True):
 
-    global row_filters, filters
+    global mt, row_filters, filters
+
+    # read input
+    if input_type == 'plink':
+        mt = read_plink(dirname, basename)
+
+    elif input_type == 'vcf':
+        print("VCF Support comming")
+        # mt = read_vcf(dirname, vcf, annotations)
+
+    else:
+        mt = read_mt(dirname, basename)
 
     gwas_pre, n_sig_var_pre = manhattan(qqtitle="Pre-QC QQ Plot", mantitle="Pre-QC Manhattan Plot").filter(mt)
     qqplt_pre, lambda_gc_pre, manplt_pre = manhattan(qqtitle="Pre-QC QQ Plot",
@@ -236,7 +251,7 @@ def preimp_qc(mt, dirname, basename, pre_geno_thresh, mind_thresh, fhet_aut, fst
 
 
 def main():
-    parser = argparse.ArgumentParser(description='preimp_qc V1.0')
+    parser = argparse.ArgumentParser(description='preimp_qc')
     parser.add_argument('--dirname', type=str, required=True)
     parser.add_argument('--basename', type=str, required=True)
     parser.add_argument('--input-type', type=str, required=True, choices=['vcf', 'plink', 'hail'])
@@ -264,18 +279,8 @@ def main():
 
     arg = parser.parse_args()
 
-    # read input
-    if arg.input_type == 'plink':
-        input_mt = read_plink(arg.dirname, arg.basename)
-
-    elif arg.input_type == 'vcf':
-        input_mt = read_vcf(arg.dirname, arg.vcf, arg.annotations)
-
-    else:
-        input_mt = read_mt(arg.dirname, arg.basename)
-
     print("Running QC")
-    preimp_qc(input_mt, arg.dirname, arg.basename, arg.pre_geno, arg.mind, arg.fhet_aut, arg.fstat_x,
+    preimp_qc(arg.input_type, arg.dirname, arg.basename, arg.pre_geno, arg.mind, arg.fhet_aut, arg.fstat_x,
               arg.fstat_y, arg.geno, arg.midi, arg.maf, arg.hwe_th_con, arg.hwe_th_cas, report=arg.report)
 
     print("\nDone running QC!")
