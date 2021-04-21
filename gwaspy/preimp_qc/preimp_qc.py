@@ -2,7 +2,7 @@ __author__ = 'Lindo Nkambule'
 
 from gwaspy.preimp_qc.annotations import *
 from typing import Tuple, Any, Dict, Union
-from gwaspy.preimp_qc.in_out import read_mt, read_vcf, read_plink
+from gwaspy.utils.read_file import read_infile
 import argparse
 from gwaspy.preimp_qc.report import MyDocument
 import shutil
@@ -63,15 +63,7 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
     global mt, row_filters, filters
 
     # read input
-    if input_type == 'plink':
-        mt = read_plink(dirname, basename)
-
-    elif input_type == 'vcf':
-        print("VCF Support comming")
-        # mt = read_vcf(dirname, vcf, annotations)
-
-    else:
-        mt = read_mt(dirname, basename)
+    mt = read_infile(input_type=input_type, dirname=dirname, basename=basename)
 
     gwas_pre, n_sig_var_pre = manhattan(qqtitle="Pre-QC QQ Plot", mantitle="Pre-QC Manhattan Plot").filter(mt)
     qqplt_pre, lambda_gc_pre, manplt_pre = manhattan(qqtitle="Pre-QC QQ Plot",
