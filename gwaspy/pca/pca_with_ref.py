@@ -46,17 +46,18 @@ def pc_project(
 def pca_with_ref(
         dirname: str = None,
         basename: str = None,
-        pca_loadings: hl.Table = "gs://covid19-hg-public/pca_projection/hgdp_tgp_pca_covid19hgi_snps_loadings.ht",
+        pca_loadings: str = "gs://covid19-hg-public/pca_projection/hgdp_tgp_pca_covid19hgi_snps_loadings.ht",
         outdir: str = None,
+        input_type: str = None,
         reference: str = 'GRCh38') -> pd.DataFrame:
     """
     Project samples into predefined PCA space
     :param dirname: matrix table of data to project
     :param basename: matrix table of data to project
-    :param project_mt: matrix table of data to project
     :param pca_loadings: existing PCA space
-    :param reference: reference build
     :param outdir: directory and filename prefix for where to put PCA projection output
+    :param input_type: input file(s) type: hail, plink, or vcf
+    :param reference: reference build
     :return: a pandas Dataframe with data PCA scores projected on the same PCA space using the Human Genome Diversity
     Project(HGDP) and the 1000 Genomes Project samples as reference
     """
@@ -66,27 +67,27 @@ def pca_with_ref(
     print("Reading mt")
     if reference.lower() == 'grch37':
         from gwaspy.utils.reference_liftover import liftover_to_grch38
-        mt = liftover_to_grch38(dirname=dirname, basename=basename)
+        mt = liftover_to_grch38(dirname=dirname, basename=basename, input_type=input_type)
     else:
-        mt = hl.read_matrix_table(dirname + basename + ".mt")
+        from gwaspy.utils.read_file import read_infile
+        mt = read_infile(input_type=input_type, dirname=dirname, basename=basename)
 
     print("Reading loadings")
     loadings = hl.read_table(pca_loadings)
 
     mt = mt.filter_rows(hl.is_defined(loadings[mt.locus, mt.alleles]))
 
+    print("projecting data")
     ht_projections = pc_project(mt, loadings)
     ht_projections = ht_projections.transmute(**{f"PC{i}": ht_projections.scores[i - 1] for i in range(1, 21)})
 
-    # output the result in .sscore format
     ht = ht_projections.key_by()
     ht = ht.select(
-        **{"#FID": ht[SAMPLE_FIELD_NAME], "IID": ht[SAMPLE_FIELD_NAME]},
+        **{"s": ht[SAMPLE_FIELD_NAME]},
         **{f"PC{i}": ht[f"PC{i}"] for i in range(1, 21)}
     )
 
-    ht.show()
-
+    print("Writing projection output")
     if outdir:
         # if specified, write out the pca score to the out directory
         ht.export('{}{}_pca_scores.tsv'.format(outdir, basename))
@@ -103,51 +104,32 @@ def pca_with_ref(
 def merge_data_with_ref(
         refscores: str = 'gs://covid19-hg-public/pca_projection/hgdp_tgp_pca_covid19hgi_snps_scores.txt.gz',
         ref_info: str = 'gs://covid19-hg-public/pca_projection/gnomad_meta_hgdp_tgp_v1.txt',
-        datascores: pd.DataFrame = None) -> pd.DataFrame:
+        data_scores: pd.DataFrame = None) -> pd.DataFrame:
     """
     Merge data with ref
     :param refscores: path to reference score
     :param ref_info: path to information about samples in the ref scores
-    :param datascores: pandas DataFrame with the data scores
+    :param data_scores: pandas DataFrame with the data scores
     :return: a pandas Dataframe of data merged with reference
     """
 
+    print("Merging data with ref")
     ref = pd.read_table(refscores, header=0, sep='\t', compression='gzip')
-    ref_info = pd.read_table(ref_info, header=0, sep=';')
-    ref_info = ref_info[['Sample', 'Population']]
+    ref_info = pd.read_table(ref_info, header=0, sep='\t')
+    ref_info = ref_info[['project_meta.sample_id', 'hgdp_tgp_meta.Population', 'hgdp_tgp_meta.Genetic.region']]
 
-    d = {'CHB': 'EAS',
-         'JPT': 'EAS',
-         'CHS': 'EAS',
-         'CDX': 'EAS',
-         'KHV': 'EAS',
-         'CEU': 'EUR',
-         'TSI': 'EUR',
-         'FIN': 'EUR',
-         'GBR': 'EUR',
-         'IBS': 'EUR',
-         'YRI': 'AFR',
-         'LWK': 'AFR',
-         'GWD': 'AFR',
-         'MSL': 'AFR',
-         'ESN': 'AFR',
-         'ASW': 'AFR',
-         'ACB': 'AFR',
-         'MXL': 'AMR',
-         'PUR': 'AMR',
-         'CLM': 'AMR',
-         'PEL': 'AMR',
-         'GIH': 'SAS',
-         'PJL': 'SAS',
-         'BEB': 'SAS',
-         'STU': 'SAS',
-         'ITU': 'SAS'}
+    # rename columns in ref_info
+    rename_cols = {'project_meta.sample_id': 's',
+                   'hgdp_tgp_meta.Population': 'Population',
+                   'hgdp_tgp_meta.Genetic.region': 'SuperPop'}
 
-    ref_info['SuperPop'] = ref_info['Population'].map(d)
+    ref_info.rename(columns=rename_cols,
+                    inplace=True)
 
-    ref_merge = pd.merge(left=ref, right=ref_info, left_on='s', right_on='Sample', how='inner')
+    ref_merge = pd.merge(left=ref, right=ref_info, left_on='s', right_on='s', how='inner')
 
-    data_ref = pd.concat([ref_merge, datascores])
+    data_ref = pd.concat([ref_merge, data_scores])
+    print("Done merging data with ref")
 
     return data_ref
 
@@ -184,7 +166,6 @@ def assign_population_pcs(
 
     # Expand PC column
     pc_cols = ['PC{}'.format(i + 1) for i in range(num_pcs)]
-    print(pc_cols)
     train_data = pop_pc_pd.loc[~pop_pc_pd[known_col].isnull()]
 
     N = len(train_data)
