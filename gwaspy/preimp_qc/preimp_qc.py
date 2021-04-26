@@ -58,9 +58,11 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
               fstat_y: Union[int, float] = 0.5, geno_thresh: Union[int, float] = 0.98,
               cr_diff_thresh: Union[int, float] = 0.02, maf_thresh: Union[int, float] = 0.01,
               hwe_th_con_thresh: Union[int, float] = 1e-6, hwe_th_cas_thresh: Union[int, float] = 1e-10,
-              report: bool = True):
+              report: bool = True, export_type: str = 'hail', out_dir: str = None):
 
     global mt, row_filters, filters
+
+    output_directory = out_dir if out_dir else dirname
 
     # read input
     mt = read_infile(input_type=input_type, dirname=dirname, basename=basename)
@@ -237,9 +239,14 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
                                 fstat_fig_path='/tmp/fstat_fig.png', data_type=data_type)
             doc.snp_char(var_con_pre_path='/tmp/var_cas_pre.png', var_cas_pre_path='/tmp/var_cas_pre.png',
                          data_type=data_type)
-        doc.generate_pdf('report', clean_tex=False)
+        doc.generate_pdf('{}report'.format(output_directory), clean_tex=False)
 
     # hl.export_plink(mt_filtered)
+
+    print("Exporting qced file")
+    if export_type:
+        from gwaspy.utils.export_file import export_qced_file
+        export_qced_file(mt=mt_filtered, out_dir=output_directory, basename=basename, export_type=export_type)
 
 
 def main():
@@ -247,6 +254,8 @@ def main():
     parser.add_argument('--dirname', type=str, required=True)
     parser.add_argument('--basename', type=str, required=True)
     parser.add_argument('--input-type', type=str, required=True, choices=['vcf', 'plink', 'hail'])
+    parser.add_argument('--export-type', type=str, default='hail', choices=['vcf', 'plink', 'hail'])
+    parser.add_argument('--out-dir', type=str, default=None)
     parser.add_argument('--annotations', type=str)
     parser.add_argument('--reference', type=str, default='GRCh38')
     parser.add_argument('--report', action='store_false')
@@ -273,7 +282,8 @@ def main():
 
     print("Running QC")
     preimp_qc(arg.input_type, arg.dirname, arg.basename, arg.pre_geno, arg.mind, arg.fhet_aut, arg.fstat_x,
-              arg.fstat_y, arg.geno, arg.midi, arg.maf, arg.hwe_th_con, arg.hwe_th_cas, report=arg.report)
+              arg.fstat_y, arg.geno, arg.midi, arg.maf, arg.hwe_th_con, arg.hwe_th_cas, report=arg.report,
+              export_type=arg.export_type, out_dir=arg.out_dir)
 
     print("\nDone running QC!")
 
