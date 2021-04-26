@@ -3,10 +3,10 @@ import hail as hl
 
 def read_plink(dirname: str, basename: str) -> hl.MatrixTable:
     if not hl.hadoop_exists(dirname + basename + '.mt'):
-        in_mt = hl.import_plink(bed=dirname + basename + '.bed',
-                                bim=dirname + basename + '.bim',
-                                fam=dirname + basename + '.fam',
-                                n_partitions=24)
+        in_mt: hl.MatrixTable = hl.import_plink(bed=dirname + basename + '.bed',
+                                                bim=dirname + basename + '.bim',
+                                                fam=dirname + basename + '.fam',
+                                                n_partitions=100)
         in_mt.write(dirname + basename + '.mt')
     return hl.read_matrix_table(dirname + basename + '.mt')
 
