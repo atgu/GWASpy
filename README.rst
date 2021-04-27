@@ -31,7 +31,7 @@ Usage
 (1) preimp_qc
 -------------
 
-You can run pre-imputation using the ``preimp_qc`` module (1) via the command line and (2) inside a python script
+You can run pre-imputation using the ``preimp_qc`` module (1) via the command line or (2) inside a python script
 
 .. code:: bash
 
