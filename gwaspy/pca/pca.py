@@ -37,6 +37,8 @@ def pca(input_type: str = None, dirname: str = None, basename: str = None,
 
     else:
         print("Running PCA without a reference")
+        from gwaspy.pca.pca_no_ref import pca_without_ref
+        pca_without_ref(dirname=dirname, basename=basename, input_type=input_type, outdir=out_dir, reference=reference)
 
 
 def main():
@@ -58,6 +60,8 @@ def main():
 
     pca(input_type=args.input_type, dirname=args.dirname, basename=args.basename, ref_scores=args.ref_scores,
         ref_info=args.ref_info, with_ref=args.with_ref, prob=args.prob, reference=args.reference, out_dir=args.out_dir)
+
+    print("Done running PCA")
 
 
 if __name__ == '__main__':
