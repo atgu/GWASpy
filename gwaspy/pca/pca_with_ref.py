@@ -74,8 +74,11 @@ def pca_with_ref(
 
     print("Reading loadings")
     loadings = hl.read_table(pca_loadings)
+    print(f'There are {loadings.count()} SNPs in the loading file')
 
+    print(f'The data has {mt.count_rows()} SNPs')
     mt = mt.filter_rows(hl.is_defined(loadings[mt.locus, mt.alleles]))
+    print(f'{mt.count_rows()} SNPs will be used for projections')
 
     print("projecting data")
     ht_projections = pc_project(mt, loadings)
