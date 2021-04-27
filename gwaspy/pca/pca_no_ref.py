@@ -103,17 +103,17 @@ def pca_without_ref(
     pcs_ht = pcs_ht.annotate(is_case=annotations_ht[pcs_ht.s].is_case)
     pcs_ht = pcs_ht.annotate(is_female=annotations_ht[pcs_ht.s].is_female)
 
+    print("Saving PC scores file")
     out_scores_file = outdir + basename + '_scores.tsv'
     pcs_ht.export(out_scores_file)
 
-    print("Saving PC scores file")
+    print("Generating PCA plots")
     pcs_scores = pd.read_table(out_scores_file, header=0, sep='\t')
 
     pcs_scores[['is_female']] = pcs_scores[['is_female']].replace([True, False, None], ['female', 'male', 'unknown'])
     pcs_scores[['is_case']] = pcs_scores[['is_case']].replace([True, False, None], ['case', 'control', 'unknown'])
     print(pcs_scores)
 
-    print("Generating PCA plots")
     figs_dict = {}
     for col in ['is_case', 'is_female']:
         for i in range(1, n_pcs, 2):
@@ -127,9 +127,3 @@ def pca_without_ref(
         pdf.savefig(figure)
     pdf.close()
     # hl.hadoop_copy('file:///tmp/GWASpy.PCA.plots.pdf', outdir)
-
-
-
-
-
-
