@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-with open("README.rst", "r") as fh:
+with open("README.md", "r") as fh:
     long_description = fh.read()
 
 classifiers = [
@@ -26,10 +26,10 @@ setup(name='GWASpy',
       version='0.1.0',
       author='Lindokuhle Nkambule',
       author_email='lnkambul (at) broadinstitute.org',
-      url='https://github.com/LindoNkambule/pydownsampler',
+      url='https://github.com/atgu/GWASpy',
       description='GWASpy: A Python package for performing GWAS QC, PCA, and genotype imputation.',
       long_description=long_description,
-      long_description_content_type="text/x-rst",
+      long_description_content_type="text/markdown",
       license='MIT',
       packages=find_packages(),
       entry_points={
