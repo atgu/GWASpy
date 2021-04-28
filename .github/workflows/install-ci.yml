@@ -1,4 +1,6 @@
-name: build
+# Run installation checks
+
+name: install
 
 on:
   push:
@@ -7,7 +9,7 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  install:
 
     runs-on: ubuntu-latest
     strategy:
