@@ -18,10 +18,10 @@ def read_vcf(dirname: str, vcf: str, annotations: str) -> hl.MatrixTable:
     in_mt = in_mt.annotate_cols(annotations=ann[in_mt.s])
     # need to change reported sex to True/False, can update how this is done later, ideally don't want to hardcode
     # this will not work for unreported sex but will work for missing values
-    in_mt = in_mt.annotate_cols(annotations=in_mt.annotate(Sex=hl.if_else((in_mt.annotations.Sex == 'F' |
-                                                                           in_mt.annotations.Sex == 2 |
-                                                                           in_mt.annotations.Sex == 'Female'),
-                                                                          True, False)))
+    in_mt = in_mt.annotate_cols(annotations=in_mt.annotate(is_female=hl.if_else((in_mt.annotations.Sex == 'F' |
+                                                                                 in_mt.annotations.Sex == 2 |
+                                                                                 in_mt.annotations.Sex == 'Female'),
+                                                                                True, False)))
     # add a check to make sure file is formatted as we'd expect else quit and throw error
     return in_mt
 
