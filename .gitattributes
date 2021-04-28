@@ -1,3 +1,4 @@
 *.bim filter=lfs diff=lfs merge=lfs -text
 *.fam filter=lfs diff=lfs merge=lfs -text
 *.bed filter=lfs diff=lfs merge=lfs -text
+data/1kg_annotated.mt/** filter=lfs diff=lfs merge=lfs -text
