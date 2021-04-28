@@ -5,21 +5,29 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 
 def filter_mt(
-        in_mt: hl.MatrixTable):
+        in_mt: hl.MatrixTable,
+        maf: float = 0.01):
 
+    print("\nInitial number of SNPs before filtering: {}".format(in_mt.count_rows()))
     mt = hl.variant_qc(in_mt)
-    mt_filt = mt.filter_rows((mt.variant_qc.AF[0] > 0.001) & (mt.variant_qc.AF[0] < 0.999))
+    mt_filt = mt.annotate_rows(maf=hl.min(mt.variant_qc.AF))
+    mt_filt = mt_filt.filter_rows(mt_filt.maf > maf)
+    # mt_filt = mt.filter_rows((mt.variant_qc.AF[0] > 0.001) & (mt.variant_qc.AF[0] < 0.999))
+    print("\nNumber of SNPs after MAF filtering: {}".format(mt_filt.count_rows()))
 
     # MHC chr6:25-35Mb
     # chr8.inversion chr8:7-13Mb
     intervals = ['chr6:25M-35M', 'chr8:7M-13M']
     mt_filt = hl.filter_intervals(mt_filt, [hl.parse_locus_interval(x, reference_genome='GRCh38') for x in intervals],
                                   keep=False)
+    print("\nNumber of SNPs after MHC and chr8 inversions filtering: {}".format(mt_filt.count_rows()))
 
     # This step is expensive (on local machine)
-    # mt_pruned = hl.ld_prune(mt_filt.GT, r2=0.8, bp_window_size=500000)
+    mt_ld_prune = hl.ld_prune(mt_filt.GT, r2=0.8, bp_window_size=500000)
+    mt_ld_pruned = mt.filter_rows(hl.is_defined(mt_ld_prune[mt.row_key]))
+    print("\nNumber of SNPs after LD pruning: {}".format(mt_ld_pruned.count_rows()))
 
-    return mt_filt
+    return mt_ld_pruned
 
 
 def plot_pca(
@@ -91,7 +99,7 @@ def pca_without_ref(
     print("Filtering mt")
     mt = filter_mt(mt)
 
-    print("Running PCA")
+    print("\nRunning PCA")
     eigenvalues, pcs, _ = hl.hwe_normalized_pca(mt.GT, k=n_pcs)
 
     pcs_ht = pcs.transmute(**{f'PC{i}': pcs.scores[i - 1] for i in range(1, n_pcs+1)})
@@ -103,16 +111,15 @@ def pca_without_ref(
     pcs_ht = pcs_ht.annotate(is_case=annotations_ht[pcs_ht.s].is_case)
     pcs_ht = pcs_ht.annotate(is_female=annotations_ht[pcs_ht.s].is_female)
 
-    print("Saving PC scores file")
+    print("\nSaving PC scores file")
     out_scores_file = outdir + basename + '_scores.tsv'
     pcs_ht.export(out_scores_file)
 
-    print("Generating PCA plots")
+    print("\nGenerating PCA plots")
     pcs_scores = pd.read_table(out_scores_file, header=0, sep='\t')
 
     pcs_scores[['is_female']] = pcs_scores[['is_female']].replace([True, False, None], ['female', 'male', 'unknown'])
     pcs_scores[['is_case']] = pcs_scores[['is_case']].replace([True, False, None], ['case', 'control', 'unknown'])
-    print(pcs_scores)
 
     figs_dict = {}
     for col in ['is_case', 'is_female']:
@@ -122,7 +129,7 @@ def pca_without_ref(
 
             figs_dict["fig{}{}".format(col, i)] = plot_pca(pcs_scores, xpc, ypc, col)
 
-    pdf = PdfPages('{}GWASpy.PCA.plots.pdf'.format(outdir))
+    pdf = PdfPages('{}{}.GWASpy.PCA.plots.pdf'.format(outdir, basename))
     for figname, figure in figs_dict.items():
         pdf.savefig(figure)
     pdf.close()
