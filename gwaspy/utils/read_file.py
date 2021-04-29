@@ -27,6 +27,7 @@ def read_vcf(dirname: str, vcf: str, annotations: str) -> hl.MatrixTable:
 
 
 def read_mt(dirname: str, basename: str) -> hl.MatrixTable:
+    print(dirname + basename + ".mt")
     in_mt: hl.MatrixTable = hl.read_matrix_table(dirname + basename + ".mt")
 
     return in_mt
