@@ -8,7 +8,7 @@ Genome-wide association studies pypeline (GWASpy): A Python package for performi
 ## Installation
 
 
-For now you can install preimp_qc and its dependencies using the command below. In the near future, it will be uploaded to pypi
+For now you can install GWASpy and its dependencies using the command below. In the near future, it will be uploaded to pypi
 
 1. Install non-Python dependencies. The above command assumes the user already has [Homebrew](https://brew.sh/)
 (MacOS) or [apt-get](https://linux.die.net/man/8/apt-get) (Linux) installed.
@@ -56,13 +56,13 @@ qc.preimp_qc.preimp_qc(input_type="plink", dirname="data/", basename="sim_sim2a_
 ``--input-type`` | Input type, plink or vcf
 ``--annotations`` | Annotations file to be used for annotating<br>the VCF file (ONLY for VCF input)
 ``--reference`` | Reference genome build e.g. GRCh37, GRCh38
-``--pre-geno`` | include only SNPs with missing-rate < NUM<br>(before ID filter), important for post<br>merge of multiple platforms
+``--pre-geno`` | include only SNPs with missing-rate < NUM (before ID filter), important for post merge of multiple platforms
 ``--mind`` | include only IDs with missing-rate < NUM
 ``--fhet-aut`` | include only IDs within NUM < FHET < NUM
 ``--fhet-y`` | include only female IDs with fhet < NUM
 ``--fhet-x`` | include only male IDs with fhet > NUM
 ``--geno`` | include only SNPs with missing-rate < NUM
-``--midi`` | include only SNPs with missing-rate<br>-difference ("case/control) < NUM
+``--midi`` | include only SNPs with missing-rate-difference ("case/control) < NUM
 ``--withpna`` | include monomorphic (invariant) SNPs
 ``--maf`` | include only SNPs with MAF >= NUM
 ``--hwe-th-con`` | HWE_controls < NUM
