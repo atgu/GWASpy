@@ -1,45 +1,11 @@
+__author__ = 'Lindo Nkambule'
+
 import hail as hl
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
-
-
-def filter_mt(
-        in_mt: hl.MatrixTable,
-        maf: float = 0.05,
-        hwe: float = 1e-3,
-        call_rate: float = 0.98):
-
-    print("\nInitial number of SNPs before filtering: {}".format(in_mt.count_rows()))
-    mt = hl.variant_qc(in_mt)
-    mt_filt = mt.annotate_rows(maf=hl.min(mt.variant_qc.AF))
-    mt_filt = mt_filt.filter_rows(mt_filt.maf > maf)
-    # mt_filt = mt.filter_rows((mt.variant_qc.AF[0] > 0.001) & (mt.variant_qc.AF[0] < 0.999))
-    print("\nNumber of SNPs after MAF filtering: {}".format(mt_filt.count_rows()))
-
-    mt_filt = mt_filt.filter_rows(mt_filt.variant_qc.p_value_hwe > hwe)
-    print("\nNumber of SNPs after HWE filtering: {}".format(mt_filt.count_rows()))
-
-    mt_filt = mt_filt.filter_rows(mt_filt.variant_qc.call_rate >= call_rate)
-    print("\nNumber of SNPs after Call Rate filtering: {}".format(mt_filt.count_rows()))
-
-    # no strand ambiguity
-    mt_filt = mt_filt.filter_rows(~hl.is_strand_ambiguous(mt_filt.alleles[0], mt_filt.alleles[1]))
-    print("\nNumber of SNPs after strand ambiguity filtering: {}".format(mt_filt.count_rows()))
-
-    # MHC chr6:25-35Mb
-    # chr8.inversion chr8:7-13Mb
-    intervals = ['chr6:25M-35M', 'chr8:7M-13M']
-    mt_filt = hl.filter_intervals(mt_filt, [hl.parse_locus_interval(x, reference_genome='GRCh38') for x in intervals],
-                                  keep=False)
-    print("\nNumber of SNPs after MHC and chr8 inversions filtering: {}".format(mt_filt.count_rows()))
-
-    # This step is expensive (on local machine)
-    mt_ld_prune = hl.ld_prune(mt_filt.GT, r2=0.8, bp_window_size=500000)
-    mt_ld_pruned = mt.filter_rows(hl.is_defined(mt_ld_prune[mt.row_key]))
-    print("\nNumber of SNPs after LD pruning: {}".format(mt_ld_pruned.count_rows()))
-
-    return mt_ld_pruned
+from gwaspy.pca.pca_filter_snps import pca_filter_mt
+from gwaspy.pca.pca_filter_snps import relatedness_check
 
 
 def plot_pca(
@@ -101,6 +67,8 @@ def pca_without_ref(
         input_type: str = None,
         reference: str = 'GRCh38',
         n_pcs: int = 20,
+        relatedness_method: str = 'ibd',
+        relatedness_ibd: float = 0.98,
         outdir: str = None):
 
     print("Reading mt")
@@ -111,8 +79,10 @@ def pca_without_ref(
         from gwaspy.utils.read_file import read_infile
         mt = read_infile(input_type=input_type, dirname=dirname, basename=basename)
 
-    print("Filtering mt")
-    mt = filter_mt(mt)
+    print("\nFiltering mt")
+    mt = pca_filter_mt(mt)
+
+    mt = relatedness_check(in_mt=mt, method=relatedness_method, outdir=outdir, ibd=relatedness_ibd)
 
     print("\nRunning PCA")
     eigenvalues, pcs, _ = hl.hwe_normalized_pca(mt.GT, k=n_pcs)
