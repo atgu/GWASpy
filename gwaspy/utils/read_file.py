@@ -14,6 +14,23 @@ def read_plink(dirname: str, basename: str) -> hl.MatrixTable:
 def read_vcf(dirname: str, vcf: str, annotations: str) -> hl.MatrixTable:
     hl.import_vcf(vcf).write('{}preimpQC.mt'.format(dirname), overwrite=True)
     in_mt = hl.read_matrix_table('{}preimpQC.mt'.format(dirname))
+
+    # Unlike array data, a VCF might have multi-allelic sites
+    # split multi-allelic sites into bi-allelic
+    print("Checking for multi-allelic sites")
+    pre_filt_multi_n = in_mt.count_rows()
+    bi = in_mt.filter_rows(hl.len(in_mt.alleles) == 2)
+    bi = bi.annotate_rows(a_index=hl.null(hl.tint)) # when we update Hail version, use hl.missing instead of hl.null
+    bi = bi.annotate_rows(was_split=False)
+
+    multi = in_mt.filter_rows(hl.len(in_mt.alleles) > 2)
+    split = hl.split_multi_hts(multi)
+
+    in_mt = split.union_rows(bi)
+    pos_filt_multi_n = in_mt.count_rows()
+    print("Number of multi-allelic SNPs in VCF file: {}".format(pos_filt_multi_n-pre_filt_multi_n))
+
+    # use annotations file to annotate VCF
     ann = hl.import_table(annotations, impute=True).key_by('Sample')
     in_mt = in_mt.annotate_cols(annotations=ann[in_mt.s])
     # need to change reported sex to True/False, can update how this is done later, ideally don't want to hardcode
