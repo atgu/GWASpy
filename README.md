@@ -71,7 +71,13 @@ qc.preimp_qc.preimp_qc(input_type="plink", dirname="data/", basename="sim_sim2a_
 
 (2) Principal Component Analysis
 --------------------------------
-Coming...
+GWASpy has two way to run PCA: (1) without a reference; or (2) with a reference (Coming). The output result is a tsv file with scores for each sample and a PDF file with PCA plots
+
+Below is an example of how to run PCA without a reference using the example data ``data/1kg_annotated.mt``
+
+```bash
+pca --dirname data/ --basename 1kg_annotated --out-dir data/ --input-type hail --reference grch37
+```
 
 (3) Genotype imputation
 --------------------------------
