@@ -69,10 +69,10 @@ def plot_pca(
                 linewidths=0.5)
 
     axs.scatter(cat2[x_pc], cat2[y_pc], c=color2, label=label2, s=15, alpha=1, marker=marker2, edgecolor='black',
-                linewidths=0.5)
+                linewidths=0.4)
 
     axs.scatter(cat3[x_pc], cat3[y_pc], c='red', label=label3, s=15, alpha=1, marker='x', edgecolor='black',
-                linewidths=0.5)
+                linewidths=0.4)
 
     plt.legend(bbox_to_anchor=(1, 0.5), loc='lower left', frameon=False, prop={'size': 13})
     axs.set_xlabel(xlabel=x_pc, fontsize=15)
