@@ -27,7 +27,7 @@ jobs:
         java-version: '8'
     - uses: vemonet/setup-spark@v1
       with:
-        spark-version: '3.0.2'
+        spark-version: '3.1.1'
         hadoop-version: '3.2'
 
     - name: Set up Python ${{ matrix.python-version }}
