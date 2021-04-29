@@ -25,10 +25,19 @@ jobs:
       with:
         distribution: 'adopt'
         java-version: '8'
+    - uses: vemonet/setup-spark@v1
+      with:
+        spark-version: '3.0.2'
+        hadoop-version: '3.2'
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Set up Apache Spark
+        run: |
+          spark-submit --conf spark.hadoop.fs.gs.impl=com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
