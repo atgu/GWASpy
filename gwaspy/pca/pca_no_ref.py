@@ -54,22 +54,25 @@ def plot_pca(
     else:
         cat1 = in_df[in_df['is_case'] == 'case']
         label1 = 'case'
-        color1 = 'blue'
+        color1 = 'green'
         marker1 = "o"
 
         cat2 = in_df[in_df['is_case'] == 'control']
         label2 = 'control'
-        color2 = 'orange'
+        color2 = 'darkorange'
         marker2 = "o"
 
         cat3 = in_df[in_df['is_case'] == 'unknown']
         label3 = 'unknown'
 
-    axs.scatter(cat1[x_pc], cat1[y_pc], c=color1, label=label1, s=15, alpha=1, marker=marker1, edgecolor='black')
+    axs.scatter(cat1[x_pc], cat1[y_pc], c=color1, label=label1, s=15, alpha=1, marker=marker1, edgecolor='black',
+                linewidths=0.5)
 
-    axs.scatter(cat2[x_pc], cat2[y_pc], c=color2, label=label2, s=15, alpha=1, marker=marker2, edgecolor='black')
+    axs.scatter(cat2[x_pc], cat2[y_pc], c=color2, label=label2, s=15, alpha=1, marker=marker2, edgecolor='black',
+                linewidths=0.5)
 
-    axs.scatter(cat3[x_pc], cat3[y_pc], c='red', label=label3, s=15, alpha=1, marker='x', edgecolor='black')
+    axs.scatter(cat3[x_pc], cat3[y_pc], c='red', label=label3, s=15, alpha=1, marker='x', edgecolor='black',
+                linewidths=0.5)
 
     plt.legend(bbox_to_anchor=(1, 0.5), loc='lower left', frameon=False, prop={'size': 13})
     axs.set_xlabel(xlabel=x_pc, fontsize=15)
