@@ -6,7 +6,9 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 def filter_mt(
         in_mt: hl.MatrixTable,
-        maf: float = 0.01):
+        maf: float = 0.05,
+        hwe: float = 1e-3,
+        call_rate: float = 0.98):
 
     print("\nInitial number of SNPs before filtering: {}".format(in_mt.count_rows()))
     mt = hl.variant_qc(in_mt)
@@ -14,6 +16,16 @@ def filter_mt(
     mt_filt = mt_filt.filter_rows(mt_filt.maf > maf)
     # mt_filt = mt.filter_rows((mt.variant_qc.AF[0] > 0.001) & (mt.variant_qc.AF[0] < 0.999))
     print("\nNumber of SNPs after MAF filtering: {}".format(mt_filt.count_rows()))
+
+    mt_filt = mt_filt.filter_rows(mt_filt.variant_qc.p_value_hwe > hwe)
+    print("\nNumber of SNPs after HWE filtering: {}".format(mt_filt.count_rows()))
+
+    mt_filt = mt_filt.filter_rows(mt_filt.variant_qc.call_rate >= call_rate)
+    print("\nNumber of SNPs after Call Rate filtering: {}".format(mt_filt.count_rows()))
+
+    # no strand ambiguity
+    mt_filt = mt_filt.filter_rows(~hl.is_strand_ambiguous(mt_filt.alleles[0], mt_filt.alleles[1]))
+    print("\nNumber of SNPs after strand ambiguity filtering: {}".format(mt_filt.count_rows()))
 
     # MHC chr6:25-35Mb
     # chr8.inversion chr8:7-13Mb
