@@ -1,3 +1,5 @@
+__author__ = 'Lindo Nkambule'
+
 import hail as hl
 import pandas as pd
 import random
