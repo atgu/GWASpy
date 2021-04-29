@@ -19,6 +19,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        lfs: true
     - uses: actions/setup-java@v2
       with:
         distribution: 'adopt'
@@ -36,6 +38,8 @@ jobs:
       run: |
         python setup.py sdist
         pip install dist/GWASpy-0.1.0.tar.gz
+    - name: Checkout LFS objects
+      run: git lfs checkout
     - name: PCA Run Test
       run: |
         gunzip -c data/1kg_annotated.mt/metadata.json.gz
