@@ -270,7 +270,7 @@ def main():
     parser.add_argument('--fhet-aut', type=float, default=0.2, help="include only IDs within NUM < FHET < NUM")
     parser.add_argument('--fstat-y', type=float, default=0.5, help="include only female IDs with fhet < NUM")
     parser.add_argument('--fstat-x', type=float, default=0.5, help="include only male IDs with fhet > NUM")
-    parser.add_argument('--geno', type=float, default=0.98, help="include only SNPs with missing-rate < NUM")
+    parser.add_argument('--geno', type=float, default=0.98, help="include only SNPs with missing-rate > NUM")
     parser.add_argument('--midi', type=float, default=0.02, help="include only SNPs with missing-rate-difference ("
                                                                  "case/control) < NUM")
     parser.add_argument('--withpna', type=int, default=0, choices=[0, 1], help="include monomorphic (invariant) SNPs")
