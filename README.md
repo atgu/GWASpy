@@ -2,7 +2,6 @@
 
 <!-- badges: start -->
 ![install status](https://github.com/atgu/GWASpy/actions/workflows/install-ci.yml/badge.svg)
-![pca status](https://github.com/atgu/GWASpy/actions/workflows/pca-ci.yml/badge.svg)
 
 Genome-wide association studies pypeline (GWASpy): A Python package for performing GWAS QC, PCA, and genotype imputation.
 
