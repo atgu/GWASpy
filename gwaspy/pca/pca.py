@@ -6,8 +6,10 @@ from typing import List
 
 def pca(input_type: str = None, dirname: str = None, basename: str = None,
         ref_scores: str = 'gs://covid19-hg-public/pca_projection/hgdp_tgp_pca_covid19hgi_snps_scores.txt.gz',
-        ref_info: str = 'gs://covid19-hg-public/pca_projection/gnomad_meta_hgdp_tgp_v1.txt', with_ref: bool = True,
-        prob: List = None, reference: str = None, out_dir: str = None):
+        ref_info: str = 'gs://covid19-hg-public/pca_projection/gnomad_meta_hgdp_tgp_v1.txt', with_ref: bool = False,
+        prob: List = None, reference: str = None, maf: float = 0.05, hwe: float = 1e-3, call_rate: float = 0.98,
+        ld_cor: float = 0.2, ld_window: int = 250000, n_pcs: int = 20, relatedness_method: str = 'pc_relate',
+        relatedness_thresh: float = 0.98, out_dir: str = None):
 
     if not out_dir:
         raise Exception("Output directory where files will be saved is not specified")
@@ -38,7 +40,9 @@ def pca(input_type: str = None, dirname: str = None, basename: str = None,
     else:
         print("Running PCA without a reference")
         from gwaspy.pca.pca_no_ref import pca_without_ref
-        pca_without_ref(dirname=dirname, basename=basename, input_type=input_type, outdir=out_dir, reference=reference)
+        pca_without_ref(dirname=dirname, basename=basename, input_type=input_type, outdir=out_dir, reference=reference,
+                        maf=maf, hwe=hwe, call_rate=call_rate, ld_cor=ld_cor, ld_window=ld_window, n_pcs=n_pcs,
+                        relatedness_method=relatedness_method, relatedness_thresh=relatedness_thresh)
 
 
 def main():
@@ -51,6 +55,16 @@ def main():
     parser.add_argument('--ref-info', type=str,
                         default='gs://covid19-hg-public/pca_projection/gnomad_meta_hgdp_tgp_v1.txt')
     parser.add_argument('--with-ref', action='store_true')
+    parser.add_argument('--maf', type=float, default=0.05, help='include only SNPs with MAF >= NUM in PCA')
+    parser.add_argument('--hwe', type=float, default=1e-3, help='include only SNPs with HWE >= NUM in PCA')
+    parser.add_argument('--geno', type=float, default=0.98, help='include only SNPs with call-rate > NUM')
+    parser.add_argument('--ld-cor', type=float, default=0.2, choices=range(0,1), metavar="[0.0-1.0]",
+                        help="Squared correlation threshold (exclusive upper bound). Must be in the range [0.0, 1.0]")
+    parser.add_argument('--ld-window', type=int, default=250000,
+                        help="Window size in base pairs (inclusive upper bound)")
+    parser.add_argument('--relatedness-method', type=str, default='pc_relate',
+                        choices=['pc_relate', 'ibd', 'king'], help='Method to use for the inference of relatedness')
+    parser.add_argument('--relatedness-thresh', type=float, default=0.98, help='Threshold value to use in relatedness checks')
     parser.add_argument('--prob', action='append',
                         help="Minimum probability of belonging to a given population for the population to be set")
     parser.add_argument('--reference', type=str, default='grch38')
@@ -59,7 +73,9 @@ def main():
     args = parser.parse_args()
 
     pca(input_type=args.input_type, dirname=args.dirname, basename=args.basename, ref_scores=args.ref_scores,
-        ref_info=args.ref_info, with_ref=args.with_ref, prob=args.prob, reference=args.reference, out_dir=args.out_dir)
+        ref_info=args.ref_info, with_ref=args.with_ref, prob=args.prob, reference=args.reference, maf=args.maf,
+        hwe=args.hwe, call_rate=args.geno, ld_cor=args.ld_cor, ld_window=args.ld_window,
+        relatedness_method=args.relatedness_method, relatedness_thresh=args.relatedness_thresh, out_dir=args.out_dir)
 
     print("Done running PCA")
 
