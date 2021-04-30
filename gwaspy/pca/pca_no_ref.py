@@ -66,9 +66,14 @@ def pca_without_ref(
         basename: str = None,
         input_type: str = None,
         reference: str = 'GRCh38',
+        maf: float = 0.05,
+        hwe: float = 1e-3,
+        call_rate: float = 0.98,
+        ld_cor: float = 0.2,
+        ld_window: int = 250000,
         n_pcs: int = 20,
-        relatedness_method: str = 'ibd',
-        relatedness_ibd: float = 0.98,
+        relatedness_method: str = 'pc_relate',
+        relatedness_thresh: float = 0.98,
         outdir: str = None):
 
     print("Reading mt")
@@ -80,9 +85,9 @@ def pca_without_ref(
         mt = read_infile(input_type=input_type, dirname=dirname, basename=basename)
 
     print("\nFiltering mt")
-    mt = pca_filter_mt(mt)
+    mt = pca_filter_mt(in_mt=mt, maf=maf, hwe=hwe, call_rate=call_rate, ld_cor=ld_cor, ld_window=ld_window)
 
-    mt = relatedness_check(in_mt=mt, method=relatedness_method, outdir=outdir, ibd=relatedness_ibd)
+    mt = relatedness_check(in_mt=mt, method=relatedness_method, outdir=outdir, kin_estimate=relatedness_thresh)
 
     print("\nRunning PCA")
     eigenvalues, pcs, _ = hl.hwe_normalized_pca(mt.GT, k=n_pcs)
