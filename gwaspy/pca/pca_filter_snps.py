@@ -45,7 +45,7 @@ def pca_filter_mt(
 
 def relatedness_check(
         in_mt: hl.MatrixTable = None,
-        method: str = 'ibd',
+        method: str = 'pc_relate',
         outdir: str = None,
         kin_estimate: float = 0.98):
 
@@ -66,6 +66,9 @@ def relatedness_check(
         samples_to_remove = samples_to_remove_ht.annotate(cr_s1=call_rate_dict[samples_to_remove_ht.i.s],
                                                           cr_s2=call_rate_dict[samples_to_remove_ht.j.s])
 
+        samples_list = samples_to_remove.annotate(sample_to_remove=hl.cond(
+            samples_to_remove.cr_s1 <= samples_to_remove.cr_s2, samples_to_remove.i, samples_to_remove.j))
+
     elif method == 'ibd':
         print("\nUsing PLINK-style identity by descent for relatedness checks")
         in_mt = in_mt.annotate_rows(maf=hl.min(in_mt.variant_qc.AF))
@@ -76,21 +79,33 @@ def relatedness_check(
         samples_to_remove = samples_to_remove_ht.annotate(cr_s1=call_rate_dict[samples_to_remove_ht.i],
                                                           cr_s2=call_rate_dict[samples_to_remove_ht.j])
 
+        samples_list = samples_to_remove.annotate(sample_to_remove=hl.cond(
+            samples_to_remove.cr_s1 <= samples_to_remove.cr_s2, samples_to_remove.i, samples_to_remove.j))
+
     else:
         print("\nUsing KING for relatedness checks")
+        if kin_estimate > 0.5:
+            raise Exception("\nThe maximum kinship coefficient is for KING 0.5")
+        relatedness_mt = hl.king(in_mt.GT)
+        filtered_relatedness_mt = relatedness_mt.filter_entries((relatedness_mt.s_1 != relatedness_mt.s) &
+                                                                (relatedness_mt.phi >= kin_estimate), keep=True)
+        samples_to_remove_ht = filtered_relatedness_mt.entries()
+        samples_to_remove = samples_to_remove_ht.annotate(cr_s1=call_rate_dict[samples_to_remove_ht.s_1],
+                                                          cr_s2=call_rate_dict[samples_to_remove_ht.s])
 
-    samples_list = samples_to_remove.annotate(sample_to_remove=hl.cond(
-        samples_to_remove.cr_s1 >= samples_to_remove.cr_s2, samples_to_remove.i, samples_to_remove.j))
+        samples_list = samples_to_remove.annotate(sample_to_remove=hl.cond(
+            samples_to_remove.cr_s1 <= samples_to_remove.cr_s2, samples_to_remove.s_1, samples_to_remove.s))
+
     samples = samples_list.sample_to_remove.collect()
 
     if len(samples) > 0:
         in_mt = in_mt.filter_cols(hl.literal(samples).contains(in_mt['s']), keep=False)
-        print("Number of samples removed after relatedness checks: {}".format(len(samples)))
+        print("\nNumber of samples that fail relatedness checks: {}".format(len(samples)))
         with open(outdir + 'relatedness_removed_samples.tsv', 'w') as f:
             for sample in samples:
                 f.write(sample + "\n")
 
     else:
-        print("No samples failed the relatedness check")
+        print("\nNo samples failed the relatedness check")
 
     return in_mt
