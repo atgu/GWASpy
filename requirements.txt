@@ -1,3 +1,4 @@
+pyspark==2.4.1
 hail==0.2.59
 matplotlib>=3.3.3
 pandas>=0.25.3
