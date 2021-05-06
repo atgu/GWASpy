@@ -1,4 +1,4 @@
-hail>=0.2.59
+hail==0.2.59
 matplotlib>=3.3.3
 pandas>=0.25.3
 pylatex>=1.4.1
