@@ -10,8 +10,8 @@ from typing import Tuple
 def pc_project(
         mt: hl.MatrixTable,
         loadings_ht: hl.Table,
-        loading_location: str = "loadings",
-        af_location: str = "pca_af") -> hl.Table:
+        loading_location: str = 'loadings',
+        af_location: str = 'pca_af') -> hl.Table:
     """
     Projects samples in `mt` on pre-computed PCs.
 
@@ -42,13 +42,13 @@ def pc_project(
 
     mt = mt.annotate_cols(scores=hl.agg.array_sum(mt.pca_loadings * gt_norm))
 
-    return mt.cols().select("scores")
+    return mt.cols().select('scores')
 
 
 def pca_with_ref(
         dirname: str = None,
         basename: str = None,
-        pca_loadings: str = "gs://covid19-hg-public/pca_projection/hgdp_tgp_pca_covid19hgi_snps_loadings.ht",
+        pca_loadings: str = 'gs://covid19-hg-public/pca_projection/hgdp_tgp_pca_covid19hgi_snps_loadings.ht',
         outdir: str = None,
         input_type: str = None,
         reference: str = 'GRCh38') -> pd.DataFrame:
@@ -66,7 +66,7 @@ def pca_with_ref(
 
     SAMPLE_FIELD_NAME = "s"
 
-    print("Reading mt")
+    print('Reading mt')
     if reference.lower() == 'grch37':
         from gwaspy.utils.reference_liftover import liftover_to_grch38
         mt = liftover_to_grch38(dirname=dirname, basename=basename, input_type=input_type)
@@ -74,33 +74,28 @@ def pca_with_ref(
         from gwaspy.utils.read_file import read_infile
         mt = read_infile(input_type=input_type, dirname=dirname, basename=basename)
 
-    print("Reading loadings")
+    print('\nReading loadings')
     loadings = hl.read_table(pca_loadings)
-    print(f'There are {loadings.count()} SNPs in the loading file')
+    print('There are {} SNPs in the loading file'.format(loadings.count()))
 
-    print(f'The data has {mt.count_rows()} SNPs')
+    print('\nThe data has {} SNPs'.format(mt.count_rows()))
     mt = mt.filter_rows(hl.is_defined(loadings[mt.locus, mt.alleles]))
-    print(f'{mt.count_rows()} SNPs will be used for projections')
+    print('{} SNPs will be used for projections'.format(mt.count_rows()))
 
-    print("projecting data")
+    print('\nProjecting data')
     ht_projections = pc_project(mt, loadings)
     ht_projections = ht_projections.transmute(**{f"PC{i}": ht_projections.scores[i - 1] for i in range(1, 21)})
 
-    ht = ht_projections.key_by()
-    ht = ht.select(
-        **{"s": ht[SAMPLE_FIELD_NAME]},
-        **{f"PC{i}": ht[f"PC{i}"] for i in range(1, 21)}
-    )
-
-    print("Writing projection output")
+    print('\nWriting projection output')
     if outdir:
         # if specified, write out the pca score to the out directory
-        ht.export('{}{}_pca_scores.tsv'.format(outdir, basename))
+        ht_projections.write('{}{}_pca_project_scores.ht'.format(outdir, basename))
+        ht = hl.read_table('{}{}_pca_project_scores.ht'.format(outdir, basename))
     else:
         # write out the PCA scores to the same directory where input files are
-        ht.export('{}{}_pca_scores.tsv'.format(dirname, basename))
+        ht_projections.write('{}{}_pca_project_scores.ht'.format(dirname, basename))
+        ht = hl.read_table('{}{}_pca_project_scores.ht'.format(dirname, basename))
 
-    # convert data scores from Hail Table to a pandas df
     df = ht.to_pandas()
 
     return df
@@ -118,23 +113,18 @@ def merge_data_with_ref(
     :return: a pandas Dataframe of data merged with reference
     """
 
-    print("Merging data with ref")
+    print('\nMerging data with ref')
     ref = pd.read_table(refscores, header=0, sep='\t', compression='gzip')
-    ref_info = pd.read_table(ref_info, header=0, sep='\t')
+    ref_info = pd.read_table(ref_info, header=0, sep='\t', low_memory=False)
     ref_info = ref_info[['project_meta.sample_id', 'hgdp_tgp_meta.Population', 'hgdp_tgp_meta.Genetic.region']]
 
     # rename columns in ref_info
-    rename_cols = {'project_meta.sample_id': 's',
-                   'hgdp_tgp_meta.Population': 'Population',
-                   'hgdp_tgp_meta.Genetic.region': 'SuperPop'}
-
-    ref_info.rename(columns=rename_cols,
-                    inplace=True)
+    ref_info.columns = ['s', 'Population', 'SuperPop']
 
     ref_merge = pd.merge(left=ref, right=ref_info, left_on='s', right_on='s', how='inner')
 
-    data_ref = pd.concat([ref_merge, data_scores])
-    print("Done merging data with ref")
+    data_ref = pd.concat([ref_merge, data_scores], sort=False)
+    print('Done merging data with ref')
 
     return data_ref
 
@@ -184,9 +174,9 @@ def assign_population_pcs(
         evaluate_fit = train_data.loc[~train_data['s'].isin(fit_samples)]
 
         # Train RF
-        training_set_known_labels = train_fit[known_col].as_matrix()
-        training_set_pcs = train_fit[pc_cols].as_matrix()
-        evaluation_set_pcs = evaluate_fit[pc_cols].as_matrix()
+        training_set_known_labels = train_fit[known_col].values
+        training_set_pcs = train_fit[pc_cols].values
+        evaluation_set_pcs = evaluate_fit[pc_cols].values
 
         pop_clf = RandomForestClassifier(n_estimators=n_estimators, random_state=seed)
         pop_clf.fit(training_set_pcs, training_set_known_labels)
@@ -201,8 +191,8 @@ def assign_population_pcs(
 
     # Classify data
     print('Classifying data')
-    pop_pc_pd[output_col] = pop_clf.predict(pop_pc_pd[pc_cols].as_matrix())
-    probs = pop_clf.predict_proba(pop_pc_pd[pc_cols].as_matrix())
+    pop_pc_pd[output_col] = pop_clf.predict(pop_pc_pd[pc_cols].values)
+    probs = pop_clf.predict_proba(pop_pc_pd[pc_cols].values)
     probs = pd.DataFrame(probs, columns=[f'prob_{p}' for p in pop_clf.classes_])
 
     pop_pc_pd = pd.concat([pop_pc_pd.reset_index(drop=True), probs.reset_index(drop=True)], axis=1)
