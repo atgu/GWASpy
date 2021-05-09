@@ -1,13 +1,13 @@
 __author__ = 'Lindo Nkambule'
 
 import argparse
-from typing import List
+import hail as hl
 
 
 def pca(input_type: str = None, dirname: str = None, basename: str = None,
         ref_scores: str = 'gs://covid19-hg-public/pca_projection/hgdp_tgp_pca_covid19hgi_snps_scores.txt.gz',
         ref_info: str = 'gs://covid19-hg-public/pca_projection/gnomad_meta_hgdp_tgp_v1.txt', with_ref: bool = False,
-        prob: List = None, reference: str = None, maf: float = 0.05, hwe: float = 1e-3, call_rate: float = 0.98,
+        prob: float = 0.8, reference: str = None, maf: float = 0.05, hwe: float = 1e-3, call_rate: float = 0.98,
         ld_cor: float = 0.2, ld_window: int = 250000, n_pcs: int = 20, relatedness_method: str = 'pc_relate',
         relatedness_thresh: float = 0.98, out_dir: str = None):
 
@@ -25,17 +25,16 @@ def pca(input_type: str = None, dirname: str = None, basename: str = None,
         # data merged with ref
         data_merged_ref = merge_data_with_ref(refscores=ref_scores, ref_info=ref_info, data_scores=data_pcs_df)
 
-        for threshold in prob:
-            pcs_df, clf = assign_population_pcs(pop_pc_pd=data_merged_ref, num_pcs=20, min_prob=threshold)
+        pcs_df, clf = assign_population_pcs(pop_pc_pd=data_merged_ref, num_pcs=20, min_prob=prob)
 
-            data_pops = pcs_df.loc[pcs_df['SuperPop'].isnull()]
-            data_pops['pop'].value_counts()
-            superpops = ['AFR', 'AMR', 'CSA', 'EAS', 'EUR', 'MID', 'OCE']
-            cols = ['s', 'pop'] + [f'prob_{i}' for i in superpops] + [f'PC{i}' for i in range(1, 21)]
-            data_pops_df = data_pops[cols]
+        data_pops = pcs_df.loc[pcs_df['SuperPop'].isnull()]
+        data_pops['pop'].value_counts()
+        superpops = ['AFR', 'AMR', 'CSA', 'EAS', 'EUR', 'MID', 'OCE']
+        cols = ['s', 'pop'] + [f'prob_{i}' for i in superpops] + [f'PC{i}' for i in range(1, 21)]
+        data_pops_df = data_pops[cols]
 
-            data_pops_df.to_csv('{}pca_sup_pops_{}_probs.txt'.format(out_dir, threshold),
-                                sep='\t', index=False)
+        data_pops_df.to_csv('{}{}_pca_sup_pops_{}_probs.txt'.format(out_dir, basename, prob),
+                            sep='\t', index=False)
 
     else:
         print("Running PCA without a reference")
@@ -64,13 +63,19 @@ def main():
                         help="Window size in base pairs (inclusive upper bound)")
     parser.add_argument('--relatedness-method', type=str, default='pc_relate',
                         choices=['pc_relate', 'ibd', 'king'], help='Method to use for the inference of relatedness')
-    parser.add_argument('--relatedness-thresh', type=float, default=0.98, help='Threshold value to use in relatedness checks')
-    parser.add_argument('--prob', action='append',
+    parser.add_argument('--relatedness-thresh', type=float, default=0.98,
+                        help='Threshold value to use in relatedness checks')
+    parser.add_argument('--prob', type=float, default=0.8,
                         help="Minimum probability of belonging to a given population for the population to be set")
-    parser.add_argument('--reference', type=str, default='grch38')
+    parser.add_argument('--reference', type=str, default='GRCh38')
     parser.add_argument('--out-dir', type=str, required=True)
 
     args = parser.parse_args()
+
+    if not args.prob:
+        print("No prob value specified, {} will be used".format(args.prob))
+
+    hl.init(default_reference=args.reference)
 
     pca(input_type=args.input_type, dirname=args.dirname, basename=args.basename, ref_scores=args.ref_scores,
         ref_info=args.ref_info, with_ref=args.with_ref, prob=args.prob, reference=args.reference, maf=args.maf,
