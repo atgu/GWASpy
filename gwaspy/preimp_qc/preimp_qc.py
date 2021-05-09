@@ -108,20 +108,20 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
     # check if data is case-/control-only, case-control, or trio
     # (a) Case-Only
     if data_type == "Case-only":
-        print(data_type)
+        print("\n" + data_type)
         mt = hwe_cas(pre_col_filter='id_pass', pre_row_filter='geno', hwe_th_ca=1e-6).filter(mt)
         row_filters = ['pre_geno', 'geno', 'cr_diff', 'monomorphic_var', 'hwe_cas']
         filters = ['pre_geno', 'mind', 'fstat', 'sex_violations', 'sex_warnings', 'geno', 'cr_diff',
                    'monomorphic_var', 'hwe_cas']
     # (b) Control-Only
     elif data_type == "Control-only":
-        print(data_type)
+        print("\n" + data_type)
         mt = hwe_con(pre_col_filter='id_pass', pre_row_filter='geno', hwe_th_co=1e-6).filter(mt)
         row_filters = ['pre_geno', 'geno', 'cr_diff', 'monomorphic_var', 'hwe_con']
         filters = ['pre_geno', 'mind', 'fstat', 'sex_violations', 'sex_warnings', 'geno', 'cr_diff',
                    'monomorphic_var', 'hwe_con']
     elif data_type == "Case-Control":
-        print(data_type)
+        print("\n" + data_type)
         mt = hwe_cas(pre_col_filter='id_pass', pre_row_filter='geno', hwe_th_ca=hwe_th_cas_thresh).filter(mt)
         mt = hwe_con(pre_col_filter='id_pass', pre_row_filter='geno', hwe_th_co=hwe_th_con_thresh).filter(mt)
         row_filters = ['pre_geno', 'geno', 'cr_diff', 'monomorphic_var', 'hwe_con', 'hwe_cas']
@@ -243,7 +243,7 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
 
     # hl.export_plink(mt_filtered)
 
-    print("Exporting qced file")
+    print("\nExporting qced file")
     if export_type:
         from gwaspy.utils.export_file import export_qced_file
         export_qced_file(mt=mt_filtered, out_dir=output_directory, basename=basename, export_type=export_type)
