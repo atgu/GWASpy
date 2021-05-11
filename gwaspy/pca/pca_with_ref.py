@@ -2,6 +2,7 @@ __author__ = 'Lindo Nkambule'
 
 import hail as hl
 import pandas as pd
+from gwaspy.pca.pca_filter_snps import pca_filter_mt
 import random
 from sklearn.ensemble import RandomForestClassifier
 from typing import Tuple
@@ -51,7 +52,12 @@ def pca_with_ref(
         pca_loadings: str = 'gs://covid19-hg-public/pca_projection/hgdp_tgp_pca_covid19hgi_snps_loadings.ht',
         outdir: str = None,
         input_type: str = None,
-        reference: str = 'GRCh38') -> pd.DataFrame:
+        reference: str = 'GRCh38',
+        maf: float = 0.05,
+        hwe: float = 1e-3,
+        call_rate: float = 0.98,
+        ld_cor: float = 0.2,
+        ld_window: int = 250000) -> pd.DataFrame:
     """
     Project samples into predefined PCA space
     :param dirname: matrix table of data to project
@@ -60,6 +66,11 @@ def pca_with_ref(
     :param outdir: directory and filename prefix for where to put PCA projection output
     :param input_type: input file(s) type: hail, plink, or vcf
     :param reference: reference build
+    :param maf: minor allele frequency threshold
+    :param hwe: hardy-weinberg fiter threshold
+    :param call_rate: variant call rate filter threshold
+    :param ld_cor: reference build
+    :param ld_window: window size
     :return: a pandas Dataframe with data PCA scores projected on the same PCA space using the Human Genome Diversity
     Project(HGDP) and the 1000 Genomes Project samples as reference
     """
@@ -73,6 +84,9 @@ def pca_with_ref(
     else:
         from gwaspy.utils.read_file import read_infile
         mt = read_infile(input_type=input_type, dirname=dirname, basename=basename)
+
+    print("\nFiltering mt")
+    mt = pca_filter_mt(in_mt=mt, maf=maf, hwe=hwe, call_rate=call_rate, ld_cor=ld_cor, ld_window=ld_window)
 
     print('\nReading loadings')
     loadings = hl.read_table(pca_loadings)
@@ -89,11 +103,11 @@ def pca_with_ref(
     print('\nWriting projection output')
     if outdir:
         # if specified, write out the pca score to the out directory
-        ht_projections.write('{}{}_pca_project_scores.ht'.format(outdir, basename))
+        ht_projections.write('{}{}_pca_project_scores.ht'.format(outdir, basename), overwrite=True)
         ht = hl.read_table('{}{}_pca_project_scores.ht'.format(outdir, basename))
     else:
         # write out the PCA scores to the same directory where input files are
-        ht_projections.write('{}{}_pca_project_scores.ht'.format(dirname, basename))
+        ht_projections.write('{}{}_pca_project_scores.ht'.format(dirname, basename), overwrite=True)
         ht = hl.read_table('{}{}_pca_project_scores.ht'.format(dirname, basename))
 
     df = ht.to_pandas()

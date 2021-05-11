@@ -19,8 +19,9 @@ def pca(input_type: str = None, dirname: str = None, basename: str = None,
 
         from gwaspy.pca.pca_with_ref import pca_with_ref, merge_data_with_ref, assign_population_pcs
 
-        data_pcs_df = pca_with_ref(dirname=dirname, basename=basename, outdir=out_dir,
-                                   reference=reference, input_type=input_type)
+        data_pcs_df = pca_with_ref(dirname=dirname, basename=basename, outdir=out_dir, reference=reference,
+                                   input_type=input_type, maf=maf, hwe=hwe, call_rate=call_rate, ld_cor=ld_cor,
+                                   ld_window=ld_window)
 
         # data merged with ref
         data_merged_ref = merge_data_with_ref(refscores=ref_scores, ref_info=ref_info, data_scores=data_pcs_df)
