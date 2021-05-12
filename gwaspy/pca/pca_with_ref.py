@@ -123,7 +123,7 @@ def merge_data_with_ref(
 
     ref_merge = pd.merge(left=ref, right=ref_info, left_on='s', right_on='Sample', how='inner')
 
-    data_ref = pd.concat([ref_merge, data])
+    data_ref = pd.concat([ref_merge, data], sort=False)
     print('\nDone merging data with ref')
 
     return data_ref
