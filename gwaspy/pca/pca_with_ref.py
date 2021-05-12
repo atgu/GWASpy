@@ -276,9 +276,7 @@ def pca_with_ref(
                                                                                         range(1, 21)]
     data_pops_df = data_pops[cols]
 
-    data_pops_df.to_csv('{}pca_sup_pops_{}_probs.txt'.format(out_dir, prob_threshold),
+    data_pops_df.to_csv('{}GWASpy/PCA/pca_sup_pops_{}_probs.txt'.format(out_dir, prob_threshold),
                         sep='\t', index=False)
 
-# pca_with_ref(dirname="/Users/lindokuhle/Desktop/preimp_qc/data/", basename="sim_sim2a_eur_sa_merge.miss",
-# reference="GRCh37")
 
