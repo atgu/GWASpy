@@ -90,11 +90,15 @@ def pca_with_ref(
 
     print('\nReading loadings')
     loadings = hl.read_table(pca_loadings)
+    # difference in mt partition and table (loadings) partitions shouldn't be too large
+    loadings = loadings.repartition(n=mt.n_partitions(), shuffle=True)
+    loadings.write('{}hgdp_tgp_pca_covid19hgi_snps_loadings_repartitioned.ht'.format(outdir))
+    loadings = hl.read_table('{}hgdp_tgp_pca_covid19hgi_snps_loadings_repartitioned.ht'.format(outdir))
     print('There are {} SNPs in the loading file'.format(loadings.count()))
 
     print('\nThe data has {} SNPs'.format(mt.count_rows()))
     mt = mt.filter_rows(hl.is_defined(loadings[mt.locus, mt.alleles]))
-    print('{} SNPs will be used for projections'.format(mt.count_rows()))
+    # print('{} SNPs will be used for projections'.format(mt.count_rows()))
 
     print('\nProjecting data')
     ht_projections = pc_project(mt, loadings)
