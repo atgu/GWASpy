@@ -5,12 +5,12 @@ import pandas as pd
 from gwaspy.pca.pca_filter_snps import pca_filter_mt
 import random
 from sklearn.ensemble import RandomForestClassifier
-from typing import Tuple
+from typing import Tuple, List
 
 
 def pc_project(
-        mt: hl.MatrixTable,
-        loadings_ht: hl.Table,
+        mt: hl.MatrixTable = None,
+        loadings_ht: hl.Table = None,
         loading_location: str = 'loadings',
         af_location: str = 'pca_af') -> hl.Table:
     """
@@ -46,103 +46,85 @@ def pc_project(
     return mt.cols().select('scores')
 
 
-def pca_with_ref(
-        dirname: str = None,
-        basename: str = None,
-        pca_loadings: str = 'gs://covid19-hg-public/pca_projection/hgdp_tgp_pca_covid19hgi_snps_loadings.ht',
-        outdir: str = None,
-        input_type: str = None,
-        reference: str = 'GRCh38',
-        maf: float = 0.05,
-        hwe: float = 1e-3,
-        call_rate: float = 0.98,
-        ld_cor: float = 0.2,
-        ld_window: int = 250000) -> pd.DataFrame:
+def intersect_ref(
+        ref_dirname: str = 'gs://dsge-covid19-data/G1000/maf_0.1/',
+        ref_basename: str = 'g1000.chr1_22',
+        data_mt: hl.MatrixTable = None,
+        data_basename: str = None, out_dir: str = None):
     """
-    Project samples into predefined PCA space
-    :param dirname: matrix table of data to project
-    :param basename: matrix table of data to project
-    :param pca_loadings: existing PCA space
-    :param outdir: directory and filename prefix for where to put PCA projection output
-    :param input_type: input file(s) type: hail, plink, or vcf
-    :param reference: reference build
-    :param maf: minor allele frequency threshold
-    :param hwe: hardy-weinberg fiter threshold
-    :param call_rate: variant call rate filter threshold
-    :param ld_cor: reference build
-    :param ld_window: window size
-    :return: a pandas Dataframe with data PCA scores projected on the same PCA space using the Human Genome Diversity
-    Project(HGDP) and the 1000 Genomes Project samples as reference
+    Intersects reference panel with the data and writes intersections as matrix tables
+    :param ref_dirname: directory name where reference data is
+    :param ref_basename: base filename for reference data
+    :param data_mt: input data MatrixTable
+    :param data_basename: base filename for input data
+    :param out_dir: output directory where files are going to be saved to
+    :return:
     """
+    print('Reading reference data mt')
+    ref_mt = hl.read_matrix_table(ref_dirname + ref_basename + '.mt')
 
-    SAMPLE_FIELD_NAME = "s"
+    # filter data to sites in ref & array data
+    data_in_ref = data_mt.filter_rows(hl.is_defined(ref_mt.rows()[data_mt.row_key]))
+    print('\nsites in ref and data, inds in data: {}'.format(data_in_ref.count()))
+    data_in_ref.write(out_dir + 'GWASpy/PCA/' + data_basename + '_intersect_1000G.mt', overwrite=True)
 
-    print('Reading mt')
-    if reference.lower() == 'grch37':
-        from gwaspy.utils.reference_liftover import liftover_to_grch38
-        mt = liftover_to_grch38(dirname=dirname, basename=basename, input_type=input_type)
-    else:
-        from gwaspy.utils.read_file import read_infile
-        mt = read_infile(input_type=input_type, dirname=dirname, basename=basename)
+    # filter ref to data sites
+    ref_in_data = ref_mt.filter_rows(hl.is_defined(data_mt.rows()[ref_mt.row_key]))
+    print('\nsites in ref and data, inds in ref: {}'.format(ref_in_data.count()))  #
+    ref_in_data.write(out_dir + 'GWASpy/PCA/' + '1000G_intersect_' + data_basename + '.mt', overwrite=True)
 
-    print("\nFiltering mt")
-    mt = pca_filter_mt(in_mt=mt, maf=maf, hwe=hwe, call_rate=call_rate, ld_cor=ld_cor, ld_window=ld_window)
 
-    print('\nReading loadings')
-    loadings = hl.read_table(pca_loadings)
-    # difference in mt partition and table (loadings) partitions shouldn't be too large
-    loadings = loadings.repartition(n=mt.n_partitions(), shuffle=True)
-    loadings.write('{}hgdp_tgp_pca_covid19hgi_snps_loadings_repartitioned.ht'.format(outdir))
-    loadings = hl.read_table('{}hgdp_tgp_pca_covid19hgi_snps_loadings_repartitioned.ht'.format(outdir))
-    print('There are {} SNPs in the loading file'.format(loadings.count()))
+def run_ref_pca(
+        mt: hl.MatrixTable,
+        out_dir: str):
+    """
+    Run PCA on a dataset
+    :param mt: dataset to run PCA on
+    :param out_dir: directory and filename prefix for where to put PCA output
+    :return:
+    """
+    pca_evals, pca_scores, pca_loadings = hl.hwe_normalized_pca(mt.GT, k=20, compute_loadings=True)
+    pca_mt = mt.annotate_rows(pca_af=hl.agg.mean(mt.GT.n_alt_alleles()) / 2)
+    pca_loadings = pca_loadings.annotate(pca_af=pca_mt.rows()[pca_loadings.key].pca_af)
 
-    print('\nThe data has {} SNPs'.format(mt.count_rows()))
-    mt = mt.filter_rows(hl.is_defined(loadings[mt.locus, mt.alleles]))
-    # print('{} SNPs will be used for projections'.format(mt.count_rows()))
+    pca_scores.write(out_dir + 'GWASpy/PCA/' + '1000G_scores.ht', overwrite=True)
+    pca_scores = hl.read_table(out_dir + 'GWASpy/PCA/' + '1000G_scores.ht')
+    pca_scores = pca_scores.transmute(**{f'PC{i}': pca_scores.scores[i - 1] for i in range(1, 21)})
+    pca_scores.export(out_dir + 'GWASpy/PCA/' + '1000G_scores.txt.bgz')  # individual-level PCs
 
-    print('\nProjecting data')
-    ht_projections = pc_project(mt, loadings)
-    ht_projections = ht_projections.transmute(**{f"PC{i}": ht_projections.scores[i - 1] for i in range(1, 21)})
-
-    print('\nWriting projection output')
-    if outdir:
-        # if specified, write out the pca score to the out directory
-        ht_projections.write('{}{}_pca_project_scores.ht'.format(outdir, basename), overwrite=True)
-        ht = hl.read_table('{}{}_pca_project_scores.ht'.format(outdir, basename))
-    else:
-        # write out the PCA scores to the same directory where input files are
-        ht_projections.write('{}{}_pca_project_scores.ht'.format(dirname, basename), overwrite=True)
-        ht = hl.read_table('{}{}_pca_project_scores.ht'.format(dirname, basename))
-
-    df = ht.to_pandas()
-
-    return df
+    pca_loadings.write(out_dir + 'GWASpy/PCA/' + '1000G_loadings.ht', overwrite=True)  # PCA loadings
 
 
 def merge_data_with_ref(
-        refscores: str = 'gs://covid19-hg-public/pca_projection/hgdp_tgp_pca_covid19hgi_snps_scores.txt.gz',
-        ref_info: str = 'gs://covid19-hg-public/pca_projection/gnomad_meta_hgdp_tgp_v1.txt',
-        data_scores: pd.DataFrame = None) -> pd.DataFrame:
+        ref_scores: str = None,
+        ref_info: str = None,
+        data_scores: str = None) -> pd.DataFrame:
     """
     Merge data with ref
-    :param refscores: path to reference score
+    :param ref_scores: path to reference score
     :param ref_info: path to information about samples in the ref scores
-    :param data_scores: pandas DataFrame with the data scores
+    :param data_scores: path to input data scores
     :return: a pandas Dataframe of data merged with reference
     """
 
     print('\nMerging data with ref')
-    ref = pd.read_table(refscores, header=0, sep='\t', compression='gzip')
-    ref_info = pd.read_table(ref_info, header=0, sep='\t', low_memory=False)
-    ref_info = ref_info[['project_meta.sample_id', 'hgdp_tgp_meta.Population', 'hgdp_tgp_meta.Genetic.region']]
+    ref = pd.read_table(ref_scores, header=0, sep='\t', compression='gzip')
+    data = pd.read_table(data_scores, header=0, sep='\t')
+    ref_info = pd.read_table(ref_info, header=0, sep=';')
+    ref_info = ref_info[['Sample', 'Population']]
 
-    # rename columns in ref_info
-    ref_info.columns = ['s', 'Population', 'SuperPop']
+    d = {'CHB': 'EAS', 'JPT': 'EAS', 'CHS': 'EAS', 'CDX': 'EAS', 'KHV': 'EAS',
+         'CEU': 'EUR', 'TSI': 'EUR', 'FIN': 'EUR', 'GBR': 'EUR', 'IBS': 'EUR',
+         'YRI': 'AFR', 'LWK': 'AFR', 'GWD': 'AFR', 'MSL': 'AFR', 'ESN': 'AFR', 'ASW': 'AFR', 'ACB': 'AFR',
+         'MXL': 'AMR', 'PUR': 'AMR', 'CLM': 'AMR', 'PEL': 'AMR',
+         'GIH': 'SAS', 'PJL': 'SAS', 'BEB': 'SAS', 'STU': 'SAS', 'ITU': 'SAS'}
 
-    ref_merge = pd.merge(left=ref, right=ref_info, left_on='s', right_on='s', how='inner')
+    ref_info['SuperPop'] = ref_info['Population'].map(d)
 
-    data_ref = pd.concat([ref_merge, data_scores], sort=False)
-    print('Done merging data with ref')
+    ref_merge = pd.merge(left=ref, right=ref_info, left_on='s', right_on='Sample', how='inner')
+
+    data_ref = pd.concat([ref_merge, data])
+    print('\nDone merging data with ref')
 
     return data_ref
 
@@ -164,7 +146,6 @@ def assign_population_pcs(
     Default values for model and assignment parameters are those used in gnomAD.
     :param Table pop_pc_pd: Pandas dataframe containing population PCs as well as a column with population labels
     :param str known_col: Column storing the known population labels
-    :param str pcs_col: Columns storing the PCs
     :param RandomForestClassifier fit: fit from a previously trained random forest model (i.e., the output from a previous RandomForestClassifier() call)
     :param int num_pcs: number of population PCs on which to train the model
     :param int seed: Random seed
@@ -221,6 +202,83 @@ def assign_population_pcs(
     return pop_pc_pd, pop_clf
 
 
+def pca_with_ref(
+        ref_dirname: str = 'gs://dsge-covid19-data/G1000/maf_0.1/',
+        ref_basename: str = 'g1000.chr1_22',
+        ref_info: str = 'gs://dsge-covid19-data/G1000/20130606_sample_info.csv',
+        data_dirname: str = None,
+        data_basename: str = None,
+        out_dir: str = None,
+        input_type: str = None,
+        reference: str = 'GRCh38',
+        maf: float = 0.05,
+        hwe: float = 1e-3,
+        call_rate: float = 0.98,
+        ld_cor: float = 0.2,
+        ld_window: int = 250000,
+        prob_threshold: float = 0.8):
+    """
+    Project samples into predefined PCA space
+    :param ref_dirname: directory name where reference data is
+    :param ref_basename: base filename for reference data
+    :param ref_info: reference sample information
+    :param data_dirname: matrix table of data to project
+    :param data_basename: matrix table of data to project
+    :param out_dir: directory and filename prefix for where to put PCA projection output
+    :param input_type: input file(s) type: hail, plink, or vcf
+    :param reference: reference build
+    :param maf: minor allele frequency threshold
+    :param hwe: hardy-weinberg fiter threshold
+    :param call_rate: variant call rate filter threshold
+    :param ld_cor: reference build
+    :param ld_window: window size
+    :param prob_threshold: a list of probability thresholds to use for classifying samples
+    :return: a pandas Dataframe with data PCA scores projected on the same PCA space using the Human Genome Diversity
+    Project(HGDP) and the 1000 Genomes Project samples as reference
+    """
+    print('Reading data mt')
+    if reference.lower() == 'grch37':
+        from gwaspy.utils.reference_liftover import liftover_to_grch38
+        mt = liftover_to_grch38(dirname=data_dirname, basename=data_basename, input_type=input_type)
+    else:
+        from gwaspy.utils.read_file import read_infile
+        mt = read_infile(input_type=input_type, dirname=data_dirname, basename=data_basename)
+
+    print("\nFiltering data mt")
+    mt = pca_filter_mt(in_mt=mt, maf=maf, hwe=hwe, call_rate=call_rate, ld_cor=ld_cor, ld_window=ld_window)
+
+    # Intersect data with reference
+    intersect_ref(ref_dirname=ref_dirname, ref_basename=ref_basename, data_mt=mt, data_basename=data_basename,
+                  out_dir=out_dir)
+
+    ref_in_data = hl.read_matrix_table(out_dir + 'GWASpy/PCA/' + '1000G_intersect_' + data_basename + '.mt')
+
+    print('\nComputing reference PCs')
+    run_ref_pca(mt=ref_in_data, out_dir=out_dir)
+
+    # project data
+    pca_loadings = hl.read_table(out_dir + 'GWASpy/PCA/' + '1000G_loadings.ht')
+    project_mt = hl.read_matrix_table(out_dir + 'GWASpy/PCA/' + data_basename + '_intersect_1000G.mt')
+
+    ht_projections = pc_project(mt=project_mt, loadings_ht=pca_loadings)
+    ht_projections = ht_projections.transmute(**{f'PC{i}': ht_projections.scores[i - 1] for i in range(1, 21)})
+    ht_projections.export(out_dir + 'GWASpy/PCA/' + data_basename + '_scores.tsv')
+
+    ref_scores = out_dir + 'GWASpy/PCA/' + '1000G_scores.txt.bgz'
+    data_scores = out_dir + 'GWASpy/PCA/' + data_basename + '_scores.tsv'
+    data_ref = merge_data_with_ref(ref_scores=ref_scores, ref_info=ref_info, data_scores=data_scores)
+
+    pcs_df, clf = assign_population_pcs(pop_pc_pd=data_ref, num_pcs=20, min_prob=prob_threshold)
+
+    data_pops = pcs_df.loc[pcs_df['SuperPop'].isnull()]
+    data_pops['pop'].value_counts()
+    cols = ['s', 'pop'] + [f'prob_{i}' for i in ["EUR", "EAS", "AMR", "AFR", "SAS"]] + [f'PC{i}' for i in
+                                                                                        range(1, 21)]
+    data_pops_df = data_pops[cols]
+
+    data_pops_df.to_csv('{}pca_sup_pops_{}_probs.txt'.format(out_dir, prob_threshold),
+                        sep='\t', index=False)
+
 # pca_with_ref(dirname="/Users/lindokuhle/Desktop/preimp_qc/data/", basename="sim_sim2a_eur_sa_merge.miss",
-             # reference="GRCh37")
+# reference="GRCh37")
 
