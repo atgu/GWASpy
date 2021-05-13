@@ -5,10 +5,10 @@ def export_qced_file(mt: hl.MatrixTable, out_dir: str, basename: str, export_typ
     outname = basename + '_qced'
 
     if export_type == 'hail':
-        mt.write('{}{}.mt'.format(out_dir, outname), overwrite=True)
+        mt.write('{}GWASpy/Preimp_QC/{}.mt'.format(out_dir, outname), overwrite=True)
 
     elif export_type == 'plink':
-        hl.export_plink(mt, '{}{}'.format(out_dir, outname))
+        hl.export_plink(mt, '{}GWASpy/Preimp_QC/{}'.format(out_dir, outname))
 
     else:
-        hl.export_vcf(mt, '{}{}.vcf.bgz'.format(out_dir, outname))
+        hl.export_vcf(mt, '{}GWASpy/Preimp_QC/{}.vcf.bgz'.format(out_dir, outname))
