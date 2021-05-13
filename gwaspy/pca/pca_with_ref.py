@@ -341,12 +341,12 @@ def pca_with_ref(
                                                              ref_scores=ref_scores,
                                                              ref_info=ref_info,
                                                              x_pc=xpc, y_pc=ypc)
-    # f'/tmp/{outfile}', dpi=300, facecolor='w'
     pdf = PdfPages('/tmp/pca.with.ref.plots.pdf')
     for figname, figure in figs_dict.items():
         pdf.savefig(figure)
     pdf.close()
-    hl.hadoop_copy(f'file:///tmp/pca.with.ref.plots.pdf', f'{out_dir}GWASpy/PCA/pca.with.ref.plots.pdf')
+    hl.hadoop_copy(f'file:///tmp/pca.with.ref.plots.pdf',
+                   '{}GWASpy/PCA/{}.pca.with.ref.plots.pdf'.format(out_dir, data_basename))
 
 
 

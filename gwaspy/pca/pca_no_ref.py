@@ -74,7 +74,7 @@ def pca_without_ref(
         n_pcs: int = 20,
         relatedness_method: str = 'pc_relate',
         relatedness_thresh: float = 0.98,
-        outdir: str = None):
+        out_dir: str = None):
 
     print("Reading mt")
     if reference.lower() == 'grch37':
@@ -87,7 +87,7 @@ def pca_without_ref(
     print("\nFiltering mt")
     mt = pca_filter_mt(in_mt=mt, maf=maf, hwe=hwe, call_rate=call_rate, ld_cor=ld_cor, ld_window=ld_window)
 
-    mt = relatedness_check(in_mt=mt, method=relatedness_method, outdir=outdir, kin_estimate=relatedness_thresh)
+    mt = relatedness_check(in_mt=mt, method=relatedness_method, outdir=out_dir, kin_estimate=relatedness_thresh)
 
     print("\nRunning PCA")
     eigenvalues, pcs, _ = hl.hwe_normalized_pca(mt.GT, k=n_pcs)
@@ -102,7 +102,7 @@ def pca_without_ref(
     pcs_ht = pcs_ht.annotate(is_female=annotations_ht[pcs_ht.s].is_female)
 
     print("\nSaving PC scores file")
-    out_scores_file = outdir + basename + '_scores.tsv'
+    out_scores_file = out_dir + basename + '_scores.tsv'
     pcs_ht.export(out_scores_file)
 
     print("\nGenerating PCA plots")
@@ -119,8 +119,10 @@ def pca_without_ref(
 
             figs_dict["fig{}{}".format(col, i)] = plot_pca(pcs_scores, xpc, ypc, col)
 
-    pdf = PdfPages('{}{}.GWASpy.PCA.plots.pdf'.format(outdir, basename))
+    pdf = PdfPages('/tmp/pca.no.ref.plots.pdf')
     for figname, figure in figs_dict.items():
         pdf.savefig(figure)
     pdf.close()
-    # hl.hadoop_copy('file:///tmp/GWASpy.PCA.plots.pdf', outdir)
+    hl.hadoop_copy(f'file:///tmp/pca.no.ref.plots.pdf',
+                   '{}GWASpy/PCA/{}.pca.no.ref.plots.pdf'.format(out_dir, basename))
+
