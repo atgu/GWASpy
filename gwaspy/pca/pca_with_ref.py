@@ -5,7 +5,10 @@ import pandas as pd
 from gwaspy.pca.pca_filter_snps import pca_filter_mt
 import random
 from sklearn.ensemble import RandomForestClassifier
-from typing import Tuple, List
+from typing import Tuple
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+from matplotlib.backends.backend_pdf import PdfPages
 
 
 def pc_project(
@@ -202,6 +205,55 @@ def assign_population_pcs(
     return pop_pc_pd, pop_clf
 
 
+def plot_pca_ref(data_scores, ref_scores, ref_info, x_pc, y_pc):
+    pcs = pd.read_table(data_scores, header=0, sep='\t')
+    ref = pd.read_table(ref_scores, header=0, sep='\t', compression='gzip')
+    ref_info = pd.read_table(ref_info, header=0, sep=';')
+
+    ref_info.rename(columns={'Sample': 's'}, inplace=True)
+    ref_update = pd.merge(ref, ref_info, how='left', on=['s'])
+    # only take s, PC1-20, and POP columns
+    ref_update = ref_update.iloc[:, 0:22]
+
+    # add SuperPop column
+    d = {'CHB': 'EAS', 'JPT': 'EAS', 'CHS': 'EAS', 'CDX': 'EAS', 'KHV': 'EAS',
+         'CEU': 'EUR', 'TSI': 'EUR', 'FIN': 'EUR', 'GBR': 'EUR', 'IBS': 'EUR',
+         'YRI': 'AFR', 'LWK': 'AFR', 'GWD': 'AFR', 'MSL': 'AFR', 'ESN': 'AFR', 'ASW': 'AFR', 'ACB': 'AFR',
+         'MXL': 'AMR', 'PUR': 'AMR', 'CLM': 'AMR', 'PEL': 'AMR',
+         'GIH': 'SAS', 'PJL': 'SAS', 'BEB': 'SAS', 'STU': 'SAS', 'ITU': 'SAS'}
+
+    ref_update['SuperPop'] = ref_update['Population'].map(d)
+
+    cbPalette = {'AFR': "#999999", 'AMR': "#E69F00", 'EAS': "#56B4E9", 'EUR': "#009E73",
+                 'oth': "#F0E442", 'SAS': "#0072B2"}
+
+    # PLOT
+    fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(15, 15))
+
+    # get population counts so we can add them to legend
+    handles = []
+    pop_counts = (pcs['pop'].value_counts(sort=True)).to_dict()
+
+    for key in cbPalette:
+        # if the key is not in the dict, add it
+        if key not in pop_counts:
+            pop_counts[key] = 0
+        # manually define a new patch
+        data_key = Line2D([0], [0], marker='o', color='w', label='{} (n={})'.format(key, pop_counts.get(key)),
+                          markerfacecolor=cbPalette[key], markersize=10)
+        handles.append(data_key)
+
+    axs.scatter(ref_update[x_pc], ref_update[y_pc], c=ref_update['SuperPop'].map(cbPalette), s=5, alpha=0.1)
+
+    axs.scatter(pcs[x_pc], pcs[y_pc], c=pcs['pop'].map(cbPalette), s=5, alpha=1)
+    axs.set_xlabel(xlabel=x_pc, fontsize=15)
+    axs.set_ylabel(ylabel=y_pc, fontsize=15)
+    fig.legend(handles=handles, title='Populations', loc='right', frameon=False)
+    plt.close()
+
+    return fig
+
+
 def pca_with_ref(
         ref_dirname: str = 'gs://dsge-covid19-data/G1000/maf_0.1/',
         ref_basename: str = 'g1000.chr1_22',
@@ -278,5 +330,23 @@ def pca_with_ref(
 
     data_pops_df.to_csv('{}GWASpy/PCA/pca_sup_pops_{}_probs.txt'.format(out_dir, prob_threshold),
                         sep='\t', index=False)
+    data_scores_prob = out_dir + 'GWASpy/PCA/pca_sup_pops_' + str(prob_threshold) + '_probs.txt'
+
+    figs_dict = {}
+    for i in range(1, 20, 2):
+        xpc = f'PC{i}'
+        ypc = f'PC{i + 1}'
+
+        figs_dict["fig{}{}".format(xpc, ypc)] = plot_pca_ref(data_scores=data_scores_prob,
+                                                             ref_scores=ref_scores,
+                                                             ref_info=ref_info,
+                                                             x_pc=xpc, y_pc=ypc)
+    # f'/tmp/{outfile}', dpi=300, facecolor='w'
+    pdf = PdfPages('/tmp/pca.with.ref.plots.pdf')
+    for figname, figure in figs_dict.items():
+        pdf.savefig(figure)
+    pdf.close()
+    hl.hadoop_copy(f'file:///tmp/pca.with.ref.plots.pdf', f'{out_dir}GWASpy/PCA/pca.with.ref.plots.pdf')
+
 
 
