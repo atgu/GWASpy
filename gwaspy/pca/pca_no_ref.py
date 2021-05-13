@@ -102,7 +102,7 @@ def pca_without_ref(
     pcs_ht = pcs_ht.annotate(is_female=annotations_ht[pcs_ht.s].is_female)
 
     print("\nSaving PC scores file")
-    out_scores_file = out_dir + basename + '_scores.tsv'
+    out_scores_file = out_dir + 'GWASpy/PCA/' + basename + '_scores.tsv'
     pcs_ht.export(out_scores_file)
 
     print("\nGenerating PCA plots")

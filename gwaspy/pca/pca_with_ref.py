@@ -330,6 +330,8 @@ def pca_with_ref(
 
     data_pops_df.to_csv('{}GWASpy/PCA/pca_sup_pops_{}_probs.txt'.format(out_dir, prob_threshold),
                         sep='\t', index=False)
+
+    print("\nGenerating PCA plots")
     data_scores_prob = out_dir + 'GWASpy/PCA/pca_sup_pops_' + str(prob_threshold) + '_probs.txt'
 
     figs_dict = {}
