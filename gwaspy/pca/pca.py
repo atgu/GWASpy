@@ -29,7 +29,7 @@ def pca(
     else:
         print("Running PCA without a reference")
         from gwaspy.pca.pca_no_ref import pca_without_ref
-        pca_without_ref(dirname=data_dirname, basename=data_basename, input_type=input_type, outdir=out_dir, reference=reference,
+        pca_without_ref(dirname=data_dirname, basename=data_basename, input_type=input_type, out_dir=out_dir, reference=reference,
                         maf=maf, hwe=hwe, call_rate=call_rate, ld_cor=ld_cor, ld_window=ld_window, n_pcs=n_pcs,
                         relatedness_method=relatedness_method, relatedness_thresh=relatedness_thresh)
 
