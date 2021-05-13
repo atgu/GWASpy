@@ -104,7 +104,7 @@ def manhattan_plot(pvals, significance_threshold: float = -np.log10(5E-08), titl
     data['-log10(p_value)'].values[data['-log10(p_value)'] > 199] = 199
     data['chromosome'] = data['chromosome'].astype('category')
     data['ind'] = range(len(data))
-    data_grouped = data.groupby(('chromosome'))
+    data_grouped = data.groupby('chromosome')
 
     title = f'{title}' if title else 'Manhattan Plot'
 
