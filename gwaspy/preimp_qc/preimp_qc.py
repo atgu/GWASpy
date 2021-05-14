@@ -257,7 +257,7 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
         hl.hadoop_copy(f'{gwaspy_dir}/GWASpy.Preimp-QC.report',
                        f'{output_directory}GWASpy/Preimp_QC/GWASpy.Preimp-QC.report')
     else:
-        shutil.copyfile(f'{gwaspy_dir}/GWASpy.Preimp-QC.report.pdf', f'{output_directory}GWASpy.Preimp-QC.report')
+        shutil.copyfile(f'{gwaspy_dir}/GWASpy.Preimp-QC.report.pdf', f'{output_directory}GWASpy.Preimp-QC.report.pdf')
 
     # clean-up
     print('\nCleaning up')
