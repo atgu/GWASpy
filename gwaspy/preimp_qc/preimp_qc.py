@@ -67,10 +67,13 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
     if not os.path.exists('gwaspy_tmp'):
         os.makedirs('gwaspy_tmp')
 
+    # LaTex needs full path to files
+    gwaspy_dir = os.getcwd() + '/gwaspy_tmp'
+
     output_directory = out_dir if out_dir else dirname
 
     # read input
-    mt = read_infile(input_type=input_type, dirname=dirname, basename=basename)
+    mt = read_infile(input_type=input_type, dirname=gwaspy_dir + '/', basename=basename)
 
     gwas_pre, n_sig_var_pre = manhattan(qqtitle='Pre-QC QQ Plot', mantitle='Pre-QC Manhattan Plot').filter(mt)
     qqplt_pre, lambda_gc_pre, manplt_pre = manhattan(qqtitle='Pre-QC QQ Plot',
@@ -211,10 +214,6 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
     man_table_results = [n_sig_var_pre, n_sig_var_pos, lambda_gc_pre, lambda_gc_pos, round(lambda_thous_pre, 3),
                          round(lambda_thous_pos, 3)]
 
-    # LaTex needs full path to files
-    gwaspy_dir = os.getcwd() + '/gwaspy_tmp'
-    # gwaspy_dir = cwd
-
     # report
     if report:
         print('\nWriting report')
@@ -254,8 +253,8 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
         export_qced_file(mt=mt_filtered, out_dir=output_directory, basename=basename, export_type=export_type)
 
     if out_dir.startswith('gs://'):
-        hl.hadoop_copy(f'{gwaspy_dir}/GWASpy.Preimp-QC.report',
-                       f'{output_directory}GWASpy/Preimp_QC/GWASpy.Preimp-QC.report')
+        hl.hadoop_copy(f'{gwaspy_dir}/GWASpy.Preimp-QC.report.pdf',
+                       f'{output_directory}GWASpy/Preimp_QC/GWASpy.Preimp-QC.report.pdf')
     else:
         shutil.copyfile(f'{gwaspy_dir}/GWASpy.Preimp-QC.report.pdf', f'{output_directory}GWASpy.Preimp-QC.report.pdf')
 
