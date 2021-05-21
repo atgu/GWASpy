@@ -8,6 +8,7 @@ from gwaspy.preimp_qc.report import MyDocument
 import shutil
 import warnings
 import os
+import hail as hl
 
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
 
@@ -59,7 +60,8 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
               fstat_y: Union[int, float] = 0.5, geno_thresh: Union[int, float] = 0.98,
               cr_diff_thresh: Union[int, float] = 0.02, maf_thresh: Union[int, float] = 0.01,
               hwe_th_con_thresh: Union[int, float] = 1e-6, hwe_th_cas_thresh: Union[int, float] = 1e-10,
-              report: bool = True, export_type: str = 'hail', out_dir: str = None):
+              annotations_file: str = None, report: bool = True, export_type: str = 'hail', out_dir: str = None,
+              reference: str = 'GRCh38'):
     print('\nRunning QC')
     global mt, row_filters, filters
 
@@ -72,8 +74,10 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
 
     output_directory = out_dir if out_dir else dirname
 
+    hl.init(default_reference=reference)
+
     # read input
-    mt = read_infile(input_type=input_type, dirname=dirname, basename=basename)
+    mt = read_infile(input_type=input_type, dirname=dirname, basename=basename, annotations=annotations_file)
 
     gwas_pre, n_sig_var_pre = manhattan(qqtitle='Pre-QC QQ Plot', mantitle='Pre-QC Manhattan Plot').filter(mt)
     qqplt_pre, lambda_gc_pre, manplt_pre = manhattan(qqtitle='Pre-QC QQ Plot',
@@ -296,9 +300,11 @@ def main():
 
     arg = parser.parse_args()
 
-    preimp_qc(arg.input_type, arg.dirname, arg.basename, arg.pre_geno, arg.mind, arg.fhet_aut, arg.fstat_x,
-              arg.fstat_y, arg.geno, arg.midi, arg.maf, arg.hwe_th_con, arg.hwe_th_cas, report=arg.report,
-              export_type=arg.export_type, out_dir=arg.out_dir)
+    preimp_qc(input_type=arg.input_type, dirname=arg.dirname, basename=arg.basename, pre_geno_thresh=arg.pre_geno,
+              mind_thresh=arg.mind, fhet_aut=arg.fhet_aut, fstat_x=arg.fstat_x, fstat_y=arg.fstat_y,
+              geno_thresh=arg.geno, cr_diff_thresh=arg.midi, maf_thresh=arg.maf, hwe_th_con_thresh=arg.hwe_th_con,
+              hwe_th_cas_thresh=arg.hwe_th_cas, annotations_file=arg.annotations, report=arg.report,
+              export_type=arg.export_type, out_dir=arg.out_dir, reference=arg.reference)
 
 
 if __name__ == '__main__':
