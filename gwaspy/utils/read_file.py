@@ -31,14 +31,21 @@ def read_vcf(dirname: str, vcf: str, annotations: str) -> hl.MatrixTable:
     print("Number of multi-allelic SNPs in VCF file: {}".format(pos_filt_multi_n-pre_filt_multi_n))
 
     # use annotations file to annotate VCF
-    ann = hl.import_table(annotations, impute=True).key_by('Sample')
+    ann = hl.import_table(annotations, impute=True,
+                          types={'Sample': hl.tstr, 'Sex': hl.tstr, 'Pheno': hl.tstr}).key_by('Sample')
     in_mt = in_mt.annotate_cols(annotations=ann[in_mt.s])
     # need to change reported sex to True/False, can update how this is done later, ideally don't want to hardcode
     # this will not work for unreported sex but will work for missing values
     in_mt = in_mt.annotate_cols(is_female=hl.if_else(((in_mt.annotations.Sex == 'F') |
                                                       (in_mt.annotations.Sex == str(2)) |
+                                                      (in_mt.annotations.isFemale == 'True') |
                                                       (in_mt.annotations.Sex == 'Female')),
                                                      True, False))
+
+    in_mt = in_mt.annotate_cols(is_case=hl.if_else(((in_mt.annotations.Pheno == str(2)) |
+                                                    (in_mt.annotations.Pheno == 'True') |
+                                                    (in_mt.annotations.Pheno == 'Case')),
+                                                   True, False))
     # add a check to make sure file is formatted as we'd expect else quit and throw error
     return in_mt
 
