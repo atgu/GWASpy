@@ -11,9 +11,10 @@ def read_plink(dirname: str, basename: str) -> hl.MatrixTable:
     return hl.read_matrix_table(dirname + basename + '.mt')
 
 
-def read_vcf(dirname: str, vcf: str, annotations: str) -> hl.MatrixTable:
-    hl.import_vcf(vcf).write('{}preimpQC.mt'.format(dirname), overwrite=True)
-    in_mt = hl.read_matrix_table('{}preimpQC.mt'.format(dirname))
+def read_vcf(dirname: str, basename: str, annotations: str) -> hl.MatrixTable:
+    vcf_file = '{}{}.vcf.gz'.format(dirname, basename)
+    hl.import_vcf(vcf_file, force_bgz=True).write('{}GWASpy.preimpQC.mt'.format(dirname), overwrite=True)
+    in_mt = hl.read_matrix_table('{}GWASpy.preimpQC.mt'.format(dirname))
 
     # Unlike array data, a VCF might have multi-allelic sites
     # split multi-allelic sites into bi-allelic
@@ -59,16 +60,20 @@ def read_mt(dirname: str, basename: str) -> hl.MatrixTable:
 
 def read_infile(
         input_type: str = None,
-        dirname: str = None, basename: str = None):
+        dirname: str = None, basename: str = None,
+        **kwargs):
 
     global mt
+
+    # vcf = kwargs.get('vcf')
+    annotations = kwargs.get('annotations')
 
     if input_type == 'plink':
         mt = read_plink(dirname, basename)
 
     elif input_type == 'vcf':
         print("VCF Support comming")
-        # mt = read_vcf(dirname, vcf, annotations)
+        mt = read_vcf(dirname, basename, annotations)
 
     else:
         mt = read_mt(dirname, basename)
