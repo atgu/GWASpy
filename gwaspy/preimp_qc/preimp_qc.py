@@ -156,10 +156,10 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
         [hl.agg.counter(mt_temp[filter].filters) for filter in row_filters])
 
     for filt, cont in zip(column_filters, column_aggregations):
-        results[filt] = cont
+        results[filt] = dict(cont) # aggregate returns a frozendict, convert that back to a dict
 
     for filt, cont in zip(row_filters, row_aggregations):
-        results[filt] = cont
+        results[filt] = dict(cont) # # aggregate returns a frozendict, convert that back to a dict
 
     for i in filters:
         # some filters will have zero snps/id filtered, and there won't be a True, so add it
@@ -249,7 +249,7 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
             doc.snp_char(var_con_pre_path=f'{gwaspy_dir}/gwaspy_var_cas_pre.png',
                          var_cas_pre_path=f'{gwaspy_dir}/gwaspy_var_cas_pre.png',
                          data_type=data_type)
-        doc.generate_pdf(f'{gwaspy_dir}/GWASpy.Preimp-QC.report', clean_tex=False)
+        doc.generate_pdf(f'{gwaspy_dir}/{basename}.preimp_qc.report', clean_tex=False)
 
     print('\nExporting qced file')
     if export_type:
@@ -257,10 +257,11 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
         export_qced_file(mt=mt_filtered, out_dir=output_directory, basename=basename, export_type=export_type)
 
     if out_dir.startswith('gs://'):
-        hl.hadoop_copy(f'file://{gwaspy_dir}/GWASpy.Preimp-QC.report.pdf',
-                       f'{output_directory}GWASpy/Preimp_QC/GWASpy.Preimp-QC.report.pdf')
+        hl.hadoop_copy(f'file://{gwaspy_dir}/{basename}.preimp_qc.report.pdf',
+                       f'{output_directory}GWASpy/Preimp_QC/{basename}.preimp_qc.report.pdf')
     else:
-        shutil.copyfile(f'{gwaspy_dir}/GWASpy.Preimp-QC.report.pdf', f'{output_directory}GWASpy.Preimp-QC.report.pdf')
+        shutil.copyfile(f'{gwaspy_dir}/{basename}.preimp_qc.report.pdf',
+                        f'{output_directory}{basename}.preimp_qc.report.pdf')
 
     # clean-up
     print('\nCleaning up')
