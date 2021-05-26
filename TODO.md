@@ -1,4 +1,4 @@
-Todo list for preimp_qc (to be renamed since we will be adding other features)
+Todo list for GWASpy
 ====
 
 ## Todo
