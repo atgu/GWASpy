@@ -36,7 +36,8 @@ setup(name='GWASpy',
           'console_scripts': [
               'preimp_qc = gwaspy.preimp_qc.preimp_qc:main',
               'pca = gwaspy.pca.pca:main',
-              'imputation = gwaspy.imputation.imputation:main'
+              'imputation = gwaspy.imputation.imputation:main',
+              'phasing = gwaspy.phasing.phasing:main'
           ]
       },
       classifiers=classifiers,
