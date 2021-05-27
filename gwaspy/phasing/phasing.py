@@ -4,12 +4,14 @@ import hailtop.batch as hb
 import ntpath
 import argparse
 import pandas as pd
+from typing import Union
 
 
 def eagle_phasing(b: hb.batch.Batch,
                   vcf: hb.resource.ResourceFile,
                   vcf_filename_no_ext: str = None,
-                  contig: str = None,
+                  reference: str = 'GRCh38',
+                  contig: Union[str, int] = None,
                   cpu: int = 8,
                   memory: str = 'standard',
                   storage: int = 50,
@@ -17,7 +19,9 @@ def eagle_phasing(b: hb.batch.Batch,
                   threads: int = 16,
                   out_dir: str = None):
 
-    output_file_name = vcf_filename_no_ext + '_' + contig + '.vcf.gz'
+    output_file_name = vcf_filename_no_ext + '_' + str(contig) + '.vcf.gz'
+
+    map_file = 'genetic_map_hg38_withX.txt.gz' if reference == 'GRCh38' else 'genetic_map_hg19_withX.txt.gz'
 
     phase = b.new_job(name=output_file_name)
     phase.cpu(cpu)
@@ -27,7 +31,7 @@ def eagle_phasing(b: hb.batch.Batch,
     phase.declare_resource_group(ofile={'vcf': '{root}.vcf.gz'})
     cmd = f'''
     Eagle_v2.4.1/eagle \
-        --geneticMapFile Eagle_v2.4.1/tables/genetic_map_hg38_withX.txt.gz \
+        --geneticMapFile Eagle_v2.4.1/tables/{map_file} \
         --numThreads {threads} \
         --chrom {contig} \
         --outPrefix {phase.ofile} \
@@ -47,6 +51,7 @@ def main():
     parser.add_argument('--input-vcfs', required=True)
     parser.add_argument('--local', action='store_true')
     parser.add_argument('--software', type=str, default='eagle', choices=['eagle', 'shapeit'])
+    parser.add_argument('--reference', type=str, default='GRCh38', choices=['GRCh37', 'GRCh38'])
     parser.add_argument('--cpu', type=int, default=8)
     parser.add_argument('--memory', type=str, default='standard', choices=['lowmem', 'standard', 'highmem'])
     parser.add_argument('--storage', type=int, default=50)
@@ -74,13 +79,13 @@ def main():
         else:
             file_no_ext = vcf_name[:-4]
 
-        for i in range(1, 23):
-            chrom = f'chr{i}'
+        for i in range(1, 24):
+            chrom = f'chr{i}' if args.reference == 'GRCh38' else i
 
             if args.software == 'eagle':
-                phasing_job = eagle_phasing(b=phasing, vcf=in_vcf, vcf_filename_no_ext=file_no_ext, contig=chrom,
-                                            cpu=args.cpu, memory=args.memory, storage=args.storage,
-                                            threads=args.threads, out_dir=args.out_dir)
+                phasing_job = eagle_phasing(b=phasing, vcf=in_vcf, vcf_filename_no_ext=file_no_ext,
+                                            reference=args.reference, contig=chrom, cpu=args.cpu, memory=args.memory,
+                                            storage=args.storage, threads=args.threads, out_dir=args.out_dir)
 
             else:
                 print("Support for SHAPEIT coming")
