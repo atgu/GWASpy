@@ -82,6 +82,8 @@ pca --dirname data/ --basename 1kg_annotated --out-dir data/ --input-type hail -
 ---------------------
 You can run haplotype phasing using Eagle_v2.4.1. We will ad support for SHAPEIT at a later stage
 
+**Before running phasing, make sure that chromosomes Y and MT have been removed from the VCF, and oNLY chromosomes 1-22, X are present.**
+
 Here's how you can run phasing:
 ```bash
 phasing --input-vcfs gs://path/to/vcf_files.txt --out-dir gs://path/to/output/directory
