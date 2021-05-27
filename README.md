@@ -22,8 +22,8 @@ Once the package is on [pypi](https://pypi.org/), it won't be ncessary to run ``
 
 ```bash
 # Install preimp_qc and its dependencies
-git clone https://github.com/atgu/preimp_qc
-cd preimp_qc/
+git clone https://github.com/atgu/GWASpy.git
+cd GWASpy/
 pip3 install -r requirements.txt
 python3 setup.py sdist
 pip3 install dist/GWASpy-0.1.0.tar.gz
