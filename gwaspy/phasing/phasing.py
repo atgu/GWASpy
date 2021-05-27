@@ -1,4 +1,4 @@
-__author__ = 'Lindo Nkambule'
+__author__ = 'Michael Wilson & Lindo Nkambule'
 
 import hailtop.batch as hb
 import ntpath
@@ -24,6 +24,7 @@ def eagle_phasing(b: hb.batch.Batch,
     phase.memory(memory)
     phase.storage(f'{storage}Gi')
     phase.image(img)
+    phase.declare_resource_group(ofile={'vcf': '{root}.vcf.gz'})
     cmd = f'''
     Eagle_v2.4.1/eagle \
         --geneticMapFile Eagle_v2.4.1/tables/genetic_map_hg38_withX.txt.gz \
@@ -45,6 +46,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input-vcfs', required=True)
     parser.add_argument('--local', action='store_true')
+    parser.add_argument('--software', type=str, default='eagle', choices=['eagle', 'shapeit'])
     parser.add_argument('--cpu', type=int, default=8)
     parser.add_argument('--memory', type=str, default='standard')
     parser.add_argument('--storage', type=int, default=50)
@@ -75,9 +77,13 @@ def main():
         for i in range(1, 23):
             chrom = f'chr{i}'
 
-            phasing_job = eagle_phasing(b=phasing, vcf=in_vcf, vcf_filename_no_ext=file_no_ext, contig=chrom,
-                                        cpu=args.cpu, memory=args.memory, storage=args.storage, threads=args.threads,
-                                        out_dir=args.out_dir)
+            if args.software == 'eagle':
+                phasing_job = eagle_phasing(b=phasing, vcf=in_vcf, vcf_filename_no_ext=file_no_ext, contig=chrom,
+                                            cpu=args.cpu, memory=args.memory, storage=args.storage,
+                                            threads=args.threads, out_dir=args.out_dir)
+
+            else:
+                print("Support for SHAPEIT coming")
 
     phasing.run()
 
