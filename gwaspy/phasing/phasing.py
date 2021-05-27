@@ -48,7 +48,7 @@ def main():
     parser.add_argument('--local', action='store_true')
     parser.add_argument('--software', type=str, default='eagle', choices=['eagle', 'shapeit'])
     parser.add_argument('--cpu', type=int, default=8)
-    parser.add_argument('--memory', type=str, default='standard')
+    parser.add_argument('--memory', type=str, default='standard', choices=['lowmem', 'standard', 'highmem'])
     parser.add_argument('--storage', type=int, default=50)
     parser.add_argument('--threads', type=int, default=16)
     parser.add_argument('--out-dir', required=True)
