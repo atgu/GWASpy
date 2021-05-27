@@ -31,7 +31,7 @@ pip3 install dist/GWASpy-0.1.0.tar.gz
 
 ## Usage
 
-## (1) preimp_qc
+## (1) Pre-imputation QC
 
 
 You can run pre-imputation using the ``preimp_qc`` module (1) via the command line or (2) inside a python script
@@ -78,6 +78,27 @@ Below is an example of how to run PCA without a reference using the example data
 pca --dirname data/ --basename 1kg_annotated --out-dir data/ --input-type hail --reference grch37
 ```
 
-(3) Genotype imputation
+(3) Haplotype Phasing
+---------------------
+You can run haplotype phasing using Eagle_v2.4.1. We will ad support for SHAPEIT at a later stage
+
+Here's how you can run phasing:
+```bash
+phasing --input-vcfs gs://path/to/vcf_files.txt --out-dir gs://path/to/output/directory
+```
+In the command above, ``vcf_files.txt`` is a text file, with no header, containing path to each VCF. One VCF path per line
+
+**Argument** | **Description**
+--- | ---
+``--input-vcfs`` | Path to where text file containing VCF(s) paths is
+``--local`` | Type of service. Default is Service backend where jobs are executed on a multi-tenant compute cluster in Google Cloud 
+``--software`` | Software to use for phasing. Default is Eagle
+``--cpu`` | Number of CPUs to use. Default is 8
+``--memory`` | Memory to use. Default is standard which correspond to ~4Gi/core. lowmem ~1Gi/core and highmem ~7Gi/core
+``--storage`` | Storage to use for the job in gigabytes. Default is 50 Gi
+``--threads`` | Number of threads to use in phasing. Default is 16
+``--out-dir`` | Path to where output files will be saved
+
+(4) Genotype imputation
 --------------------------------
 Coming...
