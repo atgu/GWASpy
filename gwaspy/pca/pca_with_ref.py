@@ -306,8 +306,8 @@ def pca_with_ref(
 
     data_pops = pcs_df.loc[pcs_df['SuperPop'].isnull()]
     data_pops['pop'].value_counts()
-    cols = ['s', 'pop'] + [f'prob_{i}' for i in ["EUR", "EAS", "AMR", "AFR", "SAS"]] + [f'PC{i}' for i in
-                                                                                        range(1, 21)]
+    cols = ['s', 'pop'] + [f'prob_{i}' for i in ["AFR", "AMR", "CSA", "EAS", "EUR", "MID", "OCE"]] + [f'PC{i}' for i in
+                                                                                                      range(1, 21)]
     data_pops_df = data_pops[cols]
 
     data_pops_df.to_csv('{}GWASpy/PCA/pca_sup_pops_{}_probs.txt'.format(out_dir, prob_threshold),
