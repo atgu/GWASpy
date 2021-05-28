@@ -50,8 +50,8 @@ def pc_project(
 
 
 def intersect_ref(
-        ref_dirname: str = 'gs://dsge-covid19-data/G1000/maf_0.1/',
-        ref_basename: str = 'g1000.chr1_22',
+        ref_dirname: str = 'gs://african-seq-data/hgdp_tgp/gwaspy_pca_ref/',
+        ref_basename: str = 'hgdp_1kg_filtered_maf_5_GRCh38',
         data_mt: hl.MatrixTable = None,
         data_basename: str = None, out_dir: str = None):
     """
@@ -113,16 +113,7 @@ def merge_data_with_ref(
     print('\nMerging data with ref')
     ref = pd.read_table(ref_scores, header=0, sep='\t', compression='gzip')
     data = pd.read_table(data_scores, header=0, sep='\t')
-    ref_info = pd.read_table(ref_info, header=0, sep=';')
-    ref_info = ref_info[['Sample', 'Population']]
-
-    d = {'CHB': 'EAS', 'JPT': 'EAS', 'CHS': 'EAS', 'CDX': 'EAS', 'KHV': 'EAS',
-         'CEU': 'EUR', 'TSI': 'EUR', 'FIN': 'EUR', 'GBR': 'EUR', 'IBS': 'EUR',
-         'YRI': 'AFR', 'LWK': 'AFR', 'GWD': 'AFR', 'MSL': 'AFR', 'ESN': 'AFR', 'ASW': 'AFR', 'ACB': 'AFR',
-         'MXL': 'AMR', 'PUR': 'AMR', 'CLM': 'AMR', 'PEL': 'AMR',
-         'GIH': 'SAS', 'PJL': 'SAS', 'BEB': 'SAS', 'STU': 'SAS', 'ITU': 'SAS'}
-
-    ref_info['SuperPop'] = ref_info['Population'].map(d)
+    ref_info = pd.read_table(ref_info, header=0, sep='\t')
 
     ref_merge = pd.merge(left=ref, right=ref_info, left_on='s', right_on='Sample', how='inner')
 
@@ -208,24 +199,15 @@ def assign_population_pcs(
 def plot_pca_ref(data_scores, ref_scores, ref_info, x_pc, y_pc):
     pcs = pd.read_table(data_scores, header=0, sep='\t')
     ref = pd.read_table(ref_scores, header=0, sep='\t', compression='gzip')
-    ref_info = pd.read_table(ref_info, header=0, sep=';')
+    ref_info = pd.read_table(ref_info, header=0, sep='\t')
 
     ref_info.rename(columns={'Sample': 's'}, inplace=True)
     ref_update = pd.merge(ref, ref_info, how='left', on=['s'])
     # only take s, PC1-20, and POP columns
     ref_update = ref_update.iloc[:, 0:22]
 
-    # add SuperPop column
-    d = {'CHB': 'EAS', 'JPT': 'EAS', 'CHS': 'EAS', 'CDX': 'EAS', 'KHV': 'EAS',
-         'CEU': 'EUR', 'TSI': 'EUR', 'FIN': 'EUR', 'GBR': 'EUR', 'IBS': 'EUR',
-         'YRI': 'AFR', 'LWK': 'AFR', 'GWD': 'AFR', 'MSL': 'AFR', 'ESN': 'AFR', 'ASW': 'AFR', 'ACB': 'AFR',
-         'MXL': 'AMR', 'PUR': 'AMR', 'CLM': 'AMR', 'PEL': 'AMR',
-         'GIH': 'SAS', 'PJL': 'SAS', 'BEB': 'SAS', 'STU': 'SAS', 'ITU': 'SAS'}
-
-    ref_update['SuperPop'] = ref_update['Population'].map(d)
-
-    cbPalette = {'AFR': "#999999", 'AMR': "#E69F00", 'EAS': "#56B4E9", 'EUR': "#009E73",
-                 'oth': "#F0E442", 'SAS': "#0072B2"}
+    cbPalette = {'AFR': "#999999", 'EAS': "#56B4E9", 'EUR': "#009E73", 'CSA': "#009E73", 'AMR': "#E69F00",
+                 'MID': "#999999", 'OCE': "#0072B2", 'oth': "#F0E442"}
 
     # PLOT
     fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(15, 15))
@@ -255,9 +237,9 @@ def plot_pca_ref(data_scores, ref_scores, ref_info, x_pc, y_pc):
 
 
 def pca_with_ref(
-        ref_dirname: str = 'gs://dsge-covid19-data/G1000/maf_0.1/',
-        ref_basename: str = 'g1000.chr1_22',
-        ref_info: str = 'gs://dsge-covid19-data/G1000/20130606_sample_info.csv',
+        ref_dirname: str = 'gs://african-seq-data/hgdp_tgp/gwaspy_pca_ref/',
+        ref_basename: str = 'hgdp_1kg_filtered_maf_5_GRCh38',
+        ref_info: str = 'gs://african-seq-data/hgdp_tgp/gwaspy_pca_ref/hgdp_1kg_sample_info.tsv',
         data_dirname: str = None,
         data_basename: str = None,
         out_dir: str = None,
