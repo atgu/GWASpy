@@ -206,8 +206,8 @@ def plot_pca_ref(data_scores, ref_scores, ref_info, x_pc, y_pc):
     # only take s, PC1-20, and POP columns
     ref_update = ref_update.iloc[:, 0:22]
 
-    cbPalette = {'AFR': "#999999", 'EAS': "#56B4E9", 'EUR': "#009E73", 'CSA': "#009E73", 'AMR': "#E69F00",
-                 'MID': "#999999", 'OCE': "#0072B2", 'oth': "#F0E442"}
+    cbPalette = {'AFR': "#984EA3", 'EAS': "#4DAF4A", 'EUR': "#377EB8", 'CSA': "#FF7F00", 'AMR': "#E41A1C",
+                 'MID': "#A65628", 'OCE': "#999999", 'oth': "#F0E442"}
 
     # PLOT
     fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(15, 15))
