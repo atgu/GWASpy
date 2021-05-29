@@ -53,15 +53,15 @@ def main():
     parser.add_argument('--hwe', type=float, default=1e-3, help='include only SNPs with HWE >= NUM in PCA')
     parser.add_argument('--geno', type=float, default=0.98, help='include only SNPs with call-rate > NUM')
     parser.add_argument('--ld-cor', type=float, default=0.2, choices=range(0,1), metavar="[0.0-1.0]",
-                        help="Squared correlation threshold (exclusive upper bound). Must be in the range [0.0, 1.0]")
+                        help='Squared correlation threshold (exclusive upper bound). Must be in the range [0.0, 1.0]')
     parser.add_argument('--ld-window', type=int, default=250000,
-                        help="Window size in base pairs (inclusive upper bound)")
+                        help='Window size in base pairs (inclusive upper bound)')
     parser.add_argument('--relatedness-method', type=str, default='pc_relate',
                         choices=['pc_relate', 'ibd', 'king'], help='Method to use for the inference of relatedness')
     parser.add_argument('--relatedness-thresh', type=float, default=0.98,
                         help='Threshold value to use in relatedness checks')
     parser.add_argument('--prob', type=float, default=0.8,
-                        help="Minimum probability of belonging to a given population for the population to be set")
+                        help='Minimum probability of belonging to a given population for the population to be set')
     parser.add_argument('--out-dir', type=str, required=True)
 
     args = parser.parse_args()
