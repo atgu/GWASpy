@@ -53,7 +53,7 @@ qc.preimp_qc.preimp_qc(input_type="plink", dirname="data/", basename="sim_sim2a_
 --- | ---
 ``--dirname`` | Path to where the data is
 ``--basename`` | Data basename
-``--input-type`` | Input type, plink or vcf
+``--input-type`` | Input type, Hail MT, PLINK or VCF
 ``--annotations`` | Annotations file to be used for annotating<br>the VCF file (ONLY for VCF input)
 ``--reference`` | Reference genome build e.g. GRCh37, GRCh38
 ``--pre-geno`` | include only SNPs with missing-rate < NUM (before ID filter), important for post merge of multiple platforms
@@ -77,6 +77,26 @@ Below is an example of how to run PCA without a reference using the example data
 ```bash
 pca --dirname data/ --basename 1kg_annotated --out-dir data/ --input-type hail --reference grch37
 ```
+
+**Argument** | **Description**
+--- | ---
+``--ref-dirname`` | Path to where reference data is
+``--ref-basename`` | Reference basename 
+``--ref-info`` | Path to reference information. Tab-delimited file with sample IDs and their SuperPop labels
+``--reference`` | Genome reference build. Default is GRCh38
+``--with-ref`` | Run PCA with or without reference. Default is without
+``--data-dirname`` | Path to where the data is
+``--data-basename`` | Data basename
+``--input-type`` | Data input type. Choices are Hail MT, PLINK, and VCF
+``--maf`` | include only SNPs with MAF >= NUM in PCA. Default is 0.05
+``--hwe`` | include only SNPs with HWE >= NUM in PCA. Default is 1e-03 
+``--geno`` | include only SNPs with call-rate > NUM. Default is 0.98
+``--ld-cor`` | Squared correlation threshold (exclusive upper bound). Must be in the range [0.0, 1.0]. Default is 0.2
+``--ld-window`` | Window size in base pairs (inclusive upper bound). Default is 250000
+``--relatedness-method`` | Method to use for the inference of relatedness. Default is pc_relate
+``--relatedness-thresh`` | Threshold value to use in relatedness checks. Default is 0.98
+``--prob`` | Minimum probability of belonging to a given population for the population to be set. Default is 0.8
+``--out-dir`` | Path to where output files will be saved
 
 (3) Haplotype Phasing
 ---------------------
