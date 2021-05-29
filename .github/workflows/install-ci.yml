@@ -36,3 +36,4 @@ jobs:
         preimp_qc --help
         pca --help
         imputation --help
+        phasing --help
