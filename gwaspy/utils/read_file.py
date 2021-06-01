@@ -21,7 +21,7 @@ def read_vcf(dirname: str, basename: str, annotations: str) -> hl.MatrixTable:
     print("Checking for multi-allelic sites")
     pre_filt_multi_n = in_mt.count_rows()
     bi = in_mt.filter_rows(hl.len(in_mt.alleles) == 2)
-    bi = bi.annotate_rows(a_index=hl.null(hl.tint)) # when we update Hail version, use hl.missing instead of hl.null
+    bi = bi.annotate_rows(a_index=hl.missing(hl.tint))  # when we update Hail version, use hl.missing instead of hl.null
     bi = bi.annotate_rows(was_split=False)
 
     multi = in_mt.filter_rows(hl.len(in_mt.alleles) > 2)
