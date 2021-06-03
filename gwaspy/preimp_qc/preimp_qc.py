@@ -16,16 +16,20 @@ warnings.simplefilter(action='ignore', category=RuntimeWarning)
 def summary_stats(mt: hl.MatrixTable) -> Tuple[hl.MatrixTable, Dict[str, Any]]:
     results = {}
 
-    counts = mt.aggregate_cols(hl.struct(is_case=hl.agg.counter(mt.is_case),
-                                         is_female=hl.agg.counter(mt.is_female)))
+    if 'is_case' in mt.col:
+        counts = mt.aggregate_cols(hl.struct(is_case=hl.agg.counter(mt.is_case),
+                                             is_female=hl.agg.counter(mt.is_female)))
 
-    mapping = {
-        True: 'case',
-        False: 'control',
-        None: 'unknown'
-    }
-    is_case_counts = {mapping[pheno]: count for pheno, count in counts['is_case'].items()}
-    results['is_case_counts'] = is_case_counts
+        mapping = {
+            False: 'control',
+            True: 'case',
+            None: 'unknown'
+        }
+        is_case_counts = {mapping[pheno]: count for pheno, count in counts['is_case'].items()}
+        results['is_case_counts'] = is_case_counts
+
+    else:
+        counts = mt.aggregate_cols(hl.struct(is_female=hl.agg.counter(mt.is_female)))
 
     mapping = {
         True: 'female',
@@ -35,22 +39,24 @@ def summary_stats(mt: hl.MatrixTable) -> Tuple[hl.MatrixTable, Dict[str, Any]]:
     is_female_counts = {mapping[pheno]: count for pheno, count in counts['is_female'].items()}
     results['is_female_counts'] = is_female_counts
 
+    if 'is_case' in mt.col:
+        pheno_status = ['case', 'control', 'unknown']
+
+        for i in pheno_status:
+            if i not in results['is_case_counts']:
+                results['is_case_counts'][i] = 0
+
+    sex_status = ['female', 'male', 'unknown']
+
+    for i in sex_status:
+        if i not in results['is_female_counts']:
+            results['is_female_counts'][i] = 0
+
     n_variants = mt.count_rows()
     n_samples = mt.count_cols()
 
     results['n_variants'] = n_variants
     results['n_samples'] = n_samples
-
-    pheno_status = ['case', 'control', 'unknown']
-    sex_status = ['female', 'male', 'unknown']
-
-    for i in pheno_status:
-        if i not in results['is_case_counts']:
-            results['is_case_counts'][i] = 0
-
-    for i in sex_status:
-        if i not in results['is_female_counts']:
-            results['is_female_counts'][i] = 0
 
     return mt, results
 
@@ -60,10 +66,11 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
               fstat_y: Union[int, float] = 0.5, geno_thresh: Union[int, float] = 0.98,
               cr_diff_thresh: Union[int, float] = 0.02, maf_thresh: Union[int, float] = 0.01,
               hwe_th_con_thresh: Union[int, float] = 1e-6, hwe_th_cas_thresh: Union[int, float] = 1e-10,
-              annotations_file: str = None, report: bool = True, export_type: str = 'hail', out_dir: str = None,
-              reference: str = 'GRCh38'):
+              hwe_th_all_thresh: Union[int, float] = 1e-06, annotations_file: str = None, report: bool = True,
+              export_type: str = 'hail', out_dir: str = None, reference: str = 'GRCh38'):
     print('\nRunning QC')
-    global mt, row_filters, filters
+
+    global mt, row_filters, filters, data_type, lambda_gc_pos, lambda_gc_pre, n_sig_var_pre, n_sig_var_pos, man_table_results
 
     # create temp directory for storing temp files
     if not os.path.exists('gwaspy_tmp'):
@@ -79,25 +86,29 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
     # read input
     mt = read_infile(input_type=input_type, dirname=dirname, basename=basename, annotations=annotations_file)
 
-    gwas_pre, n_sig_var_pre = manhattan(qqtitle='Pre-QC QQ Plot', mantitle='Pre-QC Manhattan Plot').filter(mt)
-    qqplt_pre, lambda_gc_pre, manplt_pre = manhattan(qqtitle='Pre-QC QQ Plot',
-                                                     mantitle='Pre-QC Manhattan Plot').plot(gwas_pre)
-    qqplt_pre.savefig('gwaspy_tmp/gwaspy_qq_pre.png', dpi=300)
-    manplt_pre.savefig('gwaspy_tmp/gwaspy_man_pre.png', dpi=300)
+    if 'is_case' in mt.col:
+        gwas_pre, n_sig_var_pre = manhattan(qqtitle='Pre-QC QQ Plot', mantitle='Pre-QC Manhattan Plot').filter(mt)
+        qqplt_pre, lambda_gc_pre, manplt_pre = manhattan(qqtitle='Pre-QC QQ Plot',
+                                                         mantitle='Pre-QC Manhattan Plot').plot(gwas_pre)
+        qqplt_pre.savefig('gwaspy_tmp/gwaspy_qq_pre.png', dpi=300)
+        manplt_pre.savefig('gwaspy_tmp/gwaspy_man_pre.png', dpi=300)
 
     mt = mt.annotate_rows(exclude_row=False)
     mt = mt.annotate_cols(exclude_col=False)
 
     mt, pre_qc_counts = summary_stats(mt)
 
-    if (pre_qc_counts['is_case_counts']['case'] > 0) & (pre_qc_counts['is_case_counts']['control'] == 0):
-        data_type = 'Case-only'
-    elif (pre_qc_counts['is_case_counts']['control'] > 0) & (pre_qc_counts['is_case_counts']['case'] == 0):
-        data_type = 'Control-only'
-    elif (pre_qc_counts['is_case_counts']['case'] > 0) & (pre_qc_counts['is_case_counts']['control'] > 0):
-        data_type = 'Case-Control'
+    if 'is_case' in mt.col:
+        if (pre_qc_counts['is_case_counts']['case'] > 0) & (pre_qc_counts['is_case_counts']['control'] == 0):
+            data_type = 'Case-only'
+        elif (pre_qc_counts['is_case_counts']['control'] > 0) & (pre_qc_counts['is_case_counts']['case'] == 0):
+            data_type = 'Control-only'
+        elif (pre_qc_counts['is_case_counts']['case'] > 0) & (pre_qc_counts['is_case_counts']['control'] > 0):
+            data_type = 'Case-Control'
+        else:
+            data_type = 'Trio'
     else:
-        data_type = 'Trio'
+        data_type = 'no-pheno'
 
     mt = pre_geno(pre_geno_cr=pre_geno_thresh).filter(mt)
     mt = id_call_rate(mind=mind_thresh, pre_row_filter='pre_geno').filter(mt)
@@ -113,35 +124,43 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
         )})
 
     mt = geno(pre_row_filter='pre_geno', pre_col_filter='id_pass', geno_thresh=geno_thresh, data_type=data_type).filter(mt)
-    mt = call_rate_diff(pre_row_filter='geno', pre_col_filter='id_pass', initial_row_filter='pre_geno',
-                        cr_thresh=cr_diff_thresh).filter(mt)
     mt = invariant(pre_col_filter='id_pass').filter(mt)
 
-    # check if data is case-/control-only, case-control, or trio
-    # (a) Case-Only
-    if data_type == 'Case-only':
-        print("\n" + data_type)
-        mt = hwe_cas(pre_col_filter='id_pass', pre_row_filter='geno', hwe_th_ca=1e-6).filter(mt)
-        row_filters = ['pre_geno', 'geno', 'cr_diff', 'monomorphic_var', 'hwe_cas']
-        filters = ['pre_geno', 'mind', 'fstat', 'sex_violations', 'sex_warnings', 'geno', 'cr_diff',
-                   'monomorphic_var', 'hwe_cas']
-    # (b) Control-Only
-    elif data_type == 'Control-only':
-        print("\n" + data_type)
-        mt = hwe_con(pre_col_filter='id_pass', pre_row_filter='geno', hwe_th_co=1e-6).filter(mt)
-        row_filters = ['pre_geno', 'geno', 'cr_diff', 'monomorphic_var', 'hwe_con']
-        filters = ['pre_geno', 'mind', 'fstat', 'sex_violations', 'sex_warnings', 'geno', 'cr_diff',
-                   'monomorphic_var', 'hwe_con']
-    elif data_type == 'Case-Control':
-        print("\n" + data_type)
-        mt = hwe_cas(pre_col_filter='id_pass', pre_row_filter='geno', hwe_th_ca=hwe_th_cas_thresh).filter(mt)
-        mt = hwe_con(pre_col_filter='id_pass', pre_row_filter='geno', hwe_th_co=hwe_th_con_thresh).filter(mt)
-        row_filters = ['pre_geno', 'geno', 'cr_diff', 'monomorphic_var', 'hwe_con', 'hwe_cas']
-        filters = ['pre_geno', 'mind', 'fstat', 'sex_violations', 'sex_warnings', 'geno', 'cr_diff',
-                   'monomorphic_var', 'hwe_con', 'hwe_cas']
+    if 'is_case' in mt.col:
+        mt = call_rate_diff(pre_row_filter='geno', pre_col_filter='id_pass', initial_row_filter='pre_geno',
+                            cr_thresh=cr_diff_thresh).filter(mt)
+
+        # check if data is case-/control-only, case-control, or trio
+        # (a) Case-Only
+        if data_type == 'Case-only':
+            print("\n" + data_type)
+            mt = hwe_cas(pre_col_filter='id_pass', pre_row_filter='geno', hwe_th_ca=1e-6).filter(mt)
+            row_filters = ['pre_geno', 'geno', 'cr_diff', 'monomorphic_var', 'hwe_cas']
+            filters = ['pre_geno', 'mind', 'fstat', 'sex_violations', 'sex_warnings', 'geno', 'cr_diff',
+                       'monomorphic_var', 'hwe_cas']
+        # (b) Control-Only
+        elif data_type == 'Control-only':
+            print("\n" + data_type)
+            mt = hwe_con(pre_col_filter='id_pass', pre_row_filter='geno', hwe_th_co=1e-6).filter(mt)
+            row_filters = ['pre_geno', 'geno', 'cr_diff', 'monomorphic_var', 'hwe_con']
+            filters = ['pre_geno', 'mind', 'fstat', 'sex_violations', 'sex_warnings', 'geno', 'cr_diff',
+                       'monomorphic_var', 'hwe_con']
+        elif data_type == 'Case-Control':
+            print("\n" + data_type)
+            mt = hwe_cas(pre_col_filter='id_pass', pre_row_filter='geno', hwe_th_ca=hwe_th_cas_thresh).filter(mt)
+            mt = hwe_con(pre_col_filter='id_pass', pre_row_filter='geno', hwe_th_co=hwe_th_con_thresh).filter(mt)
+            row_filters = ['pre_geno', 'geno', 'cr_diff', 'monomorphic_var', 'hwe_con', 'hwe_cas']
+            filters = ['pre_geno', 'mind', 'fstat', 'sex_violations', 'sex_warnings', 'geno', 'cr_diff',
+                       'monomorphic_var', 'hwe_con', 'hwe_cas']
+        else:
+            # trio data
+            print(data_type)
     else:
-        # trio data
-        print(data_type)
+        print('Running HWE filters on cases and controls combined')
+        mt = hwe_all(pre_col_filter='id_pass', pre_row_filter='geno', hwe_th_all=1e-08).filter(mt)
+        row_filters = ['pre_geno', 'geno', 'monomorphic_var', 'hwe_all']
+        filters = ['pre_geno', 'mind', 'fstat', 'sex_violations', 'sex_warnings', 'geno',
+                   'monomorphic_var', 'hwe_all']
 
     results = {}
     column_filters = ['mind', 'fstat', 'sex_violations', 'sex_warnings']
@@ -177,19 +196,24 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
         var_cr_plot = geno(pre_row_filter='pre_geno', pre_col_filter='id_pass', geno_thresh=geno_thresh,
                            data_type=data_type).plot(mt)
 
-        if data_type == 'Case-only':
-            id_cr_plot[0].savefig('gwaspy_tmp/gwaspy_id_cas_pre.png', dpi=300)
-            var_cr_plot[0].savefig('gwaspy_tmp/gwaspy_var_cas_pre.png', dpi=300)
+        if 'is_case' in mt.col:
+            if data_type == 'Case-only':
+                id_cr_plot[0].savefig('gwaspy_tmp/gwaspy_id_cas_pre.png', dpi=300)
+                var_cr_plot[0].savefig('gwaspy_tmp/gwaspy_var_cas_pre.png', dpi=300)
 
-        if data_type == 'Control-only':
-            id_cr_plot[0].savefig('gwaspy_tmp/gwaspy_id_con_pre.png', dpi=300)
-            var_cr_plot[0].savefig('gwaspy_tmp/gwaspy_var_con_pre.png', dpi=300)
+            if data_type == 'Control-only':
+                id_cr_plot[0].savefig('gwaspy_tmp/gwaspy_id_con_pre.png', dpi=300)
+                var_cr_plot[0].savefig('gwaspy_tmp/gwaspy_var_con_pre.png', dpi=300)
 
-        if data_type == 'Case-Control':
-            id_cr_plot[0].savefig('gwaspy_tmp/gwaspy_id_con_pre.png', dpi=300)
-            id_cr_plot[1].savefig('gwaspy_tmp/gwaspy_id_cas_pre.png', dpi=300)
-            var_cr_plot[0].savefig('gwaspy_tmp/gwaspy_var_con_pre.png', dpi=300)
-            var_cr_plot[1].savefig('gwaspy_tmp/gwaspy_var_cas_pre.png', dpi=300)
+            if data_type == 'Case-Control':
+                id_cr_plot[0].savefig('gwaspy_tmp/gwaspy_id_con_pre.png', dpi=300)
+                id_cr_plot[1].savefig('gwaspy_tmp/gwaspy_id_cas_pre.png', dpi=300)
+                var_cr_plot[0].savefig('gwaspy_tmp/gwaspy_var_con_pre.png', dpi=300)
+                var_cr_plot[1].savefig('gwaspy_tmp/gwaspy_var_cas_pre.png', dpi=300)
+
+        else:
+            id_cr_plot[0].savefig('gwaspy_tmp/gwaspy_id_cas_con_pre.png', dpi=300)
+            var_cr_plot[0].savefig('gwaspy_tmp/gwaspy_var_cas_con_pre.png', dpi=300)
 
     # FILTER OUT ALL SNPs and IDs THAT FAIL QC
     for row in row_filters:
@@ -201,54 +225,69 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
     mt_filtered = hl.read_matrix_table('gwaspy_tmp/filtered.mt')
     mt_filtered, pos_qc_counts = summary_stats(mt_filtered)
 
-    gwas_pos, n_sig_var_pos = manhattan(qqtitle='Post-QC QQ Plot', mantitle='Post-QC Manhattan Plot').filter(mt)
-    qqplt_pos, lambda_gc_pos, manplt_pos = manhattan(qqtitle='Post-QC QQ Plot',
-                                                     mantitle='Post-QC Manhattan Plot').plot(gwas_pos)
+    if 'is_case' in mt.col:
+        gwas_pos, n_sig_var_pos = manhattan(qqtitle='Post-QC QQ Plot', mantitle='Post-QC Manhattan Plot').filter(mt)
+        qqplt_pos, lambda_gc_pos, manplt_pos = manhattan(qqtitle='Post-QC QQ Plot',
+                                                         mantitle='Post-QC Manhattan Plot').plot(gwas_pos)
 
-    ncas_pre = pre_qc_counts['is_case_counts']['case']
-    ncas_pos = pos_qc_counts['is_case_counts']['case']
-    ncon_pre = pre_qc_counts['is_case_counts']['control']
-    ncon_pos = pos_qc_counts['is_case_counts']['control']
-    lambda_thous_pre = 1 + (lambda_gc_pre-1)*(1/ncas_pre+1/ncon_pre)/(1/1000+1/1000)
-    lambda_thous_pos = 1 + (lambda_gc_pos-1)*(1/ncas_pos+1/ncon_pos)/(1/1000+1/1000)
+        ncas_pre = pre_qc_counts['is_case_counts']['case']
+        ncas_pos = pos_qc_counts['is_case_counts']['case']
+        ncon_pre = pre_qc_counts['is_case_counts']['control']
+        ncon_pos = pos_qc_counts['is_case_counts']['control']
+        lambda_thous_pre = 1 + (lambda_gc_pre-1)*(1/ncas_pre+1/ncon_pre)/(1/1000+1/1000)
+        lambda_thous_pos = 1 + (lambda_gc_pos-1)*(1/ncas_pos+1/ncon_pos)/(1/1000+1/1000)
 
-    qqplt_pos.savefig('gwaspy_tmp/gwaspy_qq_pos.png', dpi=300)
-    manplt_pos.savefig('gwaspy_tmp/gwaspy_man_pos.png', dpi=300)
+        qqplt_pos.savefig('gwaspy_tmp/gwaspy_qq_pos.png', dpi=300)
+        manplt_pos.savefig('gwaspy_tmp/gwaspy_man_pos.png', dpi=300)
 
-    man_table_results = [n_sig_var_pre, n_sig_var_pos, lambda_gc_pre, lambda_gc_pos, round(lambda_thous_pre, 3),
-                         round(lambda_thous_pos, 3)]
+        man_table_results = [n_sig_var_pre, n_sig_var_pos, lambda_gc_pre, lambda_gc_pos, round(lambda_thous_pre, 3),
+                             round(lambda_thous_pos, 3)]
 
     # report
     if report:
         print('\nWriting report')
         doc = MyDocument(basename=basename)
-        doc.flags_table(pre_qc_counts=pre_qc_counts, pos_qc_counts=pos_qc_counts, results=results,
-                        lambda_gc=lambda_gc_pos, sig_vars=n_sig_var_pos)
+        if 'is_case' in mt.col:
+            doc.flags_table(pre_qc_counts=pre_qc_counts, pos_qc_counts=pos_qc_counts, results=results,
+                            lambda_gc=lambda_gc_pos, sig_vars=n_sig_var_pos)
+        else:
+            doc.flags_table(pre_qc_counts=pre_qc_counts, pos_qc_counts=pos_qc_counts, results=results)
         doc.general_info(pre_qc_conts=pre_qc_counts, post_qc_conts=pos_qc_counts,
                          count_results=results, pre_filter=pre_geno_thresh, id_cr=mind_thresh, fhet_thresh=fhet_aut,
                          var_cr=geno_thresh, miss_diff=cr_diff_thresh, hwe_con=hwe_th_con_thresh,
-                         hwe_cas=hwe_th_cas_thresh, data_type=data_type)
-        doc.manhattan_sec(qq_pre_path=f'{gwaspy_dir}/gwaspy_qq_pre.png', qq_pos_path=f'{gwaspy_dir}/gwaspy_qq_pos.png',
-                          man_pre_path=f'{gwaspy_dir}/gwaspy_man_pre.png',
-                          man_pos_path=f'{gwaspy_dir}/gwaspy_man_pos.png',
-                          table_results=man_table_results)
+                         hwe_cas=hwe_th_cas_thresh, hwe_all=hwe_th_all_thresh, data_type=data_type)
+        if 'is_case' in mt.col:
+            doc.manhattan_sec(qq_pre_path=f'{gwaspy_dir}/gwaspy_qq_pre.png', qq_pos_path=f'{gwaspy_dir}/gwaspy_qq_pos.png',
+                              man_pre_path=f'{gwaspy_dir}/gwaspy_man_pre.png',
+                              man_pos_path=f'{gwaspy_dir}/gwaspy_man_pos.png',
+                              table_results=man_table_results)
+
         if data_type == 'Case-only':
             doc.individual_char(id_con_pre_path='nothing here', id_cas_pre_path=f'{gwaspy_dir}/gwaspy_id_cas_pre.png',
-                                fstat_fig_path=f'{gwaspy_dir}/gwaspy_fstat_fig.png', data_type=data_type)
+                                fstat_fig_path=f'{gwaspy_dir}/gwaspy_fstat_fig.png', id_all_path='nothing here',
+                                data_type=data_type)
             doc.snp_char(var_con_pre_path='nothing here', var_cas_pre_path=f'{gwaspy_dir}/gwaspy_var_cas_pre.png',
-                         data_type=data_type)
+                         var_all_path='nothing here', data_type=data_type)
         if data_type == 'Control-only':
             doc.individual_char(id_con_pre_path=f'{gwaspy_dir}/gwaspy_id_con_pre.png', id_cas_pre_path='nothing here',
-                                fstat_fig_path=f'{gwaspy_dir}/gwaspy_fstat_fig.png', data_type=data_type)
+                                fstat_fig_path=f'{gwaspy_dir}/gwaspy_fstat_fig.png', id_all_path='nothing here',
+                                data_type=data_type)
             doc.snp_char(var_con_pre_path=f'{gwaspy_dir}/gwaspy_var_cas_pre.png', var_cas_pre_path='nothing here',
-                         data_type=data_type)
+                         var_all_path='nothing here', data_type=data_type)
         if data_type == 'Case-Control':
             doc.individual_char(id_con_pre_path=f'{gwaspy_dir}/gwaspy_id_con_pre.png',
                                 id_cas_pre_path=f'{gwaspy_dir}/gwaspy_id_cas_pre.png',
-                                fstat_fig_path=f'{gwaspy_dir}/gwaspy_fstat_fig.png', data_type=data_type)
+                                fstat_fig_path=f'{gwaspy_dir}/gwaspy_fstat_fig.png', id_all_path='nothing here',
+                                data_type=data_type)
             doc.snp_char(var_con_pre_path=f'{gwaspy_dir}/gwaspy_var_cas_pre.png',
                          var_cas_pre_path=f'{gwaspy_dir}/gwaspy_var_cas_pre.png',
-                         data_type=data_type)
+                         var_all_path='nothing here', data_type=data_type)
+        if data_type == 'no-pheno':
+            doc.individual_char(id_con_pre_path='nothing here', id_cas_pre_path='nothing here',
+                                fstat_fig_path=f'{gwaspy_dir}/gwaspy_fstat_fig.png',
+                                id_all_path=f'{gwaspy_dir}/gwaspy_id_cas_con_pre.png', data_type=data_type)
+            doc.snp_char(var_con_pre_path='nothing here', var_cas_pre_path=f'nothing here',
+                         var_all_path=f'{gwaspy_dir}/gwaspy_var_cas_con_pre.png', data_type=data_type)
         doc.generate_pdf(f'{gwaspy_dir}/{basename}.preimp_qc.report', clean_tex=False)
 
     print('\nExporting qced file')
@@ -296,16 +335,17 @@ def main():
                                                                  "case/control) < NUM")
     parser.add_argument('--withpna', type=int, default=0, choices=[0, 1], help="include monomorphic (invariant) SNPs")
     parser.add_argument('--maf', type=float, default=0.01, help="include only SNPs with MAF >= NUM")
-    parser.add_argument('--hwe-th-con', type=float, default=1e-6, help="HWE_controls < NUM")
-    parser.add_argument('--hwe-th-cas', type=float, default=1e-10, help="HWE_cases < NUM")
+    parser.add_argument('--hwe-th-con', type=float, default=1e-06, help="HWE controls < NUM")
+    parser.add_argument('--hwe-th-cas', type=float, default=1e-10, help="HWE cases < NUM")
+    parser.add_argument('--hwe-th-all', type=float, default=1e-06, help="HWE cases + controls < NUM")
 
     arg = parser.parse_args()
 
     preimp_qc(input_type=arg.input_type, dirname=arg.dirname, basename=arg.basename, pre_geno_thresh=arg.pre_geno,
               mind_thresh=arg.mind, fhet_aut=arg.fhet_aut, fstat_x=arg.fstat_x, fstat_y=arg.fstat_y,
               geno_thresh=arg.geno, cr_diff_thresh=arg.midi, maf_thresh=arg.maf, hwe_th_con_thresh=arg.hwe_th_con,
-              hwe_th_cas_thresh=arg.hwe_th_cas, annotations_file=arg.annotations, report=arg.report,
-              export_type=arg.export_type, out_dir=arg.out_dir, reference=arg.reference)
+              hwe_th_cas_thresh=arg.hwe_th_cas, hwe_th_all_thresh=arg.hwe_th_all, annotations_file=arg.annotations,
+              report=arg.report, export_type=arg.export_type, out_dir=arg.out_dir, reference=arg.reference)
 
 
 if __name__ == '__main__':

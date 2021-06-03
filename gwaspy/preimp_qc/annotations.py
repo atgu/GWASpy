@@ -66,24 +66,29 @@ class id_call_rate(BaseFilter):
         mt = mt.annotate_cols(
             mind_cr_pre=hl.agg.filter(mt.pre_geno.filters == False, agg_call_rate(mt)))
 
-        if self._data_type == "Case-only":
-            mt_cases: hl.MatrixTable = mt.filter_cols(mt.is_case == True)
-            cas_pre = plt_hist(mt_cases.mind_cr_pre, title="Cases", threshold=self._mind, x_label='Call Rate')
-            id_call_rate_plts = [cas_pre]
+        if 'is_case' in mt.col:
+            if self._data_type == "Case-only":
+                mt_cases: hl.MatrixTable = mt.filter_cols(mt.is_case == True)
+                cas_pre = plt_hist(mt_cases.mind_cr_pre, title="Cases", threshold=self._mind, x_label='Call Rate')
+                id_call_rate_plts = [cas_pre]
 
-        if self._data_type == "Control-only":
-            mt_controls: hl.MatrixTable = mt.filter_cols(mt.is_case == False)
-            con_pre = plt_hist(mt_controls.mind_cr_pre, title="Controls", threshold=self._mind, x_label='Call Rate')
-            id_call_rate_plts = [con_pre]
+            if self._data_type == "Control-only":
+                mt_controls: hl.MatrixTable = mt.filter_cols(mt.is_case == False)
+                con_pre = plt_hist(mt_controls.mind_cr_pre, title="Controls", threshold=self._mind, x_label='Call Rate')
+                id_call_rate_plts = [con_pre]
 
-        if self._data_type == "Case-Control":
-            mt_controls: hl.MatrixTable = mt.filter_cols(mt.is_case == False)
-            mt_cases: hl.MatrixTable = mt.filter_cols(mt.is_case == True)
+            if self._data_type == "Case-Control":
+                mt_controls: hl.MatrixTable = mt.filter_cols(mt.is_case == False)
+                mt_cases: hl.MatrixTable = mt.filter_cols(mt.is_case == True)
 
-            con_pre = plt_hist(mt_controls.mind_cr_pre, title="Controls", threshold=self._mind, x_label='Call Rate')
-            cas_pre = plt_hist(mt_cases.mind_cr_pre, title="Cases", threshold=self._mind, x_label='Call Rate')
+                con_pre = plt_hist(mt_controls.mind_cr_pre, title="Controls", threshold=self._mind, x_label='Call Rate')
+                cas_pre = plt_hist(mt_cases.mind_cr_pre, title="Cases", threshold=self._mind, x_label='Call Rate')
 
-            id_call_rate_plts = [con_pre, cas_pre]
+                id_call_rate_plts = [con_pre, cas_pre]
+
+        else:
+            all_cas_con = plt_hist(mt.mind_cr_pre, title="Cases+Controls", threshold=self._mind, x_label='Call Rate')
+            id_call_rate_plts = [all_cas_con]
 
         return id_call_rate_plts
 
@@ -225,24 +230,29 @@ class geno(BaseFilter):
         mt = mt.annotate_rows(
             var_cr_pre=hl.agg.filter(mt.pre_geno.filters == False, agg_call_rate(mt)))
 
-        if self._data_type == "Case-only":
-            mt_cases: hl.MatrixTable = mt.filter_cols(mt.is_case == True)
-            cas_pre = plt_hist(mt_cases.var_cr_pre, title="Cases", threshold=self._geno, x_label='Call Rate')
-            var_call_rate_plts = [cas_pre]
+        if 'is_case' in mt.col:
+            if self._data_type == "Case-only":
+                mt_cases: hl.MatrixTable = mt.filter_cols(mt.is_case == True)
+                cas_pre = plt_hist(mt_cases.var_cr_pre, title="Cases", threshold=self._geno, x_label='Call Rate')
+                var_call_rate_plts = [cas_pre]
 
-        if self._data_type == "Control-only":
-            mt_controls: hl.MatrixTable = mt.filter_cols(mt.is_case == False)
-            con_pre = plt_hist(mt_controls.var_cr_pre, title="Controls", threshold=self._geno, x_label='Call Rate')
-            var_call_rate_plts = [con_pre]
+            if self._data_type == "Control-only":
+                mt_controls: hl.MatrixTable = mt.filter_cols(mt.is_case == False)
+                con_pre = plt_hist(mt_controls.var_cr_pre, title="Controls", threshold=self._geno, x_label='Call Rate')
+                var_call_rate_plts = [con_pre]
 
-        if self._data_type == "Case-Control":
-            mt_controls: hl.MatrixTable = mt.filter_cols(mt.is_case == False)
-            mt_cases: hl.MatrixTable = mt.filter_cols(mt.is_case == True)
+            if self._data_type == "Case-Control":
+                mt_controls: hl.MatrixTable = mt.filter_cols(mt.is_case == False)
+                mt_cases: hl.MatrixTable = mt.filter_cols(mt.is_case == True)
 
-            con_pre = plt_hist(mt_controls.var_cr_pre, title="Controls", threshold=self._geno, x_label='Call Rate')
-            cas_pre = plt_hist(mt_cases.var_cr_pre, title="Cases", threshold=self._geno, x_label='Call Rate')
+                con_pre = plt_hist(mt_controls.var_cr_pre, title="Controls", threshold=self._geno, x_label='Call Rate')
+                cas_pre = plt_hist(mt_cases.var_cr_pre, title="Cases", threshold=self._geno, x_label='Call Rate')
 
-            var_call_rate_plts = [con_pre, cas_pre]
+                var_call_rate_plts = [con_pre, cas_pre]
+
+        else:
+            all_cas_con = plt_hist(mt.var_cr_pre, title="Cases+Controls", threshold=self._geno, x_label='Call Rate')
+            var_call_rate_plts = [all_cas_con]
 
         return var_call_rate_plts
 
@@ -363,6 +373,32 @@ class hwe_cas(BaseFilter):
                 filters=((row_filter == False) & (hl.agg.filter(((pre_filter == False) & (mt.is_case == True)),
                                                                 variant_qc_aggregator(
                                                                     mt).p_value_hwe) < self._hwe_th_ca)))})
+
+        return mt
+
+    def plot(self, mt):
+        pass
+
+
+class hwe_all(BaseFilter):
+    def __init__(self, hwe_th_all: float = 1e-06, pre_col_filter: str = None,
+                 pre_row_filter: str = None):
+        super().__init__()
+        self._hwe_th_all = hwe_th_all
+        self._col_filter = pre_col_filter
+        self._row_filter = pre_row_filter
+
+    def filter(self, mt):
+        row_filter = mt[self._row_filter].filters if self._row_filter else mt.exclude_row
+        col_filter = mt[self._col_filter].filters if self._col_filter else mt.exclude_col
+
+        pre_filter = row_filter | col_filter
+
+        mt = mt.annotate_rows(**{
+            'hwe_all': hl.struct(
+                filters=((row_filter == False) & (hl.agg.filter((pre_filter == False),
+                                                                variant_qc_aggregator(
+                                                                    mt).p_value_hwe) < self._hwe_th_all)))})
 
         return mt
 
