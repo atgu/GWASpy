@@ -15,29 +15,31 @@ class MyDocument(Document):
 
     def flags_table(self, pre_qc_counts=None, pos_qc_counts=None, results=None, lambda_gc=None, sig_vars=None):
         nids_lost = (pre_qc_counts['n_samples'] - pos_qc_counts['n_samples']) / pre_qc_counts['n_samples']
+        nids_lost = round(nids_lost, 4)
         nids_sex_check = results['sex_warnings'][True] / pre_qc_counts['n_samples']
+        nids_sex_check = round(nids_sex_check, 4)
 
         if 'is_case_counts' in pre_qc_counts.keys() | pos_qc_counts.keys():
             cas_con_ratio = round(pos_qc_counts['is_case_counts']['case'] / pos_qc_counts['is_case_counts']['control'], 4)
 
-            tbl = [['nsnps-postqc', pos_qc_counts['n_variants'], 250000, 200000, 0, 'green'],
-                   ['ncases-postqc', pos_qc_counts['is_case_counts']['case'], 100, 50, 0, 'green'],
-                   ['ncontrols-postqc', pos_qc_counts['is_case_counts']['control'], 100, 50, 0, 'green'],
-                   ['case-control-ratio-postqc', cas_con_ratio, 0.0625, 0.0278, 0, 'green'],
-                   ['nids-lost-ratio', nids_lost, 0.01, 0.1, 0, 'green'],
-                   ['n-nopt-postqc', pos_qc_counts['is_case_counts']['unknown'], 0, 10, 0, 'green'],
-                   ['nids-sexcheck-ratio', nids_sex_check, 0.005, 0.0025, 0, 'green'],
-                   ['lambda-postqc', lambda_gc, 1.1, 1.2, 0, 'green'],
-                   ['nsnps-gws', sig_vars, 0, 1, 0, 'green']]
+            tbl = [['Number of SNPs Post-QC', pos_qc_counts['n_variants'], 250000, 200000, 0, 'green'],
+                   ['Number of Cases Post-QC', pos_qc_counts['is_case_counts']['case'], 100, 50, 0, 'green'],
+                   ['Number of Controls Post-QC', pos_qc_counts['is_case_counts']['control'], 100, 50, 0, 'green'],
+                   ['Case-Control ratio Post-QC', cas_con_ratio, 0.0625, 0.0278, 0, 'green'],
+                   ['Number of IDs lost ratio', nids_lost, 0.01, 0.1, 0, 'green'],
+                   ['Number of IDs with no Phenotype Post-QC', pos_qc_counts['is_case_counts']['unknown'], 0, 10, 0, 'green'],
+                   ['Ratio of IDs that failed sex checks', nids_sex_check, 0.005, 0.0025, 0, 'green'],
+                   ['Lambda GC Post-QC', lambda_gc, 1.1, 1.2, 0, 'green'],
+                   ['Number of Significant GWAS hits Post-QC', sig_vars, 0, 1, 0, 'green']]
 
         else:
-            tbl = [['nsnps-postqc', pos_qc_counts['n_variants'], 250000, 200000, 0, 'green'],
-                   ['nids-lost-ratio', nids_lost, 0.01, 0.1, 0, 'green'],
-                   ['nids-sexcheck-ratio', nids_sex_check, 0.005, 0.0025, 0, 'green']]
+            tbl = [['Number of SNPs Post-QC', pos_qc_counts['n_variants'], 250000, 200000, 0, 'green'],
+                   ['Number of IDs lost ratio', nids_lost, 0.01, 0.1, 0, 'green'],
+                   ['Ratio of IDs that failed sex checks', nids_sex_check, 0.005, 0.0025, 0, 'green']]
 
         for i in tbl:
-            if (i[0] == 'nsnps-postqc') | (i[0] == 'ncases-postqc') | (i[0] == 'ncontrols-postqc') | (
-                    i[0] == 'case-control-ratio-postqc'):
+            if (i[0] == 'Number of SNPs Post-QC') | (i[0] == 'Number of Cases Post-QC') |\
+                    (i[0] == 'Number of Controls Post-QC') | (i[0] == 'Case-Control ratio Post-QC'):
                 if (i[1] <= i[2]) & (i[1] >= i[3]):
                     i[4] = 1
                     i[5] = 'orange'
@@ -48,7 +50,7 @@ class MyDocument(Document):
                     i[4] = 0
                     i[5] = 'green'
 
-            if i[0] == 'nids-lost-ratio':
+            if i[0] == 'Number of IDs lost ratio':
                 if (i[1] > i[2]) & (i[1] <= i[3]):
                     i[4] = 1
                     i[5] = 'orange'
@@ -59,7 +61,7 @@ class MyDocument(Document):
                     i[4] = 0
                     i[5] = 'green'
 
-            if (i[0] == 'nids-sexcheck-ratio') | (i[0] == 'lambda-postqc'):
+            if (i[0] == 'Ratio of IDs that failed sex checks') | (i[0] == 'Lambda GC Post-QC'):
                 if (i[1] >= i[2]) & (i[1] <= i[3]):
                     i[4] = 1
                     i[5] = 'orange'
@@ -70,7 +72,7 @@ class MyDocument(Document):
                     i[4] = 0
                     i[5] = 'green'
 
-            if (i[0] == 'nsnps-gws') | (i[0] == 'n-nopt-postqc'):
+            if (i[0] == 'Number of Significant GWAS hits Post-QC') | (i[0] == 'Number of IDs with no Phenotype Post-QC'):
                 if i[1] == i[2]:
                     i[4] = 0
                     i[5] = 'green'
