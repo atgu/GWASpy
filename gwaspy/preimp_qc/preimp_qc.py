@@ -156,7 +156,7 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
             # trio data
             print(data_type)
     else:
-        print('Running HWE filters on cases and controls combined')
+        print('Running HWE filters on whole dataset without spliting by phenotype status')
         mt = hwe_all(pre_col_filter='id_pass', pre_row_filter='geno', hwe_th_all=1e-08).filter(mt)
         row_filters = ['pre_geno', 'geno', 'monomorphic_var', 'hwe_all']
         filters = ['pre_geno', 'mind', 'fstat', 'sex_violations', 'sex_warnings', 'geno',
