@@ -9,7 +9,7 @@ class MyDocument(Document):
         super().__init__()
 
         self.preamble.append(Command('title', 'QC Report of {}'.format(basename)))
-        self.preamble.append(Command('author', 'Anonymous author'))
+        # self.preamble.append(Command('author', 'Anonymous author'))
         self.preamble.append(Command('date', NoEscape(r'\today')))
         self.append(NoEscape(r'\maketitle'))
 
@@ -124,61 +124,59 @@ class MyDocument(Document):
                     + str(pre_qc_conts['is_female_counts']['female']-post_qc_conts['is_female_counts']['female']) +\
                     ', ' + str(pre_qc_conts['is_female_counts']['unknown']-post_qc_conts['is_female_counts']['unknown'])
 
-        self.append(NewPage())
-
         with self.create(Section('General Info')):
-            with self.create(Subsection('Size of sample')):
-                with self.create(Center()) as centered:
-                    with centered.create(Tabular('|c|c|c|c|')) as table:
+            # with self.create(Subsection('Size of sample')):
+            with self.create(Center()) as centered:
+                with centered.create(Tabular('|c|c|c|c|')) as table:
+                    table.add_hline()
+                    table.add_row((bold('Test'), bold('pre QC'), bold('post QC'), bold('exlcusion-N')))
+                    table.add_hline()
+                    if 'is_case_counts' in pre_qc_conts.keys() | post_qc_conts.keys():
+                        table.add_row(('Cases, Controls, Missing', pre_pheno_counts,
+                                        post_pheno_counts, pheno_diffs))
                         table.add_hline()
-                        table.add_row((bold('Test'), bold('pre QC'), bold('post QC'), bold('exlcusion-N')))
-                        table.add_hline()
-                        if 'is_case_counts' in pre_qc_conts.keys() | post_qc_conts.keys():
-                            table.add_row(('Cases, Controls, Missing', pre_pheno_counts,
-                                           post_pheno_counts, pheno_diffs))
-                            table.add_hline()
-                        table.add_row(('Males, Females, Unspec', pre_sex_counts,
-                                       post_sex_counts, sex_diffs))
-                        table.add_hline()
-                        table.add_row(('SNPs', pre_qc_conts['n_variants'],
-                                       post_qc_conts['n_variants'],
-                                       pre_qc_conts['n_variants'] - post_qc_conts['n_variants']))
-                        table.add_hline()
+                    table.add_row(('Males, Females, Unspec', pre_sex_counts,
+                                    post_sex_counts, sex_diffs))
+                    table.add_hline()
+                    table.add_row(('SNPs', pre_qc_conts['n_variants'],
+                                    post_qc_conts['n_variants'],
+                                    pre_qc_conts['n_variants'] - post_qc_conts['n_variants']))
+                    table.add_hline()
 
-            with self.create(Subsection('Exclusion overview')):
-                with self.create(Center()) as centered:
-                    with centered.create(Tabular('|l|l|')) as table:
+            # with self.create(Subsection('Exclusion overview')):
+            with self.create(Center()) as centered:
+                with centered.create(Tabular('|l|l|')) as table:
+                    table.add_hline()
+                    table.add_row((bold('Filter'), bold('N ')))
+                    table.add_hline()
+                    table.add_row(('SNPs: call rate < {} (pre - filter)'.format(pre_filter),
+                                    count_results['pre_geno'][True]))
+                    table.add_row(('IDs: call rate (cases/controls) < {}'.format(id_cr),
+                                    count_results['mind'][True]))
+                    table.add_row(('IDs: FHET outside +- {} (cases/controls)'.format(fhet_thresh),
+                                    count_results['fstat'][True]))
+                    table.add_row(('IDs: Sex violations -excluded- (N-tested)', count_results['sex_violations'][True]))
+                    table.add_row(
+                        ('IDs: Sex warnings (undefined phenotype / ambiguous genotypes)',
+                            count_results['sex_warnings'][True]))
+                    table.add_row(('SNPs: call rate < {}'.format(var_cr), count_results['geno'][True]))
+                    if data_type != "no-pheno":
+                        table.add_row(('SNPs: missing diference > {}'.format(miss_diff), count_results['cr_diff'][True]))
+                        table.add_row(('SNPs: without valid association p-value (invariant)',
+                                        count_results['monomorphic_var'][True]))
+                    if data_type == "Case-only":
+                        table.add_row(('SNPs: HWE-cases < {}'.format(hwe_cas), count_results['hwe_cas'][True]))
                         table.add_hline()
-                        table.add_row((bold('Filter'), bold('N')))
+                    if data_type == "Control-only":
+                        table.add_row(('SNPs: HWE-controls < {}'.format(hwe_con), count_results['hwe_con'][True]))
                         table.add_hline()
-                        table.add_row(('SNPs: call rate < {} (pre - filter)'.format(pre_filter),
-                                       count_results['pre_geno'][True]))
-                        table.add_row(('IDs: call rate (cases/controls) < {}'.format(id_cr),
-                                       count_results['mind'][True]))
-                        table.add_row(('IDs: FHET outside +- {} (cases/controls)'.format(fhet_thresh),
-                                       count_results['fstat'][True]))
-                        table.add_row(('IDs: Sex violations -excluded- (N-tested)', count_results['sex_violations'][True]))
-                        table.add_row(
-                            ('IDs: Sex warnings (undefined phenotype / ambiguous genotypes)',
-                             count_results['sex_warnings'][True]))
-                        table.add_row(('SNPs: call rate < {}'.format(var_cr), count_results['geno'][True]))
-                        if data_type != "no-pheno":
-                            table.add_row(('SNPs: missing diference > {}'.format(miss_diff), count_results['cr_diff'][True]))
-                            table.add_row(('SNPs: without valid association p-value (invariant)',
-                                           count_results['monomorphic_var'][True]))
-                        if data_type == "Case-only":
-                            table.add_row(('SNPs: HWE-cases < {}'.format(hwe_cas), count_results['hwe_cas'][True]))
-                            table.add_hline()
-                        if data_type == "Control-only":
-                            table.add_row(('SNPs: HWE-controls < {}'.format(hwe_con), count_results['hwe_con'][True]))
-                            table.add_hline()
-                        if data_type == "Case-Control":
-                            table.add_row(('SNPs: HWE-controls < {}'.format(hwe_con), count_results['hwe_con'][True]))
-                            table.add_row(('SNPs: HWE-cases < {}'.format(hwe_cas), count_results['hwe_cas'][True]))
-                            table.add_hline()
-                        if data_type == "no-pheno":
-                            table.add_row(('SNPs: HWE < {}'.format(hwe_all), count_results['hwe_all'][True]))
-                            table.add_hline()
+                    if data_type == "Case-Control":
+                        table.add_row(('SNPs: HWE-controls < {}'.format(hwe_con), count_results['hwe_con'][True]))
+                        table.add_row(('SNPs: HWE-cases < {}'.format(hwe_cas), count_results['hwe_cas'][True]))
+                        table.add_hline()
+                    if data_type == "no-pheno":
+                        table.add_row(('SNPs: HWE < {}'.format(hwe_all), count_results['hwe_all'][True]))
+                        table.add_hline()
 
     def manhattan_sec(self, qq_pre_path, qq_pos_path, man_pre_path, man_pos_path, table_results):
         self.append(NewPage())
