@@ -175,7 +175,7 @@ class MyDocument(Document):
                             table.add_row(('SNPs: HWE-cases < {}'.format(hwe_cas), count_results['hwe_cas'][True]))
                             table.add_hline()
                         if data_type == "no-pheno":
-                            table.add_row(('SNPs: HWE-cases+controls < {}'.format(hwe_all), count_results['hwe_all'][True]))
+                            table.add_row(('SNPs: HWE < {}'.format(hwe_all), count_results['hwe_all'][True]))
                             table.add_hline()
 
     def manhattan_sec(self, qq_pre_path, qq_pos_path, man_pre_path, man_pos_path, table_results):
