@@ -7,6 +7,7 @@ import pandas as pd
 from typing import Union
 
 
+# phasing without a reference panel (this is fine for big dataset)
 def eagle_phasing(b: hb.batch.Batch,
                   vcf: hb.resource.ResourceFile,
                   vcf_filename_no_ext: str = None,
