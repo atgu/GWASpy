@@ -288,7 +288,7 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
                                 id_all_path=f'{gwaspy_dir}/gwaspy_id_cas_con_pre.png', data_type=data_type)
             doc.snp_char(var_con_pre_path='nothing here', var_cas_pre_path=f'nothing here',
                          var_all_path=f'{gwaspy_dir}/gwaspy_var_cas_con_pre.png', data_type=data_type)
-        doc.generate_pdf(f'{gwaspy_dir}/{basename}.preimp_qc.report', clean_tex=False)
+        doc.generate_pdf(f'{gwaspy_dir}/{basename}.preimp_qc.report', clean=True, clean_tex=True)
 
     print('\nExporting qced file')
     if export_type:
