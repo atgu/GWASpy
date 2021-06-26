@@ -221,8 +221,8 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
     for col in column_filters:
         mt = mt.filter_cols(mt[col].filters == True, keep=False)
 
-    mt.repartition(100).write('gwaspy_tmp/filtered.mt', overwrite=True)
-    mt_filtered = hl.read_matrix_table('gwaspy_tmp/filtered.mt')
+    mt.repartition(100).write(f'{output_directory}filtered.mt', overwrite=True)
+    mt_filtered = hl.read_matrix_table(f'{output_directory}filtered.mt')
     mt_filtered, pos_qc_counts = summary_stats(mt_filtered)
 
     if 'is_case' in mt.col:
