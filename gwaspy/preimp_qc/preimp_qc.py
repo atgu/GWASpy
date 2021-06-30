@@ -165,9 +165,9 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
     results = {}
     column_filters = ['mind', 'fstat', 'sex_violations', 'sex_warnings']
 
-    mt.select_entries().select_rows(*row_filters).select_cols(*column_filters).write('gwaspy_tmp/temp.mt',
+    mt.select_entries().select_rows(*row_filters).select_cols(*column_filters).write(f'{output_directory}/temp.mt',
                                                                                      overwrite=True)
-    mt_temp = hl.read_matrix_table('gwaspy_tmp/temp.mt')
+    mt_temp = hl.read_matrix_table(f'{output_directory}/temp.mt')
     column_aggregations = mt_temp.aggregate_cols(
         [hl.agg.counter(mt_temp[filter].filters) for filter in column_filters])
 
@@ -216,13 +216,14 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
             var_cr_plot[0].savefig('gwaspy_tmp/gwaspy_var_cas_con_pre.png', dpi=300)
 
     # FILTER OUT ALL SNPs and IDs THAT FAIL QC
+    column_filters = ['mind', 'fstat', 'sex_violations']
     for row in row_filters:
         mt = mt.filter_rows(mt[row].filters == True, keep=False)
     for col in column_filters:
         mt = mt.filter_cols(mt[col].filters == True, keep=False)
 
-    mt.repartition(100).write(f'{output_directory}filtered.mt', overwrite=True)
-    mt_filtered = hl.read_matrix_table(f'{output_directory}filtered.mt')
+    mt.repartition(100).write(f'{output_directory}{basename}.filtered.mt', overwrite=True)
+    mt_filtered = hl.read_matrix_table(f'{output_directory}{basename}.filtered.mt')
     mt_filtered, pos_qc_counts = summary_stats(mt_filtered)
 
     if 'is_case' in mt.col:

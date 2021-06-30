@@ -162,8 +162,8 @@ class MyDocument(Document):
                     table.add_row(('SNPs: call rate < {}'.format(var_cr), count_results['geno'][True]))
                     if data_type != "no-pheno":
                         table.add_row(('SNPs: missing diference > {}'.format(miss_diff), count_results['cr_diff'][True]))
-                        table.add_row(('SNPs: without valid association p-value (invariant)',
-                                        count_results['monomorphic_var'][True]))
+                    table.add_row(('SNPs: without valid association p-value (invariant)',
+                                   count_results['monomorphic_var'][True]))
                     if data_type == "Case-only":
                         table.add_row(('SNPs: HWE-cases < {}'.format(hwe_cas), count_results['hwe_cas'][True]))
                         table.add_hline()
