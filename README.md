@@ -102,17 +102,23 @@ pca --dirname data/ --basename 1kg_annotated --out-dir data/ --input-type hail -
 ---------------------
 You can run haplotype phasing using Eagle_v2.4.1. We will ad support for SHAPEIT at a later stage
 
-**Before running phasing, make sure that chromosomes Y and MT have been removed from the VCF, and oNLY chromosomes 1-22, X are present.**
+**Before running phasing, make sure that chromosomes Y and MT have been removed from the VCF, and ONLY chromosomes 1-22, X are present.**
 
-Here's how you can run phasing:
+**3.1. Running phasing without a reference panel:**
 ```bash
 phasing --input-vcfs gs://path/to/vcf_files.txt --out-dir gs://path/to/output/directory
 ```
-In the command above, ``vcf_files.txt`` is a text file, with no header, containing path to each VCF. One VCF path per line
+
+**3.2. Running phasing with a reference panel:**
+```bash
+phasing --input-vcfs gs://path/to/vcf_files.txt --vcf-ref gs://path/to/reference_panel.vcf --out-dir gs://path/to/output/directory
+```
+In the commands above, ``vcf_files.txt`` is a text file, with no header, containing path to each VCF. One VCF path per line
 
 **Argument** | **Description**
 --- | ---
-``--input-vcfs`` | Path to where text file containing VCF(s) paths is
+``--input-vcfs`` | Path to where text file containing VCF(s) for target genotypes paths is
+``--vcf-ref`` | VCF file for reference haplotypes
 ``--local`` | Type of service. Default is Service backend where jobs are executed on a multi-tenant compute cluster in Google Cloud 
 ``--software`` | Software to use for phasing. Default is Eagle
 ``--cpu`` | Number of CPUs to use. Default is 8
