@@ -8,9 +8,11 @@ from typing import Union
 
 
 # phasing without a reference panel (this is fine for big dataset)
+# we want to use HGDP+1KG as reference panel, but it hasn't been phased yet.
 def eagle_phasing(b: hb.batch.Batch,
                   vcf: hb.resource.ResourceFile,
                   vcf_filename_no_ext: str = None,
+                  ref_vcf: hb.resource.ResourceFile = None,
                   reference: str = 'GRCh38',
                   contig: Union[str, int] = None,
                   cpu: int = 8,
@@ -30,15 +32,29 @@ def eagle_phasing(b: hb.batch.Batch,
     phase.storage(f'{storage}Gi')
     phase.image(img)
     phase.declare_resource_group(ofile={'vcf': '{root}.vcf.gz'})
-    cmd = f'''
-    Eagle_v2.4.1/eagle \
-        --geneticMapFile Eagle_v2.4.1/tables/{map_file} \
-        --numThreads {threads} \
-        --chrom {contig} \
-        --outPrefix {phase.ofile} \
-        --vcfOutFormat z \
-        --vcf {vcf}
-    '''
+
+    if ref_vcf:
+        cmd = f'''
+        Eagle_v2.4.1/eagle \
+            --geneticMapFile Eagle_v2.4.1/tables/{map_file} \
+            --numThreads {threads} \
+            --chrom {contig} \
+            --outPrefix {phase.ofile} \
+            --vcfOutFormat z \
+            --vcfRef {ref_vcf} \
+            --vcfTarget {vcf}
+        '''
+
+    else:
+        cmd = f'''
+        Eagle_v2.4.1/eagle \
+            --geneticMapFile Eagle_v2.4.1/tables/{map_file} \
+            --numThreads {threads} \
+            --chrom {contig} \
+            --outPrefix {phase.ofile} \
+            --vcfOutFormat z \
+            --vcf {vcf}
+        '''
 
     phase.command(cmd)
 
@@ -49,7 +65,8 @@ def eagle_phasing(b: hb.batch.Batch,
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input-vcfs', required=True)
+    parser.add_argument('--input-vcfs', type=str, required=True)
+    parser.add_argument('--vcf-ref', type=str, default=None)
     parser.add_argument('--local', action='store_true')
     parser.add_argument('--software', type=str, default='eagle', choices=['eagle', 'shapeit'])
     parser.add_argument('--reference', type=str, default='GRCh38', choices=['GRCh37', 'GRCh38'])
@@ -69,6 +86,11 @@ def main():
     phasing = hb.Batch(backend=backend,
                        name='haplotype-phasing')
 
+    if args.vcf_ref:
+        vcf_ref = phasing.read_input(args.vcf_ref)
+    else:
+        vcf_ref = None
+
     vcf_paths = pd.read_csv(args.input_vcfs, sep='\t', header=None)
 
     for index, row in vcf_paths.iterrows():
@@ -86,7 +108,7 @@ def main():
             chrom = f'chr{i}' if args.reference == 'GRCh38' else i
 
             if args.software == 'eagle':
-                phasing_job = eagle_phasing(b=phasing, vcf=in_vcf, vcf_filename_no_ext=file_no_ext,
+                phasing_job = eagle_phasing(b=phasing, vcf=in_vcf, vcf_filename_no_ext=file_no_ext, ref_vcf=vcf_ref,
                                             reference=args.reference, contig=chrom, cpu=args.cpu, memory=args.memory,
                                             storage=args.storage, threads=args.threads, out_dir=args.out_dir)
 
