@@ -22,7 +22,7 @@ def eagle_phasing(b: hb.batch.Batch,
                   threads: int = 16,
                   out_dir: str = None):
 
-    output_file_name = vcf_filename_no_ext + '_' + str(contig) + '.vcf.gz'
+    output_file_name = vcf_filename_no_ext + '_' + str(contig)
 
     map_file = 'genetic_map_hg38_withX.txt.gz' if reference == 'GRCh38' else 'genetic_map_hg19_withX.txt.gz'
 
@@ -31,7 +31,7 @@ def eagle_phasing(b: hb.batch.Batch,
     phase.memory(memory)
     phase.storage(f'{storage}Gi')
     phase.image(img)
-    phase.declare_resource_group(ofile={'vcf': '{root}.vcf.gz'})
+    # phase.declare_resource_group(ofile={'vcf': '{root}.vcf.gz'})
 
     if ref_vcf:
         cmd = f'''
@@ -39,7 +39,7 @@ def eagle_phasing(b: hb.batch.Batch,
             --geneticMapFile Eagle_v2.4.1/tables/{map_file} \
             --numThreads {threads} \
             --chrom {contig} \
-            --outPrefix {phase.ofile} \
+            --outPrefix {output_file_name} \
             --vcfOutFormat z \
             --vcfRef {ref_vcf} \
             --vcfTarget {vcf}
@@ -51,14 +51,15 @@ def eagle_phasing(b: hb.batch.Batch,
             --geneticMapFile Eagle_v2.4.1/tables/{map_file} \
             --numThreads {threads} \
             --chrom {contig} \
-            --outPrefix {phase.ofile} \
+            --outPrefix {output_file_name} \
             --vcfOutFormat z \
             --vcf {vcf}
         '''
 
     phase.command(cmd)
 
-    b.write_output(phase.ofile, f'{out_dir}/GWASpy/Phasing/{vcf_filename_no_ext}/{output_file_name}')
+    phase.command(f'mv {output_file_name}.vcf.gz {phase.ofile}')
+    b.write_output(phase.ofile, f'{out_dir}/GWASpy/Phasing/{vcf_filename_no_ext}/{output_file_name}.vcf.gz')
 
     return phase
 
@@ -88,8 +89,10 @@ def main():
 
     if args.vcf_ref:
         vcf_ref = phasing.read_input(args.vcf_ref)
+        print('RUNNING PHASING WITH A REFERENCE PANEL\n')
     else:
         vcf_ref = None
+        print('RUNNING PHASING WITHOUT A REFERENCE PANEL\n')
 
     vcf_paths = pd.read_csv(args.input_vcfs, sep='\t', header=None)
 
