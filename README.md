@@ -115,6 +115,8 @@ phasing --input-vcfs gs://path/to/vcf_files.txt --vcf-ref gs://path/to/reference
 ```
 In the commands above, ``vcf_files.txt`` is a text file, with no header, containing path to each VCF. One VCF path per line
 
+**NB: If the data set you wish to phase contains more than twice as many samples as the largest reference panel available to you, then using a reference panel is unlikely to give much of a boost in phasing accuracy.**
+
 **Argument** | **Description**
 --- | ---
 ``--input-vcfs`` | Path to where text file containing VCF(s) for target genotypes paths is
