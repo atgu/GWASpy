@@ -59,8 +59,8 @@ qc.preimp_qc.preimp_qc(input_type="plink", dirname="data/", basename="sim_sim2a_
 ``--pre-geno`` | include only SNPs with missing-rate < NUM (before ID filter), important for post merge of multiple platforms
 ``--mind`` | include only IDs with missing-rate < NUM
 ``--fhet-aut`` | include only IDs within NUM < FHET < NUM
-``--fhet-y`` | include only female IDs with fhet < NUM
-``--fhet-x`` | include only male IDs with fhet > NUM
+``--fstat-y`` | include only female IDs with fhet < NUM
+``--fstat-x`` | include only male IDs with fhet > NUM
 ``--geno`` | include only SNPs with missing-rate < NUM
 ``--midi`` | include only SNPs with missing-rate-difference ("case/control) < NUM
 ``--withpna`` | include monomorphic (invariant) SNPs
