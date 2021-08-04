@@ -74,7 +74,7 @@ RUN cd /opt && \
     mkdir genetic_maps_shapeit && cd genetic_maps_shapeit && \
     mkdir hg38 hg17 hg19 && cd /opt &&  \
     bash split_maps.sh && \
-    rm -rf Eagle_v2.4.1* && rm -rf shapeit4*
+    rm -rf Eagle_v2.4.1*
 
 
 
