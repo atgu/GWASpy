@@ -47,7 +47,11 @@ COPY makefile /opt
 RUN git clone https://github.com/odelaneau/shapeit4.git && \
     cd shapeit4 && \
     mv makefile makefile.old && cp /opt/makefile . && \
-    make
+    make && \
+    cd /shapeit4/maps && mkdir b37 b38 && gunzip *.gz && \
+    tar -xf genetic_maps.b37.tar -C b37/ && \
+    tar -xf genetic_maps.b38.tar -C b38/ && \
+    rm *.tar
 
 ENV PATH /shapeit4/bin/:${PATH}
 
@@ -62,17 +66,9 @@ RUN cd /opt && \
     wget https://data.broadinstitute.org/alkesgroup/Eagle/downloads/Eagle_v2.4.1.tar.gz && \
     gunzip Eagle_v2.4.1.tar.gz && \
     tar xvf Eagle_v2.4.1.tar && \
-    mv Eagle_v2.4.1/eagle /usr/local/bin/
-
-COPY makefile split_maps.sh /opt
-
-# genetic maps files
-RUN cd /opt && \
-    mkdir genetic_maps_eagle && cd genetic_maps_eagle && \
-    mkdir hg38 hg17 hg19 && cd /opt && \
-    mkdir genetic_maps_shapeit && cd genetic_maps_shapeit && \
-    mkdir hg38 hg17 hg19 && cd /opt &&  \
-    bash split_maps.sh && \
+    cp /opt/Eagle_v2.4.1/tables/genetic_map_hg19_withX.txt.gz /opt && \
+    cp /opt/Eagle_v2.4.1/tables/genetic_map_hg38_withX.txt.gz /opt && \
+    mv Eagle_v2.4.1/eagle /usr/local/bin/ && \
     rm -rf Eagle_v2.4.1*
 
 
