@@ -24,7 +24,7 @@ def eagle_phasing(b: hb.batch.Batch,
 
     output_file_name = vcf_filename_no_ext + '_' + str(contig) + '.phased.eagle'
 
-    map_file = f'/opt/genetic_maps_eagle/hg38/genetic_map_hg38_chr{contig}_withX.txt.gz' if reference == 'GRCh38' else f'/opt/genetic_maps_eagle/hg19/genetic_map_hg19_chr{contig}_withX.txt.gz'
+    map_file = f'/opt/genetic_map_hg38_withX.txt.gz' if reference == 'GRCh38' else f'/opt/genetic_map_hg19_withX.txt.gz'
 
     phase = b.new_job(name=output_file_name)
     phase.cpu(cpu)
@@ -79,7 +79,20 @@ def shapeit_phasing(b: hb.batch.Batch,
 
     output_file_name = vcf_filename_no_ext + '_' + str(contig) + '.phased.shapeit.vcf.gz'
 
-    map_file = f'/opt/genetic_maps_shapeit/hg38/genetic_map_hg38_chr{contig}_withX.txt.gz' if reference == 'GRCh38' else f'/opt/genetic_maps_shapeit/hg19/genetic_map_hg19_chr{contig}_withX.txt.gz'
+    # chrom = f'chr{i}' if args.reference == 'GRCh38' else i
+    if reference == 'GRCh38':
+        if contig == 'chr23':
+            in_contig = 'chrX'
+        else:
+            in_contig = contig
+
+    else:
+        if contig == 23:
+            in_contig = 'X'
+        else:
+            in_contig = contig
+
+    map_file = f'/shapeit4/maps/b38/{in_contig}.b38.gmap.gz' if reference == 'GRCh38' else f'/shapeit4/maps/b37/chr{in_contig}.b37.gmap.gz'
 
     phase = b.new_job(name=output_file_name)
     phase.cpu(cpu)
@@ -94,7 +107,7 @@ def shapeit_phasing(b: hb.batch.Batch,
         shapeit4.2 \
             --input {vcf} \
             --map {map_file} \
-            --region {contig} \
+            --region {in_contig} \
             --reference {ref_vcf} \
             --output {output_file_name} \
             --thread {threads}
@@ -105,7 +118,7 @@ def shapeit_phasing(b: hb.batch.Batch,
         shapeit4.2 \
             --input {vcf} \
             --map {map_file} \
-            --region {contig} \
+            --region {in_contig} \
             --output {output_file_name} \
             --thread {threads}
         '''
