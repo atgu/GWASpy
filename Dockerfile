@@ -44,8 +44,7 @@ RUN cd /opt && \
 COPY makefile /opt
 
 # SHAPEIT4
-RUN cd /opt && \
-    git clone https://github.com/odelaneau/shapeit4.git && \
+RUN git clone https://github.com/odelaneau/shapeit4.git && \
     cd shapeit4 && \
     mv makefile makefile.old && cp /opt/makefile . && \
     make
