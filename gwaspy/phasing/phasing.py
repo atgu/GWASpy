@@ -18,13 +18,13 @@ def eagle_phasing(b: hb.batch.Batch,
                   cpu: int = 8,
                   memory: str = 'standard',
                   storage: int = 50,
-                  img: str = 'gcr.io/broad-mpg-gnomad/lai_phasing:latest',
+                  img: str = 'docker.io/lindonkambule/gwaspy:v1',
                   threads: int = 16,
                   out_dir: str = None):
 
-    output_file_name = vcf_filename_no_ext + '_' + str(contig)
+    output_file_name = vcf_filename_no_ext + '_' + str(contig) + '.phased.eagle'
 
-    map_file = 'genetic_map_hg38_withX.txt.gz' if reference == 'GRCh38' else 'genetic_map_hg19_withX.txt.gz'
+    map_file = f'/opt/genetic_maps_eagle/hg38/genetic_map_hg38_chr{contig}_withX.txt.gz' if reference == 'GRCh38' else f'/opt/genetic_maps_eagle/hg19/genetic_map_hg19_chr{contig}_withX.txt.gz'
 
     phase = b.new_job(name=output_file_name)
     phase.cpu(cpu)
@@ -35,8 +35,8 @@ def eagle_phasing(b: hb.batch.Batch,
 
     if ref_vcf:
         cmd = f'''
-        Eagle_v2.4.1/eagle \
-            --geneticMapFile Eagle_v2.4.1/tables/{map_file} \
+        eagle \
+            --geneticMapFile {map_file} \
             --numThreads {threads} \
             --chrom {contig} \
             --outPrefix {output_file_name} \
@@ -47,8 +47,8 @@ def eagle_phasing(b: hb.batch.Batch,
 
     else:
         cmd = f'''
-        Eagle_v2.4.1/eagle \
-            --geneticMapFile Eagle_v2.4.1/tables/{map_file} \
+        eagle \
+            --geneticMapFile {map_file} \
             --numThreads {threads} \
             --chrom {contig} \
             --outPrefix {output_file_name} \
@@ -60,6 +60,62 @@ def eagle_phasing(b: hb.batch.Batch,
 
     phase.command(f'mv {output_file_name}.vcf.gz {phase.ofile}')
     b.write_output(phase.ofile, f'{out_dir}/GWASpy/Phasing/{vcf_filename_no_ext}/{output_file_name}.vcf.gz')
+
+    return phase
+
+
+def shapeit_phasing(b: hb.batch.Batch,
+                    vcf: hb.resource.ResourceFile,
+                    vcf_filename_no_ext: str = None,
+                    ref_vcf: hb.resource.ResourceFile = None,
+                    reference: str = 'GRCh38',
+                    contig: Union[str, int] = None,
+                    cpu: int = 8,
+                    memory: str = 'standard',
+                    storage: int = 50,
+                    img: str = 'docker.io/lindonkambule/gwaspy:v1',
+                    threads: int = 16,
+                    out_dir: str = None):
+
+    output_file_name = vcf_filename_no_ext + '_' + str(contig) + '.phased.shapeit.vcf.gz'
+
+    map_file = f'/opt/genetic_maps_shapeit/hg38/genetic_map_hg38_chr{contig}_withX.txt.gz' if reference == 'GRCh38' else f'/opt/genetic_maps_shapeit/hg19/genetic_map_hg19_chr{contig}_withX.txt.gz'
+
+    phase = b.new_job(name=output_file_name)
+    phase.cpu(cpu)
+    phase.memory(memory)
+    phase.storage(f'{storage}Gi')
+    phase.image(img)
+
+    if ref_vcf:
+        # shapeit requires that the VCF be indexed
+        phase.command(f'bcftools index {ref_vcf}')
+        cmd = f'''
+        shapeit4.2 \
+            --input {vcf} \
+            --map {map_file} \
+            --region {contig} \
+            --reference {ref_vcf} \
+            --output {output_file_name} \
+            --thread {threads}
+        '''
+
+    else:
+        cmd = f'''
+        shapeit4.2 \
+            --input {vcf} \
+            --map {map_file} \
+            --region {contig} \
+            --output {output_file_name} \
+            --thread {threads}
+        '''
+
+    # shapeit requires that the VCF be indexed
+    phase.command(f'bcftools index {vcf}')
+    phase.command(cmd)
+
+    phase.command(f'mv {output_file_name} {phase.ofile}')
+    b.write_output(phase.ofile, f'{out_dir}/GWASpy/Phasing/{vcf_filename_no_ext}/{output_file_name}')
 
     return phase
 
@@ -116,7 +172,9 @@ def main():
                                             storage=args.storage, threads=args.threads, out_dir=args.out_dir)
 
             else:
-                print("Support for SHAPEIT coming")
+                phasing_job = shapeit_phasing(b=phasing, vcf=in_vcf, vcf_filename_no_ext=file_no_ext, ref_vcf=vcf_ref,
+                                              reference=args.reference, contig=chrom, cpu=args.cpu, memory=args.memory,
+                                              storage=args.storage, threads=args.threads, out_dir=args.out_dir)
 
     phasing.run()
 
