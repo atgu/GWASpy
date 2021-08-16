@@ -75,7 +75,7 @@ GWASpy has two way to run PCA: (1) without a reference; or (2) with a reference 
 Below is an example of how to run PCA without a reference using the example data ``data/1kg_annotated.mt``
 
 ```bash
-pca --dirname data/ --basename 1kg_annotated --out-dir data/ --input-type hail --reference grch37
+pca --data-dirname data/ --data-basename 1kg_annotated --out-dir data/ --input-type hail --reference grch37
 ```
 
 **Argument** | **Description**
