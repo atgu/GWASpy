@@ -95,10 +95,18 @@ def pca_without_ref(
     pcs_ht = pcs.transmute(**{f'PC{i}': pcs.scores[i - 1] for i in range(1, n_pcs+1)})
 
     # add phenotype and sex to the output, using information from the mt
-    ann_cols = ['is_case', 'is_female']
+    # first check if is_case and os_female fields exist in the mt
+    all_column_field_names = list(mt.col)
+    # sex status is a MUST but not phenotype status
+    if 'is_case' in all_column_field_names:
+        ann_cols = ['is_case', 'is_female']
+    else:
+        ann_cols = ['is_female']
+
     annotations_ht = mt.cols().select(*ann_cols)
 
-    pcs_ht = pcs_ht.annotate(is_case=annotations_ht[pcs_ht.s].is_case)
+    if 'is_case' in all_column_field_names:
+        pcs_ht = pcs_ht.annotate(is_case=annotations_ht[pcs_ht.s].is_case)
     pcs_ht = pcs_ht.annotate(is_female=annotations_ht[pcs_ht.s].is_female)
 
     print("\nSaving PC scores file")
@@ -108,11 +116,12 @@ def pca_without_ref(
     print("\nGenerating PCA plots")
     pcs_scores = pd.read_table(out_scores_file, header=0, sep='\t')
 
+    if 'is_case' in all_column_field_names:
+        pcs_scores[['is_case']] = pcs_scores[['is_case']].replace([True, False, None], ['case', 'control', 'unknown'])
     pcs_scores[['is_female']] = pcs_scores[['is_female']].replace([True, False, None], ['female', 'male', 'unknown'])
-    pcs_scores[['is_case']] = pcs_scores[['is_case']].replace([True, False, None], ['case', 'control', 'unknown'])
 
     figs_dict = {}
-    for col in ['is_case', 'is_female']:
+    for col in ann_cols:
         for i in range(1, n_pcs, 2):
             xpc = f'PC{i}'
             ypc = f'PC{i + 1}'
