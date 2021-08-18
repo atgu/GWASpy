@@ -71,5 +71,10 @@ RUN cd /opt && \
     mv Eagle_v2.4.1/eagle /usr/local/bin/ && \
     rm -rf Eagle_v2.4.1*
 
+# IMPUTE5
+COPY  impute5_v1.1.5.zip /opt
+RUN cd /opt && \
+    unzip impute5_v1.1.5.zip && cd impute5_v1.1.5 && \
+    mv *_static /usr/local/bin/ && cd /opt && rm -rf impute5_v1.1.5*
 
 
