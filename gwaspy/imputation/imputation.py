@@ -1,14 +1,16 @@
 __author__ = 'Lindo Nkambule'
 
 import hailtop.batch as hb
+import ntpath
 import argparse
+import pandas as pd
 from typing import Union
 
 
 def imputation(b: hb.batch.Batch,
                vcf: hb.resource.ResourceFile,
                vcf_filename_no_ext: str = None,
-               ref_imp5: hb.resource.ResourceFile = None,
+               ref_imp5: hb.resource.ResourceGroup = None,
                reference: str = 'GRCh38',
                contig: Union[str, int] = None,
                cpu: int = 8,
@@ -42,10 +44,11 @@ def imputation(b: hb.batch.Batch,
 
     cmd = f'''
         impute5_1.1.5_static \
-            --h {ref_imp5} \
+            --h {ref_imp5.imp5} \
             --m {map_file} \
             --g {vcf} \
             --r {in_contig} \
+            --out-gp-field \
             --o {output_file_name} \
             --threads {threads}
     '''
@@ -61,9 +64,7 @@ def imputation(b: hb.batch.Batch,
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input-vcfs', type=str, required=True)
-    parser.add_argument('--vcf-ref', type=str, default=None)
     parser.add_argument('--local', action='store_true')
-    parser.add_argument('--software', type=str, default='eagle', choices=['eagle', 'shapeit'])
     parser.add_argument('--reference', type=str, default='GRCh38', choices=['GRCh37', 'GRCh38'])
     parser.add_argument('--cpu', type=int, default=8)
     parser.add_argument('--memory', type=str, default='standard', choices=['lowmem', 'standard', 'highmem'])
@@ -73,7 +74,39 @@ def main():
 
     args = parser.parse_args()
 
-    imputation()
+    if args.local:
+        backend = hb.LocalBackend()
+    else:
+        backend = hb.ServiceBackend()
+
+    phasing = hb.Batch(backend=backend,
+                       name='genotype-imputation')
+
+    vcf_paths = pd.read_csv(args.input_vcfs, sep='\t', header=None)
+
+    for index, row in vcf_paths.iterrows():
+        vcf = row[0]
+        in_vcf = phasing.read_input(vcf)
+        vcf_name = ntpath.basename(vcf)
+        if vcf_name.endswith('.gz'):
+            file_no_ext = vcf_name[:-7]
+        elif vcf_name.endswith('.bgz'):
+            file_no_ext = vcf_name[:-8]
+        else:
+            file_no_ext = vcf_name[:-4]
+
+        for i in range(1, 24):
+            chrom = f'chr{i}' if args.reference == 'GRCh38' else i
+
+            # AFTER PHASING THE 1KG+HGDP DATA, CONVERT THE FILES TO IMP5 THEN CHANGE THE PATHS BELOW !!!
+            ref_imp_chrom_file = f'gs://path/to/reference_chr{i}.imp5'
+            ref_imp_chrom_file_idx = f'gs://path/to/reference_chr{i}.imp5.idx'
+            ref_chrom_files = phasing.read_input_group(**{'imp5': ref_imp_chrom_file,
+                                                          'imp5.idx': ref_imp_chrom_file_idx})
+
+            imputation(b=phasing, vcf=in_vcf, vcf_filename_no_ext=file_no_ext, ref_imp5=ref_chrom_files,
+                       reference=args.reference, contig=chrom, cpu=args.cpu, memory=args.memory,
+                       storage=args.storage, threads=args.threads, out_dir=args.out_dir)
 
 
 if __name__ == '__main__':
