@@ -1,7 +1,7 @@
-.. _sec-meta_analysis:
+.. _sec-phasing:
 
 ===================================
-GWAS Meta-Analysis
+Haplotype Phasing
 ===================================
 
-Write something about Meta-Analysis and include examples
+Write something about haplotype phasing and include examples

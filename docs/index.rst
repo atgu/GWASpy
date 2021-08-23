@@ -13,11 +13,11 @@ Contents
 .. toctree::
     :maxdepth: 2
 
-    Installation <installation>
+    Installation <installation.rst>
     Pre-Imputation QC <preimp_qc.rst>
-    Principal Component Analysis <pca>
-    Genotype Imputation <imputation>
-    GWAS Meta-Analysis <meta_analysis>
+    Principal Component Analysis <pca.rst>
+    Haplotype Phasing <phasing.rst>
+    Genotype Imputation <imputation.rst>
 
 ==================
 Indices and tables
