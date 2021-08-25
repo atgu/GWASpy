@@ -133,6 +133,75 @@ def shapeit_phasing(b: hb.batch.Batch,
     return phase
 
 
+def haplotype_phasing(input_vcfs: str = None,
+                      vcf_ref: str = None,
+                      local: bool = False,
+                      software: str = 'eagle',
+                      reference: str = 'GRCh38',
+                      cpu: int = 8,
+                      memory: str = 'standard',
+                      storage: int = 50,
+                      threads: int = 16,
+                      out_dir: str = None):
+
+    # Error handling
+    if software.lower() not in ['eagle', 'shapeit']:
+        raise SystemExit(f'Incorrect software {software} selected. Options are [eagle, shapeit]')
+
+    if reference not in ['GRCh37', 'GRCh38']:
+        raise SystemExit(f'Incorrect reference genome build {reference} selected. Options are [GRCh37, GRCh38]')
+
+    if memory not in ['lowmem', 'standard', 'highmem']:
+        raise SystemExit(f'Incorrect memory type {memory} selected. Options are [lowmem, standard, highmem]')
+
+    if not out_dir:
+        raise SystemExit('Output directory not specified. Specify using --out_dir if running from the command line or'
+                         'out_dir argument if running inside a Python script')
+
+    if local:
+        backend = hb.LocalBackend()
+    else:
+        backend = hb.ServiceBackend()
+
+    phasing = hb.Batch(backend=backend,
+                       name=f'haplotype-phasing-{software}')
+
+    if vcf_ref:
+        vcf_ref = phasing.read_input(vcf_ref)
+        print('RUNNING PHASING WITH A REFERENCE PANEL\n')
+    else:
+        vcf_ref = None
+        print('RUNNING PHASING WITHOUT A REFERENCE PANEL\n')
+
+    vcf_paths = pd.read_csv(input_vcfs, sep='\t', header=None)
+
+    for index, row in vcf_paths.iterrows():
+        vcf = row[0]
+        in_vcf = phasing.read_input(vcf)
+        vcf_name = ntpath.basename(vcf)
+        if vcf_name.endswith('.gz'):
+            file_no_ext = vcf_name[:-7]
+        elif vcf_name.endswith('.bgz'):
+            file_no_ext = vcf_name[:-8]
+        else:
+            file_no_ext = vcf_name[:-4]
+
+        for i in range(1, 24):
+            chrom = f'chr{i}' if reference == 'GRCh38' else i
+
+            if software == 'eagle':
+                phasing_job = eagle_phasing(b=phasing, vcf=in_vcf, vcf_filename_no_ext=file_no_ext, ref_vcf=vcf_ref,
+                                            reference=reference, contig=chrom, cpu=cpu, memory=memory,
+                                            storage=storage, threads=threads, out_dir=out_dir)
+
+            else:
+                phasing_job = shapeit_phasing(b=phasing, vcf=in_vcf, vcf_filename_no_ext=file_no_ext, ref_vcf=vcf_ref,
+                                              reference=reference, contig=chrom, cpu=cpu, memory=memory,
+                                              storage=storage, threads=threads, out_dir=out_dir)
+
+    phasing.run()
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input-vcfs', type=str, required=True)
@@ -148,48 +217,9 @@ def main():
 
     args = parser.parse_args()
 
-    if args.local:
-        backend = hb.LocalBackend()
-    else:
-        backend = hb.ServiceBackend()
-
-    phasing = hb.Batch(backend=backend,
-                       name='haplotype-phasing')
-
-    if args.vcf_ref:
-        vcf_ref = phasing.read_input(args.vcf_ref)
-        print('RUNNING PHASING WITH A REFERENCE PANEL\n')
-    else:
-        vcf_ref = None
-        print('RUNNING PHASING WITHOUT A REFERENCE PANEL\n')
-
-    vcf_paths = pd.read_csv(args.input_vcfs, sep='\t', header=None)
-
-    for index, row in vcf_paths.iterrows():
-        vcf = row[0]
-        in_vcf = phasing.read_input(vcf)
-        vcf_name = ntpath.basename(vcf)
-        if vcf_name.endswith('.gz'):
-            file_no_ext = vcf_name[:-7]
-        elif vcf_name.endswith('.bgz'):
-            file_no_ext = vcf_name[:-8]
-        else:
-            file_no_ext = vcf_name[:-4]
-
-        for i in range(1, 24):
-            chrom = f'chr{i}' if args.reference == 'GRCh38' else i
-
-            if args.software == 'eagle':
-                phasing_job = eagle_phasing(b=phasing, vcf=in_vcf, vcf_filename_no_ext=file_no_ext, ref_vcf=vcf_ref,
-                                            reference=args.reference, contig=chrom, cpu=args.cpu, memory=args.memory,
-                                            storage=args.storage, threads=args.threads, out_dir=args.out_dir)
-
-            else:
-                phasing_job = shapeit_phasing(b=phasing, vcf=in_vcf, vcf_filename_no_ext=file_no_ext, ref_vcf=vcf_ref,
-                                              reference=args.reference, contig=chrom, cpu=args.cpu, memory=args.memory,
-                                              storage=args.storage, threads=args.threads, out_dir=args.out_dir)
-
-    phasing.run()
+    haplotype_phasing(input_vcfs=args.input_vcfs, vcf_ref=args.vcf_ref, local=args.local, software=args.software,
+                      reference=args.reference, cpu=args.cpu, memory=args.memory, storage=args.storage,
+                      threads=args.threads, out_dir=args.out_dir)
 
 
 if __name__ == '__main__':
