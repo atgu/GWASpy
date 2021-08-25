@@ -4,6 +4,9 @@
 Principal Component Analysis
 ============================
 
+Principal components analysis (PCA) can be used to detect and quantify the genetic structure of populations.
+In GWASpy, the :code:`pca` module can be run in two different ways: (1) without a reference panel; and (2) with a reference panel.
+
 .. toctree::
    :maxdepth: 1
 
@@ -14,7 +17,7 @@ Arguments and options
 #####################
 
 .. list-table::
-   :widths: 25 50
+   :widths: 15 50
    :header-rows: 1
 
    * - Argument
@@ -26,7 +29,7 @@ Arguments and options
    * - :code:`--ref-info`
      - Path to reference information. Tab-delimited file with sample IDs and their SuperPop labels
    * - :code:`--reference`
-     - Genome reference build. Default is GRCh38
+     - Genome reference build. Default is GRCh38. Options: [:code:`GRCh37`, :code:`GRCh38`]
    * - :code:`--with-ref`
      - Run PCA with or without reference. Default is without
    * - :code:`--data-dirname`
@@ -34,7 +37,7 @@ Arguments and options
    * - :code:`--data-basename`
      - Data basename
    * - :code:`--input-type`
-     - Data input type. Choices are Hail MT, PLINK, and VCF
+     - Data input type. Options: [:code:`hail`, :code:`plink`, :code:`vcf`]
    * - :code:`--maf`
      - include only SNPs with MAF >= NUM in PCA. Default is 0.05
    * - :code:`--hwe`
@@ -46,10 +49,15 @@ Arguments and options
    * - :code:`--ld-window`
      - Window size in base pairs (inclusive upper bound). Default is 250000
    * - :code:`--relatedness-method`
-     - Method to use for the inference of relatedness. Default is pc_relate
+     - Method to use for the inference of relatedness. Default is pc_relate. Options: [:code:`pc_relate`, :code:`ibd`, :code:`king`]
    * - :code:`--relatedness-thresh`
      - Threshold value to use in relatedness checks. Default is 0.98
    * - :code:`--prob`
      - Minimum probability of belonging to a given population for the population to be set. Default is 0.8
    * - :code:`--out-dir`
      - Path to where output files will be saved
+
+Output
+######
+A tab-delimited file with the first 20 principal components (PCs)  computed and
+graphical visualizations of the PCs are generated.

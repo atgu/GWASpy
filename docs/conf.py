@@ -18,8 +18,8 @@
 # -- Project information -----------------------------------------------------
 
 project = 'GWASpy'
-copyright = '2021, Lindokuhle Nkambule & Zan Koenig'
-author = 'Lindokuhle Nkambule & Zan Koenig'
+copyright = '2021, Martin Lab, Broad Institute'
+author = 'Lindokuhle Nkambule'
 
 # The full version, including alpha/beta/rc tags
 release = '0.1.0'

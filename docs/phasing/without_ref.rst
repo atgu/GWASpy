@@ -2,10 +2,25 @@
 Running Phasing without a reference
 ====================================
 
-Put information on when NOT including a reference panel is beneficial
+Users can run phasing without a reference panel using the **phasing** module
 
-Below is a code on how you can run phasing without a reference panel.
+Below is a code on how you can run phasing without a reference panel either: (1) via the command-line;
+or (2) inside a Python script
 
-.. code-block:: sh
+#. Command line
 
-   phasing --input-vcfs gs://path/to/vcf_files.txt --out-dir gs://path/to/output/directory
+    .. code-block:: sh
+
+        phasing --input-vcfs gs://path/to/vcf_files.txt --out-dir gs://path/to/output/directory
+
+#. Python (inside a Python script)
+
+    .. code-block:: python
+
+            import gwaspy.phasing as phase
+            phase.phasing.haplotype_phasing(input_vcfs = 'gs://path/to/vcf_files.txt',
+                      software = 'shapeit',
+                      reference= 'GRCh37',
+                      out_dir = 'gs://path/to/output/dir')
+
+
