@@ -1,0 +1,302 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Principal Component Analysis &mdash; GWASpy 0.1.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Running PCA without a reference" href="pca/without_ref.html" />
+    <link rel="prev" title="Pre-Imputation Quality Control (QC)" href="preimp_qc.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> GWASpy
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preimp_qc.html">Pre-Imputation QC</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Principal Component Analysis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pca/without_ref.html">     PCA without a reference panel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pca/with_ref.html">     PCA with a reference panel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#arguments-and-options">Arguments and options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#output">Output</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="phasing.html">Haplotype Phasing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="imputation.html">Genotype Imputation</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GWASpy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Principal Component Analysis</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/pca.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="principal-component-analysis">
+<span id="sec-pca"></span><h1>Principal Component Analysis<a class="headerlink" href="#principal-component-analysis" title="Permalink to this headline">¶</a></h1>
+<p>Principal components analysis (PCA) can be used to detect and quantify the genetic structure of populations.
+In GWASpy, the <code class="code docutils literal notranslate"><span class="pre">pca</span></code> module can be run in two different ways: (1) without a reference panel; and (2) with a reference panel.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="pca/without_ref.html">     PCA without a reference panel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pca/with_ref.html">     PCA with a reference panel</a></li>
+</ul>
+</div>
+<div class="section" id="arguments-and-options">
+<h2>Arguments and options<a class="headerlink" href="#arguments-and-options" title="Permalink to this headline">¶</a></h2>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 77%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Argument</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--ref-dirname</span></code></p></td>
+<td><p>Path to where reference data is</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--ref-basename</span></code></p></td>
+<td><p>Reference basename</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--ref-info</span></code></p></td>
+<td><p>Path to reference information. Tab-delimited file with sample IDs and their SuperPop labels</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--reference</span></code></p></td>
+<td><p>Genome reference build. Default is GRCh38. Options: [<code class="code docutils literal notranslate"><span class="pre">GRCh37</span></code>, <code class="code docutils literal notranslate"><span class="pre">GRCh38</span></code>]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--with-ref</span></code></p></td>
+<td><p>Run PCA with or without reference. Default is without</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--data-dirname</span></code></p></td>
+<td><p>Path to where the data is</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--data-basename</span></code></p></td>
+<td><p>Data basename</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--input-type</span></code></p></td>
+<td><p>Data input type. Options: [<code class="code docutils literal notranslate"><span class="pre">hail</span></code>, <code class="code docutils literal notranslate"><span class="pre">plink</span></code>, <code class="code docutils literal notranslate"><span class="pre">vcf</span></code>]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--maf</span></code></p></td>
+<td><p>include only SNPs with MAF &gt;= NUM in PCA. Default is 0.05</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--hwe</span></code></p></td>
+<td><p>include only SNPs with HWE &gt;= NUM in PCA. Default is 1e-03</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--geno</span></code></p></td>
+<td><p>include only SNPs with call-rate &gt; NUM. Default is 0.98</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--ld-cor</span></code></p></td>
+<td><p>Squared correlation threshold (exclusive upper bound). Must be in the range [0.0, 1.0]. Default is 0.2</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--ld-window</span></code></p></td>
+<td><p>Window size in base pairs (inclusive upper bound). Default is 250000</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--relatedness-method</span></code></p></td>
+<td><p>Method to use for the inference of relatedness. Default is pc_relate. Options: [<code class="code docutils literal notranslate"><span class="pre">pc_relate</span></code>, <code class="code docutils literal notranslate"><span class="pre">ibd</span></code>, <code class="code docutils literal notranslate"><span class="pre">king</span></code>]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--relatedness-thresh</span></code></p></td>
+<td><p>Threshold value to use in relatedness checks. Default is 0.98</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--prob</span></code></p></td>
+<td><p>Minimum probability of belonging to a given population for the population to be set. Default is 0.8</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--out-dir</span></code></p></td>
+<td><p>Path to where output files will be saved</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="output">
+<h2>Output<a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h2>
+<p>A tab-delimited file with the first 20 principal components (PCs)  computed and
+graphical visualizations of the PCs are generated.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="pca/without_ref.html" class="btn btn-neutral float-right" title="Running PCA without a reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="preimp_qc.html" class="btn btn-neutral float-left" title="Pre-Imputation Quality Control (QC)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Martin Lab, Broad Institute.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,289 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Haplotype Phasing &mdash; GWASpy 0.1.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Running Phasing without a reference" href="phasing/without_ref.html" />
+    <link rel="prev" title="Running PCA with a reference" href="pca/with_ref.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> GWASpy
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preimp_qc.html">Pre-Imputation QC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pca.html">Principal Component Analysis</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Haplotype Phasing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="phasing/without_ref.html">     Phasing without a reference panel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phasing/with_ref.html">     Phasing with a reference panel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#arguments-and-options">Arguments and options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#output">Output</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="imputation.html">Genotype Imputation</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GWASpy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Haplotype Phasing</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/phasing.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="haplotype-phasing">
+<span id="sec-phasing"></span><h1>Haplotype Phasing<a class="headerlink" href="#haplotype-phasing" title="Permalink to this headline">¶</a></h1>
+<p>Knowing the phase of a haplotype can allow us to impute low frequency variants, this makes haplotype phasing an
+important step before genotype imputation. GWASpy has a module, <code class="code docutils literal notranslate"><span class="pre">phasing</span></code>, for performing phasing. Phasing can
+be run with or without a reference panel using either Eagle2 or SHAPEIT4</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If the data set you wish to phase contains more than twice as many samples as the largest reference panel
+available to you, then using a reference panel is unlikely to give much of a boost in phasing accuracy.</p>
+</div>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="phasing/without_ref.html">     Phasing without a reference panel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phasing/with_ref.html">     Phasing with a reference panel</a></li>
+</ul>
+</div>
+<div class="section" id="arguments-and-options">
+<h2>Arguments and options<a class="headerlink" href="#arguments-and-options" title="Permalink to this headline">¶</a></h2>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 77%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Argument</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--input-vcfs</span></code></p></td>
+<td><p>Path to where text file containing VCF(s) for target genotypes paths is</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--vcf-ref</span></code></p></td>
+<td><p>VCF file for reference haplotypes if phasing with a reference panel</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--local</span></code></p></td>
+<td><p>Type of service. Default is Service backend where jobs are executed on a multi-tenant compute cluster in Google Cloud</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--software</span></code></p></td>
+<td><p>Software to use for phasing. Options: [<code class="code docutils literal notranslate"><span class="pre">eagle</span></code>, <code class="code docutils literal notranslate"><span class="pre">shapeit</span></code>]. Default is Eagle</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--cpu</span></code></p></td>
+<td><p>Number of CPUs to use. Default is 8</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--memory</span></code></p></td>
+<td><p>Memory to use. Default is <code class="code docutils literal notranslate"><span class="pre">standard</span></code> which correspond to ~4Gi/core. <code class="code docutils literal notranslate"><span class="pre">lowmem</span></code> ~1Gi/core and <code class="code docutils literal notranslate"><span class="pre">highmem</span></code> ~7Gi/core</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--storage</span></code></p></td>
+<td><p>Storage to use for the job in gigabytes. Default is 50 Gi</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--threads</span></code></p></td>
+<td><p>Number of threads to use in phasing. Default is 16</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--out-dir</span></code></p></td>
+<td><p>Path to where output files will be saved</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="output">
+<h2>Output<a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h2>
+<p>For both Eagle and SHAPEIT, the resulting output is a VCF file per chromosome with phased haplotypes.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>By default, Eagle will output a VCF file with phased GT and other fields that were in the unphased VCF, whereas
+SHAPEIT will ONLY output the GT field. This will result in phased files generated using Eagle being bigger in size
+than those generate using SHAPEIT.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="phasing/without_ref.html" class="btn btn-neutral float-right" title="Running Phasing without a reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="pca/with_ref.html" class="btn btn-neutral float-left" title="Running PCA with a reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Martin Lab, Broad Institute.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,323 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Pre-Imputation Quality Control (QC) &mdash; GWASpy 0.1.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Principal Component Analysis" href="pca.html" />
+    <link rel="prev" title="Install GWASpy on GNU/Linux" href="install/linux.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> GWASpy
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Pre-Imputation QC</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#arguments-and-options">Arguments and options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#output-s">Output(s)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pca.html">Principal Component Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phasing.html">Haplotype Phasing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="imputation.html">Genotype Imputation</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GWASpy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Pre-Imputation Quality Control (QC)</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/preimp_qc.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="pre-imputation-quality-control-qc">
+<span id="sec-pre-imputation-qc"></span><h1>Pre-Imputation Quality Control (QC)<a class="headerlink" href="#pre-imputation-quality-control-qc" title="Permalink to this headline">¶</a></h1>
+<p>Detecting and correcting issues such as genotyping errors, sample handling errors, population stratification etc
+is important in GWAS. The: code:<cite>preimp_qc</cite> module addresses these issues and cleans (QC) your data. Below is a flow diagram
+of the filters applied when QC’ing input data:</p>
+<a class="reference internal image-reference" href="_images/qc_workflow.png"><img alt="_images/qc_workflow.png" class="align-center" src="_images/qc_workflow.png" style="width: 500.0px; height: 950.0px;" /></a>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>You can run pre-imputation qc using the <code class="code docutils literal notranslate"><span class="pre">preimp_qc</span></code> module: (1) via the command line; or (2) inside a python script</p>
+<ol class="arabic">
+<li><p>Command line</p>
+<blockquote>
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>preimp_qc --dirname data/ --basename sim_sim2a_eur_sa_merge.miss --input-type plink
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Inside a python script</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gwaspy.preimp_qc</span> <span class="k">as</span> <span class="nn">qc</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">preimp_qc</span><span class="o">.</span><span class="n">preimp_qc</span><span class="p">(</span><span class="n">input_type</span><span class="o">=</span><span class="s2">&quot;plink&quot;</span><span class="p">,</span> <span class="n">dirname</span><span class="o">=</span><span class="s2">&quot;data/&quot;</span><span class="p">,</span> <span class="n">basename</span><span class="o">=</span><span class="s2">&quot;sim_sim2a_eur_sa_merge.miss&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ol>
+</div>
+<div class="section" id="arguments-and-options">
+<h2>Arguments and options<a class="headerlink" href="#arguments-and-options" title="Permalink to this headline">¶</a></h2>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 77%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Argument</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--dirname</span></code></p></td>
+<td><p>Path to where the data is</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--basename</span></code></p></td>
+<td><p>Data basename</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--input-type</span></code></p></td>
+<td><p>Input type. Options: [<code class="code docutils literal notranslate"><span class="pre">hail</span></code>, <code class="code docutils literal notranslate"><span class="pre">plink</span></code>, <code class="code docutils literal notranslate"><span class="pre">vcf</span></code>]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--export-type</span></code></p></td>
+<td><p>Export type. Options: [<code class="code docutils literal notranslate"><span class="pre">hail</span></code>, <code class="code docutils literal notranslate"><span class="pre">plink</span></code>, <code class="code docutils literal notranslate"><span class="pre">vcf</span></code>]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--annotations</span></code></p></td>
+<td><p>Annotations file to be used for annotating&lt;br&gt;the VCF file (ONLY for VCF input)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--reference</span></code></p></td>
+<td><p>Reference genome build. Default is GRCh38. Options: [<code class="code docutils literal notranslate"><span class="pre">GRCh37</span></code>, <code class="code docutils literal notranslate"><span class="pre">GRCh38</span></code>]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--report</span></code></p></td>
+<td><p>Generate a QC PDF report or not. Default is True</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--pre-geno</span></code></p></td>
+<td><p>include only SNPs with missing-rate &lt; NUM (before ID filter), important for post merge of multiple platforms</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--mind</span></code></p></td>
+<td><p>include only IDs with missing-rate &lt; NUM</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--fhet-aut</span></code></p></td>
+<td><p>include only IDs within NUM &lt; FHET &lt; NUM</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--fstat-y</span></code></p></td>
+<td><p>include only female IDs with fhet &lt; NUM</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--fstat-x</span></code></p></td>
+<td><p>include only male IDs with fhet &gt; NUM</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--geno</span></code></p></td>
+<td><p>include only SNPs with missing-rate &lt; NUM</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--midi</span></code></p></td>
+<td><p>include only SNPs with missing-rate-difference (case/control) &lt; NUM</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--withpna</span></code></p></td>
+<td><p>include monomorphic (invariant) SNPs</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--maf</span></code></p></td>
+<td><p>include only SNPs with MAF &gt;= NUM</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--hwe-th-con</span></code></p></td>
+<td><p>HWE_controls &lt; NUM</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--hwe-th-cas</span></code></p></td>
+<td><p>HWE_cases &lt; NUM</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="output-s">
+<h2>Output(s)<a class="headerlink" href="#output-s" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>QC’ed file(s) i.e. file with all the variants and/or samples that fail QC filters removed</p></li>
+<li><p>A detailed PDF QC report including pre- and post-QC variant/sample counts, figures such as Manhattan and QQ plots etc.</p></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="pca.html" class="btn btn-neutral float-right" title="Principal Component Analysis" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="install/linux.html" class="btn btn-neutral float-left" title="Install GWASpy on GNU/Linux" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Martin Lab, Broad Institute.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
