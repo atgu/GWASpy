@@ -171,13 +171,13 @@
             
   <div class="section" id="running-phasing-with-a-reference">
 <h1>Running Phasing with a reference<a class="headerlink" href="#running-phasing-with-a-reference" title="Permalink to this headline">¶</a></h1>
-<p>Using a reference panel for phasing can improve the accuracy of phasing. The <strong>phasing</strong> module can be run with a
+<p>Using a reference panel for phasing can improve the accuracy of phasing. The code:<cite>phasing</cite> module can be run with a
 reference panel</p>
 <p>Below is a code on how you can run phasing with a reference panel via:</p>
 <ol class="arabic">
 <li><p>Command line</p>
 <blockquote>
-<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>phasing --input-vcfs gs://path/to/vcf_files.txt --vcf-ref gs://path/to/reference_panel.vcf --out-dir gs://path/to/output/dir
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>phasing --input-vcfs gs://path/to/vcf_files.txt --vcf-ref gs://path/to/reference_panel.vcf --out-dir gs://path/to/output/dir --billing-project project-name --bucket bucket-associated-with-project
 </pre></div>
 </div>
 </div></blockquote>
@@ -189,7 +189,9 @@ reference panel</p>
           <span class="n">vcf_ref</span> <span class="o">=</span> <span class="s1">&#39;gs://path/to/reference_panel.vcf&#39;</span>
           <span class="n">software</span> <span class="o">=</span> <span class="s1">&#39;shapeit&#39;</span><span class="p">,</span>
           <span class="n">reference</span><span class="o">=</span> <span class="s1">&#39;GRCh37&#39;</span><span class="p">,</span>
-          <span class="n">out_dir</span> <span class="o">=</span> <span class="s1">&#39;gs://path/to/output/dir&#39;</span><span class="p">)</span>
+          <span class="n">out_dir</span> <span class="o">=</span> <span class="s1">&#39;gs://path/to/output/dir&#39;</span><span class="p">,</span>
+          <span class="n">billing_project</span> <span class="o">=</span> <span class="s1">&#39;project-name&#39;</span><span class="p">,</span>
+          <span class="n">bucket</span> <span class="o">=</span> <span class="s1">&#39;bucket-associated-with-project&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div></blockquote>

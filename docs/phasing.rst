@@ -33,6 +33,10 @@ Arguments and options
      - VCF file for reference haplotypes if phasing with a reference panel
    * - :code:`--local`
      - Type of service. Default is Service backend where jobs are executed on a multi-tenant compute cluster in Google Cloud
+   * - :code:`--billing-project`
+     - Billing project to be used for the job(s)
+   * - :code:`--bucket`
+     - Bucket associated with the billing project
    * - :code:`--software`
      - Software to use for phasing. Options: [:code:`eagle`, :code:`shapeit`]. Default is Eagle
    * - :code:`--cpu`

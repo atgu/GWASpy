@@ -171,13 +171,13 @@
             
   <div class="section" id="running-phasing-without-a-reference">
 <h1>Running Phasing without a reference<a class="headerlink" href="#running-phasing-without-a-reference" title="Permalink to this headline">¶</a></h1>
-<p>Users can run phasing without a reference panel using the <strong>phasing</strong> module</p>
+<p>Users can run phasing without a reference panel using the code:<cite>phasing</cite> module</p>
 <p>Below is a code on how you can run phasing without a reference panel either: (1) via the command-line;
 or (2) inside a Python script</p>
 <ol class="arabic">
 <li><p>Command line</p>
 <blockquote>
-<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>phasing --input-vcfs gs://path/to/vcf_files.txt --out-dir gs://path/to/output/directory
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>phasing --input-vcfs gs://path/to/vcf_files.txt --out-dir gs://path/to/output/directory --billing-project project-name --bucket bucket-associated-with-project
 </pre></div>
 </div>
 </div></blockquote>
@@ -188,7 +188,9 @@ or (2) inside a Python script</p>
 <span class="n">phase</span><span class="o">.</span><span class="n">phasing</span><span class="o">.</span><span class="n">haplotype_phasing</span><span class="p">(</span><span class="n">input_vcfs</span> <span class="o">=</span> <span class="s1">&#39;gs://path/to/vcf_files.txt&#39;</span><span class="p">,</span>
           <span class="n">software</span> <span class="o">=</span> <span class="s1">&#39;shapeit&#39;</span><span class="p">,</span>
           <span class="n">reference</span><span class="o">=</span> <span class="s1">&#39;GRCh37&#39;</span><span class="p">,</span>
-          <span class="n">out_dir</span> <span class="o">=</span> <span class="s1">&#39;gs://path/to/output/dir&#39;</span><span class="p">)</span>
+          <span class="n">out_dir</span> <span class="o">=</span> <span class="s1">&#39;gs://path/to/output/dir&#39;</span><span class="p">,</span>
+          <span class="n">billing_project</span> <span class="o">=</span> <span class="s1">&#39;project-name&#39;</span><span class="p">,</span>
+          <span class="n">bucket</span> <span class="o">=</span> <span class="s1">&#39;bucket-associated-with-project&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div></blockquote>

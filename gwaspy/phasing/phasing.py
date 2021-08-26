@@ -136,6 +136,8 @@ def shapeit_phasing(b: hb.batch.Batch,
 def haplotype_phasing(input_vcfs: str = None,
                       vcf_ref: str = None,
                       local: bool = False,
+                      billing_project: str = None,
+                      bucket: str = None,
                       software: str = 'eagle',
                       reference: str = 'GRCh38',
                       cpu: int = 8,
@@ -161,7 +163,8 @@ def haplotype_phasing(input_vcfs: str = None,
     if local:
         backend = hb.LocalBackend()
     else:
-        backend = hb.ServiceBackend()
+        backend = hb.ServiceBackend(billing_project=billing_project,
+                                    bucket=bucket)
 
     phasing = hb.Batch(backend=backend,
                        name=f'haplotype-phasing-{software}')
@@ -207,6 +210,8 @@ def main():
     parser.add_argument('--input-vcfs', type=str, required=True)
     parser.add_argument('--vcf-ref', type=str, default=None)
     parser.add_argument('--local', action='store_true')
+    parser.add_argument('--billing-project', required=True)
+    parser.add_argument('--bucket', required=True)
     parser.add_argument('--software', type=str, default='eagle', choices=['eagle', 'shapeit'])
     parser.add_argument('--reference', type=str, default='GRCh38', choices=['GRCh37', 'GRCh38'])
     parser.add_argument('--cpu', type=int, default=8)
@@ -217,9 +222,10 @@ def main():
 
     args = parser.parse_args()
 
-    haplotype_phasing(input_vcfs=args.input_vcfs, vcf_ref=args.vcf_ref, local=args.local, software=args.software,
-                      reference=args.reference, cpu=args.cpu, memory=args.memory, storage=args.storage,
-                      threads=args.threads, out_dir=args.out_dir)
+    haplotype_phasing(input_vcfs=args.input_vcfs, vcf_ref=args.vcf_ref, local=args.local, bucket=args.bucket,
+                      billing_project=args.billing_project, software=args.software, reference=args.reference,
+                      cpu=args.cpu, memory=args.memory, storage=args.storage, threads=args.threads,
+                      out_dir=args.out_dir)
 
 
 if __name__ == '__main__':

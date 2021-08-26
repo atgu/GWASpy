@@ -5,7 +5,7 @@ Pre-Imputation Quality Control (QC)
 ====================================
 
 Detecting and correcting issues such as genotyping errors, sample handling errors, population stratification etc
-is important in GWAS. The: code:`preimp_qc` module addresses these issues and cleans (QC) your data. Below is a flow diagram
+is important in GWAS. The :code:`preimp_qc` module addresses these issues and cleans (QC) your data. Below is a flow diagram
 of the filters applied when QC'ing input data:
 
 .. image:: images/qc_workflow.png
