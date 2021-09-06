@@ -76,7 +76,6 @@ def vcf_scatter(b: hb.batch.Batch,
     cmd = f'''
         set -euo pipefail
         mkdir vcfs
-        echo *
         awk -F"\t" '{{print $1":"$2"-"$3"\t"NR-1}}' {bed} > regions.lines
         bcftools query --list-samples "{vcf}" | tee "{vcf_filename_no_ext}.sample_id.lines" | wc -l > n_smpls.int
         bcftools annotate \
@@ -93,12 +92,12 @@ def vcf_scatter(b: hb.batch.Batch,
             --threads {threads} \
             --scatter-file regions.lines \
             --prefix "{vcf_filename_no_ext}."
-        cut -f2 regions.lines | sed 's/^/vcfs\/{vcf_filename_no_ext}./;s/$/.vcf.gz/'
-        echo vcfs/*
         '''
 
     scatter.command(cmd)
 
-    scatter.command(f'mv vcfs {scatter.ofile}')
-    b.write_output(scatter.ofile, f'{out_dir}/GWASpy/Phasing/{vcf_filename_no_ext}/scatter_vcfs')
+    scatter.command(f'mv vcfs {scatter.vcfs}')
+    scatter.command(f'mv regions.lines {scatter.regions}')
+    b.write_output(scatter.vcfs, f'{out_dir}/GWASpy/Phasing/{vcf_filename_no_ext}/scatter_vcfs')
+    b.write_output(scatter.regions, f'{out_dir}/GWASpy/Phasing/regions.lines')
 
