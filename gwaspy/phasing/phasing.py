@@ -6,6 +6,7 @@ import argparse
 import pandas as pd
 from gwaspy.phasing.get_filebase import get_vcf_filebase
 from gwaspy.phasing.scatter_vcf import create_windows_bed, vcf_scatter
+from typing import Union
 
 
 def eagle_phasing(b: hb.batch.Batch,
@@ -64,6 +65,7 @@ def shapeit_phasing(b: hb.batch.Batch,
                     vcf_file: str = None,
                     ref_vcf: hb.resource.ResourceFile = None,
                     reference: str = 'GRCh38',
+                    region: Union[str, int] = None,
                     cpu: int = 8,
                     memory: str = 'standard',
                     storage: int = 50,
@@ -90,6 +92,7 @@ def shapeit_phasing(b: hb.batch.Batch,
         shapeit4.2 \
             --input {vcf} \
             --map {map_file} \
+            --region {region} \
             --reference {ref_vcf} \
             --output {output_file_name} \
             --thread {threads}
@@ -100,6 +103,7 @@ def shapeit_phasing(b: hb.batch.Batch,
         shapeit4.2 \
             --input {vcf} \
             --map {map_file} \
+            --region {region} \
             --output {output_file_name} \
             --thread {threads}
         '''
@@ -179,6 +183,10 @@ def haplotype_phasing(input_vcfs: str = None,
 
     vcf_paths = pd.read_csv(input_vcfs, sep='\t', header=None)
 
+    # get the regions so we can map each file to its specific region
+    regions = pd.read_csv(f'{out_dir}/GWASpy/Phasing/regions.lines', sep='\t', names=['reg', 'ind'])
+    regions_dict = pd.Series(regions.reg.values, index=regions.ind).to_dict()
+
     for index, row in vcf_paths.iterrows():
         vcf = row[0]
         vcf_filebase = get_vcf_filebase(vcf)
@@ -191,13 +199,18 @@ def haplotype_phasing(input_vcfs: str = None,
         phased_vcf_out_dir = f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_scatter'
 
         for file in vcfs:
+            # get specific region for file using regions.line file
+            vcf_basename = get_vcf_filebase(file)
+            file_index = int(vcf_basename.split('.')[-1])
+            file_region = regions_dict[file_index]
+
             if software == 'eagle':
                 eagle_phasing(b=phasing, vcf_file=file, ref_vcf=vcf_ref, reference=reference, cpu=cpu, memory=memory,
                               storage=storage, threads=threads, out_dir=phased_vcf_out_dir)
 
             else:
-                shapeit_phasing(b=phasing, vcf_file=file, ref_vcf=vcf_ref, reference=reference, cpu=cpu,
-                                memory=memory, storage=storage, threads=threads, out_dir=phased_vcf_out_dir)
+                shapeit_phasing(b=phasing, vcf_file=file, ref_vcf=vcf_ref, reference=reference, region=file_region,
+                                cpu=cpu, memory=memory, storage=storage, threads=threads, out_dir=phased_vcf_out_dir)
 
     phasing.run()
 
