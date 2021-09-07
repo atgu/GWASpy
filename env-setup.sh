@@ -20,11 +20,11 @@ case "$PLATFORM" in
         ;;
     linux*)
         install-pylatex-dependencies() {
-            apt-get install texlive-pictures texlive-science texlive-latex-extra latexmk
+            yes Y | apt-get install texlive-pictures texlive-science texlive-latex-extra latexmk
         }
         install-git-lfs() {
             curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
-            apt-get install git-lfs
+            yes Y | apt-get install git-lfs
         }
         ;;
     *)
