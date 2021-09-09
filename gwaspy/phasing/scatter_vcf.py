@@ -1,7 +1,12 @@
+__author__ = 'Lindo Nkambule'
+
 import pandas as pd, numpy as np
 from gwaspy.utils.get_file_size import bytes_to_gb
 from gwaspy.phasing.get_filebase import get_vcf_filebase
 import hailtop.batch as hb
+import pathlib
+import ntpath
+from typing import Union
 
 
 def create_windows_bed(reference: str = 'GRCh38',
@@ -57,6 +62,8 @@ def vcf_scatter(b: hb.batch.Batch,
                 memory: float = 26,
                 out_dir: str = None):
 
+    global cmd
+
     vcf_size = bytes_to_gb(vcf_file)
     disk_size = round(10.0 + 3.0 * vcf_size)
     cpu = 2 * round(memory / 13) if memory > 6.5 else 1
@@ -73,26 +80,54 @@ def vcf_scatter(b: hb.batch.Batch,
     scatter.storage(f'{disk_size}Gi')
     scatter.image(docker_img)
 
-    cmd = f'''
-        set -euo pipefail
-        mkdir vcfs
-        awk -F"\t" '{{print $1":"$2"-"$3"\t"NR-1}}' {bed} > regions.lines
-        bcftools query --list-samples "{vcf}" | tee "{vcf_filename_no_ext}.sample_id.lines" | wc -l > n_smpls.int
-        bcftools annotate \
-            --no-version \
-            --force \
-            --output-type z \
-            --remove ID,QUAL,INFO,^FMT/GT \
-            --threads {threads} \
-            "{vcf}" | \
-        bcftools +scatter \
-            --no-version \
-            --output-type z \
-            --output vcfs \
-            --threads {threads} \
-            --scatter-file regions.lines \
-            --prefix "{vcf_filename_no_ext}."
+    # work out if file is BCF or VCF
+    vcf_basename = ntpath.basename(vcf_file)
+    print(vcf_file, vcf_basename)
+    if '.vcf' in pathlib.Path(vcf_basename).suffixes:
+        cmd = f'''
+            set -euo pipefail
+            mkdir vcfs
+            awk -F"\t" '{{print $1":"$2"-"$3"\t"NR-1}}' {bed} > regions.lines
+            bcftools query --list-samples "{vcf}" | tee "{vcf_filename_no_ext}.sample_id.lines" | wc -l > n_smpls.int
+            bcftools view --threads {threads} --output-type u "{vcf}" | \
+            bcftools annotate \
+                --no-version \
+                --force \
+                --output-type u \
+                --remove ID,QUAL,INFO,^FMT/GT \
+                --threads {threads} | \
+            bcftools +scatter \
+                --no-version \
+                --output-type b \
+                --output vcfs \
+                --threads {threads} \
+                --scatter-file regions.lines \
+                --prefix "{vcf_filename_no_ext}."
         '''
+    elif '.bcf' in pathlib.Path(vcf_basename).suffixes:
+        cmd = f'''
+            set -euo pipefail
+            mkdir vcfs
+            awk -F"\t" '{{print $1":"$2"-"$3"\t"NR-1}}' {bed} > regions.lines
+            bcftools query --list-samples "{vcf}" | tee "{vcf_filename_no_ext}.sample_id.lines" | wc -l > n_smpls.int
+            bcftools annotate \
+                --no-version \
+                --force \
+                --output-type u \
+                --remove ID,QUAL,INFO,^FMT/GT \
+                --threads {threads} \
+                "{vcf}" | \
+            bcftools +scatter \
+                --no-version \
+                --output-type b \
+                --output vcfs \
+                --threads {threads} \
+                --scatter-file regions.lines \
+                --prefix "{vcf_filename_no_ext}."
+        '''
+
+    else:
+        raise SystemExit('Unsupported file format. Choices are VCF OR BCF')
 
     scatter.command(cmd)
 
@@ -100,4 +135,29 @@ def vcf_scatter(b: hb.batch.Batch,
     scatter.command(f'mv regions.lines {scatter.regions}')
     b.write_output(scatter.vcfs, f'{out_dir}/GWASpy/Phasing/{vcf_filename_no_ext}/scatter_vcfs')
     b.write_output(scatter.regions, f'{out_dir}/GWASpy/Phasing/regions.lines')
+
+
+def run_scatter(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
+                input_vcfs: str = None,
+                reference: str = 'GRCh38',
+                max_win_size_cm: float = 10.0,
+                overlap_size_cm: float = 2.0,
+                scatter_memory: int = 26,
+                out_dir: str = None):
+
+    create_windows_bed(reference=reference, max_win_size_cm=max_win_size_cm, out_dir=out_dir,
+                       overlap_size_cm=overlap_size_cm)
+
+    scatter_b = hb.Batch(backend=backend, name='scatter-vcf')
+
+    vcf_paths = pd.read_csv(input_vcfs, sep='\t', header=None)
+
+    for index, row in vcf_paths.iterrows():
+        vcf = row[0]
+
+        vcf_scatter(b=scatter_b, vcf_file=vcf, intervals_bed=f'{out_dir}/GWASpy/Phasing/gwaspy.refscatter.bed',
+                    memory=scatter_memory, out_dir=out_dir)
+
+    scatter_b.run()
+
 
