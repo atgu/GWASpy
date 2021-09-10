@@ -18,7 +18,7 @@ def concat_vcfs(b: hb.batch.Batch,
                 cpu: int = 4,
                 out_dir: str = None):
 
-    out_type = 'u' if output_type == 'bcf' else 'z'
+    out_type = 'b' if output_type == 'bcf' else 'z'
     threads = cpu - 1
     vcfs_sizes_sum = 0
     merge_vcf_i = ''
