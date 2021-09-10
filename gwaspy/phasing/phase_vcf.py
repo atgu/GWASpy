@@ -10,14 +10,19 @@ from typing import Union
 
 def eagle_phasing(b: hb.batch.Batch,
                   vcf_file: str = None,
-                  ref_vcf: hb.resource.ResourceFile = None,
+                  ref_vcf_file: str = None,
                   reference: str = 'GRCh38',
                   cpu: int = 8,
-                  memory: str = 'standard',
-                  storage: int = 50,
                   img: str = 'docker.io/lindonkambule/gwaspy:v1',
                   threads: int = 16,
                   out_dir: str = None):
+    global ref_size, vcf_ref
+    vcf_size = bytes_to_gb(vcf_file)
+    if ref_vcf_file:
+        ref_size = bytes_to_gb(ref_vcf_file)
+        vcf_ref = b.read_input(ref_vcf_file)
+    mem = 'highmem' if vcf_size > 1 else 'standard'
+    disk_size = round(5.0 + 3.0 * vcf_size) + round(5.0 + 3.0 * ref_size) if ref_vcf_file else vcf_size
 
     vcf_filename_no_ext = get_vcf_filebase(vcf_file)
     output_file_name = f'{vcf_filename_no_ext}.phased.eagle'
@@ -27,18 +32,18 @@ def eagle_phasing(b: hb.batch.Batch,
 
     phase = b.new_job(name=output_file_name)
     phase.cpu(cpu)
-    phase.memory(memory)
-    phase.storage(f'{storage}Gi')
+    phase.memory(mem)
+    phase.storage(f'{disk_size}Gi')
     phase.image(img)
 
-    if ref_vcf:
+    if ref_vcf_file:
         cmd = f'''
         eagle \
             --geneticMapFile {map_file} \
             --numThreads {threads} \
             --outPrefix {output_file_name} \
-            --vcfOutFormat z \
-            --vcfRef {ref_vcf} \
+            --vcfOutFormat b \
+            --vcfRef {vcf_ref} \
             --vcfTarget {vcf}
         '''
 
@@ -48,7 +53,7 @@ def eagle_phasing(b: hb.batch.Batch,
             --geneticMapFile {map_file} \
             --numThreads {threads} \
             --outPrefix {output_file_name} \
-            --vcfOutFormat z \
+            --vcfOutFormat b \
             --vcf {vcf}
         '''
 
@@ -62,7 +67,7 @@ def eagle_phasing(b: hb.batch.Batch,
 
 def shapeit_phasing(b: hb.batch.Batch,
                     vcf_file: str = None,
-                    ref_vcf: hb.resource.ResourceFile = None,
+                    ref_vcf_file: str = None,
                     reference: str = 'GRCh38',
                     region: Union[str, int] = None,
                     map_chromosome: str = None,
@@ -71,12 +76,16 @@ def shapeit_phasing(b: hb.batch.Batch,
                     threads: int = 3,
                     out_dir: str = None):
 
+    global ref_size, vcf_ref
     vcf_size = bytes_to_gb(vcf_file)
+    if ref_vcf_file:
+        ref_size = bytes_to_gb(ref_vcf_file)
+        vcf_ref = b.read_input(ref_vcf_file)
     mem = 'highmem' if vcf_size > 1 else 'standard'
-    disk_size = round(5.0 + 3.0 * vcf_size)
+    disk_size = round(5.0 + 3.0 * vcf_size) + round(5.0 + 3.0 * ref_size) if ref_vcf_file else vcf_size
 
     vcf_filename_no_ext = get_vcf_filebase(vcf_file)
-    output_file_name = f'{vcf_filename_no_ext}.phased.shapeit.vcf.gz'
+    output_file_name = f'{vcf_filename_no_ext}.phased.shapeit.bcf'
     vcf = b.read_input(vcf_file)
 
     map_file = f'/shapeit4/maps/b38/{map_chromosome}.b38.gmap.gz' if reference == 'GRCh38'\
@@ -88,15 +97,15 @@ def shapeit_phasing(b: hb.batch.Batch,
     phase.storage(f'{disk_size}Gi')
     phase.image(img)
 
-    if ref_vcf:
+    if ref_vcf_file:
         # shapeit requires that the VCF be indexed
-        phase.command(f'bcftools index {ref_vcf}')
+        phase.command(f'bcftools index {vcf_ref}')
         cmd = f'''
         shapeit4.2 \
             --input {vcf} \
             --map {map_file} \
             --region {region} \
-            --reference {ref_vcf} \
+            --reference {vcf_ref} \
             --output {output_file_name} \
             --thread {threads}
         '''
@@ -120,13 +129,12 @@ def shapeit_phasing(b: hb.batch.Batch,
     return phase
 
 
-def run_phase(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None, input_vcfs: str = None,
-              vcf_ref: str = None,
+def run_phase(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
+              input_vcfs: str = None,
+              vcf_ref_path: str = None,
               software: str = 'shapeit',
               reference: str = 'GRCh38',
               cpu: int = 4,
-              memory: str = 'standard',
-              storage: int = 50,
               threads: int = 3,
               out_dir: str = None):
 
@@ -137,17 +145,12 @@ def run_phase(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None, input_v
     if reference not in ['GRCh37', 'GRCh38']:
         raise SystemExit(f'Incorrect reference genome build {reference} selected. Options are [GRCh37, GRCh38]')
 
-    if memory not in ['lowmem', 'standard', 'highmem']:
-        raise SystemExit(f'Incorrect memory type {memory} selected. Options are [lowmem, standard, highmem]')
-
     phasing = hb.Batch(backend=backend,
                        name=f'haplotype-phasing-{software}')
 
-    if vcf_ref:
-        vcf_ref = phasing.read_input(vcf_ref)
+    if vcf_ref_path:
         print('RUNNING PHASING WITH A REFERENCE PANEL\n')
     else:
-        vcf_ref = None
         print('RUNNING PHASING WITHOUT A REFERENCE PANEL\n')
 
     vcf_paths = pd.read_csv(input_vcfs, sep='\t', header=None)
@@ -175,12 +178,12 @@ def run_phase(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None, input_v
             map_chrom = file_region.split(':')[0]
 
             if software == 'eagle':
-                eagle_phasing(b=phasing, vcf_file=file, ref_vcf=vcf_ref, reference=reference, cpu=cpu, memory=memory,
-                              storage=storage, threads=threads, out_dir=phased_vcf_out_dir)
+                eagle_phasing(b=phasing, vcf_file=file, ref_vcf_file=vcf_ref_path, reference=reference, cpu=cpu,
+                              threads=threads, out_dir=phased_vcf_out_dir)
 
             else:
-                shapeit_phasing(b=phasing, vcf_file=file, ref_vcf=vcf_ref, reference=reference, region=file_region,
-                                map_chromosome=map_chrom, cpu=cpu, threads=threads,
+                shapeit_phasing(b=phasing, vcf_file=file, ref_vcf_file=vcf_ref_path, reference=reference,
+                                region=file_region, map_chromosome=map_chrom, cpu=cpu, threads=threads,
                                 out_dir=phased_vcf_out_dir)
 
     phasing.run()
