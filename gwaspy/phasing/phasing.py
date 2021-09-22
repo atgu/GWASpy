@@ -51,7 +51,8 @@ def haplotype_phasing(input_vcfs: str = None,
     # Concatenate phased chunks
     if run.lower() == 'concat':
         from gwaspy.phasing.concat_vcfs import run_concat
-        run_concat(backend=backend, input_vcfs=input_vcfs, output_type=output_type, out_dir=out_dir)
+        run_concat(backend=backend, input_vcfs=input_vcfs, output_type=output_type, reference=reference,
+                   out_dir=out_dir)
 
 
 def main():
@@ -68,7 +69,7 @@ def main():
     parser.add_argument('--cpu', type=int, default=4)
     parser.add_argument('--scatter-mem', type=int, default=26)
     parser.add_argument('--threads', type=int, default=3)
-    parser.add_argument('--run', type=str, default='standard', choices=['scatter', 'phase', 'concat'])
+    parser.add_argument('--run', type=str, default='scatter', choices=['scatter', 'phase', 'concat'])
     parser.add_argument('--out-type', type=str, default='bcf', choices=['bcf', 'vcf'])
     parser.add_argument('--out-dir', required=True)
 
