@@ -22,7 +22,7 @@ def eagle_phasing(b: hb.batch.Batch,
         ref_size = bytes_to_gb(ref_vcf_file)
         vcf_ref = b.read_input(ref_vcf_file)
     mem = 'highmem' if vcf_size > 1 else 'standard'
-    disk_size = round(5.0 + 3.0 * vcf_size) + round(5.0 + 3.0 * ref_size) if ref_vcf_file else vcf_size
+    disk_size = round(5.0 + 3.0 * vcf_size) + round(5.0 + 3.0 * ref_size) if ref_vcf_file else round(5.0 + 3.0 * vcf_size)
 
     vcf_filename_no_ext = get_vcf_filebase(vcf_file)
     output_file_name = f'{vcf_filename_no_ext}.phased.eagle'
@@ -82,14 +82,14 @@ def shapeit_phasing(b: hb.batch.Batch,
         ref_size = bytes_to_gb(ref_vcf_file)
         vcf_ref = b.read_input(ref_vcf_file)
     mem = 'highmem' if vcf_size > 1 else 'standard'
-    disk_size = round(5.0 + 3.0 * vcf_size) + round(5.0 + 3.0 * ref_size) if ref_vcf_file else vcf_size
+    disk_size = round(5.0 + 3.0 * vcf_size) + round(5.0 + 3.0 * ref_size) if ref_vcf_file else round(5.0 + 3.0 * vcf_size)
 
     vcf_filename_no_ext = get_vcf_filebase(vcf_file)
     output_file_name = f'{vcf_filename_no_ext}.phased.shapeit.bcf'
     vcf = b.read_input(vcf_file)
 
     map_file = f'/shapeit4/maps/b38/{map_chromosome}.b38.gmap.gz' if reference == 'GRCh38'\
-        else f'/shapeit4/maps/b37/chr{map_chromosome}.b37.gmap.gz'
+        else f'/shapeit4/maps/b37/{map_chromosome}.b37.gmap.gz'
 
     phase = b.new_job(name=output_file_name)
     phase.cpu(cpu)
