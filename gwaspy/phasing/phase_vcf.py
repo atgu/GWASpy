@@ -59,8 +59,8 @@ def eagle_phasing(b: hb.batch.Batch,
 
     phase.command(cmd)
 
-    phase.command(f'mv {output_file_name}.vcf.gz {phase.ofile}')
-    b.write_output(phase.ofile, f'{out_dir}/{output_file_name}.vcf.gz')
+    phase.command(f'mv {output_file_name}.bcf {phase.ofile}')
+    b.write_output(phase.ofile, f'{out_dir}/{output_file_name}.bcf')
 
     return phase
 
@@ -88,8 +88,14 @@ def shapeit_phasing(b: hb.batch.Batch,
     output_file_name = f'{vcf_filename_no_ext}.phased.shapeit.bcf'
     vcf = b.read_input(vcf_file)
 
-    map_file = f'/shapeit4/maps/b38/{map_chromosome}.b38.gmap.gz' if reference == 'GRCh38'\
-        else f'/shapeit4/maps/b37/{map_chromosome}.b37.gmap.gz'
+    chrom = map_chromosome if reference == 'GRCh38' else f'chr{map_chromosome}'
+
+    if reference == 'GRCh37':
+        if chrom == 'chr23':
+            chrom = 'chrX'
+
+    map_file = f'/shapeit4/maps/b38/{chrom}.b38.gmap.gz' if reference == 'GRCh38'\
+        else f'/shapeit4/maps/b37/{chrom}.b37.gmap.gz'
 
     phase = b.new_job(name=output_file_name)
     phase.cpu(cpu)
