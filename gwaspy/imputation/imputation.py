@@ -120,7 +120,7 @@ def main():
     else:
         backend = hb.ServiceBackend()
 
-    run_impute(backend=backend, input_vcfs=args.inout_vcfs, memory=args.memory, cpu=args.cpu, threads=args.threads,
+    run_impute(backend=backend, input_vcfs=args.input_vcfs, memory=args.memory, cpu=args.cpu, threads=args.threads,
                out_dir=args.out_dir)
 
 
