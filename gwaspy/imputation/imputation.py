@@ -120,9 +120,6 @@ def main():
     else:
         backend = hb.ServiceBackend()
 
-    phasing = hb.Batch(backend=backend,
-                       name='genotype-imputation')
-
     run_impute(backend=backend, input_vcfs=args.inout_vcfs, memory=args.memory, cpu=args.cpu, threads=args.threads,
                out_dir=args.out_dir)
 
