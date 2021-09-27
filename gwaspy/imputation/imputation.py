@@ -1,53 +1,47 @@
 __author__ = 'Lindo Nkambule'
 
 import hailtop.batch as hb
-import ntpath
+import hail as hl
 import argparse
 import pandas as pd
 from typing import Union
+from gwaspy.phasing.get_filebase import get_vcf_filebase
+from gwaspy.utils.get_file_size import bytes_to_gb
 
 
 def imputation(b: hb.batch.Batch,
-               vcf: hb.resource.ResourceFile,
+               vcf: str = None,
                vcf_filename_no_ext: str = None,
-               ref_imp5: hb.resource.ResourceGroup = None,
-               reference: str = 'GRCh38',
-               contig: Union[str, int] = None,
+               ref: hb.ResourceGroup = None,
+               ref_size: Union[int, float] = None,
+               region: str = None,
+               chromosome: str = None,
                cpu: int = 8,
-               memory: str = 'standard',
-               storage: int = 50,
+               memory: str = 'highmem',
                img: str = 'docker.io/lindonkambule/gwaspy:v1',
-               threads: int = 16,
+               threads: int = 7,
                out_dir: str = None):
 
-    output_file_name = vcf_filename_no_ext + '_' + str(contig) + '.imputed.vcf.gz'
+    in_vcf = b.read_input(vcf)
+    vcf_size = bytes_to_gb(vcf)
 
-    if reference == 'GRCh38':
-        if contig == 'chr23':
-            in_contig = 'chrX'
-        else:
-            in_contig = contig
+    output_file_name = vcf_filename_no_ext + '.imputed.vcf.gz'
+    disk_size = ref_size + (vcf_size * 4)
 
-    else:
-        if contig == 23:
-            in_contig = 'X'
-        else:
-            in_contig = contig
-
-    map_file = f'/shapeit4/maps/b38/{in_contig}.b38.gmap.gz' if reference == 'GRCh38' else f'/shapeit4/maps/b37/chr{in_contig}.b37.gmap.gz'
+    map_file = f'/shapeit4/maps/b38/{chromosome}.b38.gmap.gz'
 
     impute = b.new_job(name=output_file_name)
     impute.cpu(cpu)
     impute.memory(memory)
-    impute.storage(f'{storage}Gi')
+    impute.storage(f'{disk_size}Gi')
     impute.image(img)
 
     cmd = f'''
         impute5_1.1.5_static \
-            --h {ref_imp5.imp5} \
+            --h {ref.bcf} \
             --m {map_file} \
-            --g {vcf} \
-            --r {in_contig} \
+            --g {in_vcf} \
+            --r {region} \
             --out-gp-field \
             --o {output_file_name} \
             --threads {threads}
@@ -61,15 +55,62 @@ def imputation(b: hb.batch.Batch,
     return impute
 
 
+def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
+               input_vcfs: str = None,
+               memory: str = 'highmem',
+               cpu: int = 8,
+               threads: int = 7,
+               out_dir: str = None):
+
+    print('RUNNING IMPUTATION')
+    impute_b = hb.Batch(backend=backend, name=f'impute-phased-chunks')
+
+    vcf_paths = pd.read_csv(input_vcfs, sep='\t', header=None)
+
+    # get the regions so we can map each file to its specific region
+    regions = pd.read_csv(f'{out_dir}/GWASpy/Phasing/regions.lines', sep='\t', names=['reg', 'ind'])
+    regions_dict = pd.Series(regions.reg.values, index=regions.ind).to_dict()
+
+    for index, row in vcf_paths.iterrows():
+        vcf = row[0]
+        vcf_filebase = get_vcf_filebase(vcf)
+
+        phased_vcfs_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_scatter')
+
+        for i in range(1, 24):
+            if i == 23:
+                chrom = 'chrX'
+            else:
+                chrom = f'chr{i}'
+
+            ref_bcf = f'gs://hgdp-1kg/hgdp_tgp_phasing/vcf/hgdp.tgp.gwaspy.merged.{chrom}.merged.bcf'
+            ref_ind = f'gs://hgdp-1kg/hgdp_tgp_phasing/vcf/hgdp.tgp.gwaspy.merged.{chrom}.merged.bcf.csi'
+            ref_size = bytes_to_gb(ref_bcf)
+            ref = impute_b.read_input_group(**{'bcf': ref_bcf,
+                                               'bcf.csi': ref_ind})
+
+            for file in phased_vcfs_chunks:
+                f = file['path']
+                vcf_basename = get_vcf_filebase(f)
+                file_index = int(vcf_basename.split('.')[-3])
+                file_region = regions_dict[file_index]
+                map_chrom = file_region.split(':')[0]
+
+                if map_chrom == chrom:
+                    imputation(b=impute_b, vcf=f, vcf_filename_no_ext=vcf_filebase, ref=ref, ref_size=ref_size,
+                               region=file_region[3:], chromosome=chrom, cpu=cpu, memory=memory,
+                               threads=threads, out_dir=out_dir)
+
+    impute_b.run()
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input-vcfs', type=str, required=True)
     parser.add_argument('--local', action='store_true')
-    parser.add_argument('--reference', type=str, default='GRCh38', choices=['GRCh37', 'GRCh38'])
+    parser.add_argument('--memory', type=str, default='highmem', choices=['lowmem', 'standard', 'highmem'])
     parser.add_argument('--cpu', type=int, default=8)
-    parser.add_argument('--memory', type=str, default='standard', choices=['lowmem', 'standard', 'highmem'])
-    parser.add_argument('--storage', type=int, default=50)
-    parser.add_argument('--threads', type=int, default=16)
+    parser.add_argument('--threads', type=int, default=7)
     parser.add_argument('--out-dir', required=True)
 
     args = parser.parse_args()
@@ -82,31 +123,8 @@ def main():
     phasing = hb.Batch(backend=backend,
                        name='genotype-imputation')
 
-    vcf_paths = pd.read_csv(args.input_vcfs, sep='\t', header=None)
-
-    for index, row in vcf_paths.iterrows():
-        vcf = row[0]
-        in_vcf = phasing.read_input(vcf)
-        vcf_name = ntpath.basename(vcf)
-        if vcf_name.endswith('.gz'):
-            file_no_ext = vcf_name[:-7]
-        elif vcf_name.endswith('.bgz'):
-            file_no_ext = vcf_name[:-8]
-        else:
-            file_no_ext = vcf_name[:-4]
-
-        for i in range(1, 24):
-            chrom = f'chr{i}' if args.reference == 'GRCh38' else i
-
-            # AFTER PHASING THE 1KG+HGDP DATA, CONVERT THE FILES TO IMP5 THEN CHANGE THE PATHS BELOW !!!
-            ref_imp_chrom_file = f'gs://path/to/reference_chr{i}.imp5'
-            ref_imp_chrom_file_idx = f'gs://path/to/reference_chr{i}.imp5.idx'
-            ref_chrom_files = phasing.read_input_group(**{'imp5': ref_imp_chrom_file,
-                                                          'imp5.idx': ref_imp_chrom_file_idx})
-
-            imputation(b=phasing, vcf=in_vcf, vcf_filename_no_ext=file_no_ext, ref_imp5=ref_chrom_files,
-                       reference=args.reference, contig=chrom, cpu=args.cpu, memory=args.memory,
-                       storage=args.storage, threads=args.threads, out_dir=args.out_dir)
+    run_impute(backend=backend, input_vcfs=args.inout_vcfs, memory=args.memory, cpu=args.cpu, threads=args.threads,
+               out_dir=args.out_dir)
 
 
 if __name__ == '__main__':
