@@ -52,8 +52,6 @@ def imputation(b: hb.batch.Batch,
     impute.command(f'mv {output_file_name} {impute.ofile}')
     b.write_output(impute.ofile, f'{out_dir}/GWASpy/Imputation/{vcf_filename_no_ext}/{output_file_name}')
 
-    return impute
-
 
 def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
                input_vcfs: str = None,
@@ -108,6 +106,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input-vcfs', type=str, required=True)
     parser.add_argument('--local', action='store_true')
+    parser.add_argument('--billing-project', required=True)
+    parser.add_argument('--bucket', required=True)
     parser.add_argument('--memory', type=str, default='highmem', choices=['lowmem', 'standard', 'highmem'])
     parser.add_argument('--cpu', type=int, default=8)
     parser.add_argument('--threads', type=int, default=7)
@@ -118,7 +118,8 @@ def main():
     if args.local:
         backend = hb.LocalBackend()
     else:
-        backend = hb.ServiceBackend()
+        backend = hb.ServiceBackend(billing_project=args.billing_project,
+                                    bucket=args.bucket)
 
     run_impute(backend=backend, input_vcfs=args.input_vcfs, memory=args.memory, cpu=args.cpu, threads=args.threads,
                out_dir=args.out_dir)
