@@ -22,7 +22,9 @@ def imputation(b: hb.batch.Batch,
                threads: int = 7,
                out_dir: str = None):
 
-    in_vcf = b.read_input(vcf)
+    # in_vcf = b.read_input(vcf)
+    in_vcf = b.read_input_group(**{'bcf': vcf,
+                                'bcf.csi': f'{vcf}.csi'})
     vcf_size = bytes_to_gb(vcf)
 
     output_file_name = vcf_filename_no_ext + '.imputed.vcf.gz'
@@ -40,7 +42,7 @@ def imputation(b: hb.batch.Batch,
         impute5_1.1.5_static \
             --h {ref.bcf} \
             --m {map_file} \
-            --g {in_vcf} \
+            --g {in_vcf.bcf} \
             --r {region} \
             --out-gp-field \
             --o {output_file_name} \
