@@ -98,7 +98,7 @@ def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
 
                 if map_chrom == chrom:
                     imputation(b=impute_b, vcf=f, vcf_filename_no_ext=vcf_basename, ref=ref, ref_size=ref_size,
-                               region=file_region[3:], chromosome=chrom, cpu=cpu, memory=memory,
+                               region=file_region, chromosome=chrom, cpu=cpu, memory=memory,
                                threads=threads, out_dir=out_dir)
 
     impute_b.run()
