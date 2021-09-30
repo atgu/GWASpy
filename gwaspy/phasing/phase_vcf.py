@@ -58,9 +58,13 @@ def eagle_phasing(b: hb.batch.Batch,
         '''
 
     phase.command(cmd)
+    # index the output
+    phase.command(f'bcftools index {output_file_name}.bcf')
 
     phase.command(f'mv {output_file_name}.bcf {phase.ofile}')
+    phase.command(f'mv {output_file_name}.bcf.csi {phase.csi}')
     b.write_output(phase.ofile, f'{out_dir}/{output_file_name}.bcf')
+    b.write_output(phase.csi, f'{out_dir}/{output_file_name}.bcf.csi')
 
     return phase
 
@@ -128,9 +132,13 @@ def shapeit_phasing(b: hb.batch.Batch,
 
     phase.command(f'bcftools index {vcf}')
     phase.command(cmd)
+    # index the output
+    phase.command(f'bcftools index {output_file_name}')
 
     phase.command(f'mv {output_file_name} {phase.ofile}')
+    phase.command(f'mv {output_file_name}.csi {phase.csi}')
     b.write_output(phase.ofile, f'{out_dir}/{output_file_name}')
+    b.write_output(phase.csi, f'{out_dir}/{output_file_name}.csi')
 
     return phase
 
