@@ -75,7 +75,7 @@ def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
         vcf = row[0]
         vcf_filebase = get_vcf_filebase(vcf)
 
-        phased_vcfs_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_scatter')
+        phased_vcfs_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_scatter/*.bcf')
 
         for i in range(1, 24):
             if i == 23:
