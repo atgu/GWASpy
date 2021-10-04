@@ -15,7 +15,7 @@ def concat_vcfs(b: hb.batch.Batch,
                 output_type: str = 'vcf',
                 chrom: str = None,
                 docker_img: str = 'docker.io/lindonkambule/gwaspy:v1',
-                cpu: int = 4,
+                cpu: int = 8,
                 out_dir: str = None):
 
     global index_cmd
@@ -33,11 +33,11 @@ def concat_vcfs(b: hb.batch.Batch,
     for line in vcfs_to_merge:
         vcfs_sizes_sum += 2 + bytes_to_gb(line)
 
-    storage = vcfs_sizes_sum * 2
+    mem = 'highmem' if vcfs_sizes_sum > 2 else 'standard'
 
     concat = b.new_job(name=f'concat-{vcf_basename}')
-    concat.memory(f'{vcfs_sizes_sum}Gi')
-    concat.storage(f'{storage}Gi')
+    concat.memory(mem)
+    concat.storage(f'{vcfs_sizes_sum}Gi')
     concat.image(docker_img)
     concat.cpu(cpu)
 
