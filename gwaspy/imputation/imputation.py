@@ -1,109 +1,49 @@
 __author__ = 'Lindo Nkambule'
 
 import hailtop.batch as hb
-import hail as hl
 import argparse
-import pandas as pd
-from typing import Union
-from gwaspy.phasing.get_filebase import get_vcf_filebase
-from gwaspy.utils.get_file_size import bytes_to_gb
 
 
-def imputation(b: hb.batch.Batch,
-               vcf: str = None,
-               vcf_filename_no_ext: str = None,
-               ref: hb.ResourceGroup = None,
-               ref_size: Union[int, float] = None,
-               region: str = None,
-               chromosome: str = None,
-               cpu: int = 8,
-               memory: str = 'highmem',
-               img: str = 'docker.io/lindonkambule/gwaspy:v1',
-               threads: int = 7,
-               out_dir: str = None):
+def genotype_imputation(input_vcfs: str = None,
+                        local: bool = False,
+                        billing_project: str = None,
+                        bucket: str = None,
+                        memory: str = 'highmem',
+                        cpu: int = 8,
+                        threads: int = 7,
+                        run: str = 'impute',
+                        output_type: str = 'bcf',
+                        out_dir: str = None):
+    # Error handling
+    if not out_dir:
+        raise SystemExit('Output directory not specified. Specify using --out_dir if running from the command line or'
+                         'out_dir argument if running inside a Python script')
 
-    # in_vcf = b.read_input(vcf)
-    in_vcf = b.read_input_group(**{'bcf': vcf,
-                                'bcf.csi': f'{vcf}.csi'})
-    vcf_size = bytes_to_gb(vcf)
+    if run.lower() not in ['impute', 'concat']:
+        raise SystemExit(f'Incorrect process {run} selected. Options are [impute, concat]')
 
-    output_file_name = vcf_filename_no_ext + '.imputed.vcf.gz'
-    file_dir = vcf_filename_no_ext.split('.')[0]
+    if output_type.lower() not in ['bcf', 'vcf']:
+        raise SystemExit(f'Incorrect output type {run} selected. Options are [bcf, vcf]')
 
-    disk_size = ref_size + (vcf_size * 4)
+    if memory.lower() not in ['lowmem', 'standard', 'highmem']:
+        raise SystemExit(f'Incorrect memory type {run} selected. Options are [lowmem, standard, highmem]')
 
-    map_file = f'/shapeit4/maps/b38/{chromosome}.b38.gmap.gz'
+    if local:
+        backend = hb.LocalBackend()
+    else:
+        backend = hb.ServiceBackend(billing_project=billing_project,
+                                    bucket=bucket)
 
-    impute = b.new_job(name=output_file_name)
-    impute.cpu(cpu)
-    impute.memory(memory)
-    impute.storage(f'{disk_size}Gi')
-    impute.image(img)
+    # impute genotypes
+    if run.lower() == 'impute':
+        from gwaspy.imputation.impute_vcf import run_impute
+        run_impute(backend=backend, input_vcfs=input_vcfs, memory=memory, cpu=cpu, threads=threads,
+                   out_dir=out_dir)
 
-    cmd = f'''
-        impute5_1.1.5_static \
-            --h {ref.bcf} \
-            --m {map_file} \
-            --g {in_vcf.bcf} \
-            --r {region} \
-            --out-gp-field \
-            --o {output_file_name} \
-            --threads {threads}
-    '''
-
-    impute.command(cmd)
-
-    impute.command(f'mv {output_file_name} {impute.ofile}')
-    b.write_output(impute.ofile, f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{output_file_name}')
-
-
-def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
-               input_vcfs: str = None,
-               memory: str = 'highmem',
-               cpu: int = 8,
-               threads: int = 7,
-               out_dir: str = None):
-
-    print('RUNNING IMPUTATION')
-    impute_b = hb.Batch(backend=backend, name=f'impute-phased-chunks')
-
-    vcf_paths = pd.read_csv(input_vcfs, sep='\t', header=None)
-
-    # get the regions so we can map each file to its specific region
-    regions = pd.read_csv(f'{out_dir}/GWASpy/Phasing/regions.lines', sep='\t', names=['reg', 'ind'])
-    regions_dict = pd.Series(regions.reg.values, index=regions.ind).to_dict()
-
-    for index, row in vcf_paths.iterrows():
-        vcf = row[0]
-        vcf_filebase = get_vcf_filebase(vcf)
-
-        phased_vcfs_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_scatter/*.bcf')
-
-        for i in range(1, 24):
-            if i == 23:
-                chrom = 'chrX'
-            else:
-                chrom = f'chr{i}'
-
-            ref_bcf = f'gs://hgdp-1kg/hgdp_tgp_phasing/vcf/hgdp.tgp.gwaspy.merged.{chrom}.merged.bcf'
-            ref_ind = f'gs://hgdp-1kg/hgdp_tgp_phasing/vcf/hgdp.tgp.gwaspy.merged.{chrom}.merged.bcf.csi'
-            ref_size = bytes_to_gb(ref_bcf)
-            ref = impute_b.read_input_group(**{'bcf': ref_bcf,
-                                               'bcf.csi': ref_ind})
-
-            for file in phased_vcfs_chunks:
-                f = file['path']
-                vcf_basename = get_vcf_filebase(f)
-                file_index = int(vcf_basename.split('.')[-3])
-                file_region = regions_dict[file_index]
-                map_chrom = file_region.split(':')[0]
-
-                if map_chrom == chrom:
-                    imputation(b=impute_b, vcf=f, vcf_filename_no_ext=vcf_basename, ref=ref, ref_size=ref_size,
-                               region=file_region, chromosome=chrom, cpu=cpu, memory=memory,
-                               threads=threads, out_dir=out_dir)
-
-    impute_b.run()
+    # Concatenate imputed chunks
+    if run.lower() == 'concat':
+        from gwaspy.imputation.concat_vcfs import run_concat
+        run_concat(backend=backend, input_vcfs=input_vcfs, output_type=output_type, out_dir=out_dir)
 
 
 def main():
@@ -115,18 +55,15 @@ def main():
     parser.add_argument('--memory', type=str, default='highmem', choices=['lowmem', 'standard', 'highmem'])
     parser.add_argument('--cpu', type=int, default=8)
     parser.add_argument('--threads', type=int, default=7)
+    parser.add_argument('--run', type=str, default='impute', choices=['impute', 'concat'])
+    parser.add_argument('--out-type', type=str, default='bcf', choices=['bcf', 'vcf'])
     parser.add_argument('--out-dir', required=True)
 
     args = parser.parse_args()
 
-    if args.local:
-        backend = hb.LocalBackend()
-    else:
-        backend = hb.ServiceBackend(billing_project=args.billing_project,
-                                    bucket=args.bucket)
-
-    run_impute(backend=backend, input_vcfs=args.input_vcfs, memory=args.memory, cpu=args.cpu, threads=args.threads,
-               out_dir=args.out_dir)
+    genotype_imputation(input_vcfs=args.input_vcfs, local=args.local, billing_project=args.billing_project,
+                        bucket=args.bucket, memory=args.memory, cpu=args.cpu, threads=args.threads,
+                        run=args.run, output_type=args.out_type, out_dir=args.out_dir)
 
 
 if __name__ == '__main__':
