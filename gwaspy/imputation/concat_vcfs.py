@@ -33,11 +33,11 @@ def concat_vcfs(b: hb.batch.Batch,
     for line in vcfs_to_merge:
         vcfs_sizes_sum += 2 + bytes_to_gb(line)
 
-    mem = 'highmem' if vcfs_sizes_sum > 2 else 'standard'
+    storage = vcfs_sizes_sum * 2
 
     concat = b.new_job(name=f'concat-{vcf_basename}')
-    concat.memory(mem)
-    concat.storage(f'{vcfs_sizes_sum}Gi')
+    concat.memory(f'{vcfs_sizes_sum}Gi')
+    concat.storage(f'{storage}Gi')
     concat.image(docker_img)
     concat.cpu(cpu)
 
