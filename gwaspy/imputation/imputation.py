@@ -28,6 +28,8 @@ def imputation(b: hb.batch.Batch,
     vcf_size = bytes_to_gb(vcf)
 
     output_file_name = vcf_filename_no_ext + '.imputed.vcf.gz'
+    file_dir = vcf_filename_no_ext.split('.')[0]
+
     disk_size = ref_size + (vcf_size * 4)
 
     map_file = f'/shapeit4/maps/b38/{chromosome}.b38.gmap.gz'
@@ -52,7 +54,7 @@ def imputation(b: hb.batch.Batch,
     impute.command(cmd)
 
     impute.command(f'mv {output_file_name} {impute.ofile}')
-    b.write_output(impute.ofile, f'{out_dir}/GWASpy/Imputation/{vcf_filename_no_ext}/{output_file_name}')
+    b.write_output(impute.ofile, f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{output_file_name}')
 
 
 def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
