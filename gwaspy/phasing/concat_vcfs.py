@@ -63,8 +63,8 @@ def concat_vcfs(b: hb.batch.Batch,
 
     concat.command(f'mv {out_filename} {concat.ofile}')
     concat.command(f'mv {out_index_name} {concat.idx}')
-    b.write_output(concat.ofile, f'{out_dir}/GWASpy/Phasing/{vcf_basename}/phased_merged/{out_filename}')
-    b.write_output(concat.idx, f'{out_dir}/GWASpy/Phasing/{vcf_basename}/phased_merged/{out_index_name}')
+    b.write_output(concat.ofile, f'{out_dir}/GWASpy/Imputation/{vcf_basename}/imputed_merged/{out_filename}')
+    b.write_output(concat.idx, f'{out_dir}/GWASpy/Imputation/{vcf_basename}/imputed_merged/{out_index_name}')
 
 
 def run_concat(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
@@ -85,7 +85,7 @@ def run_concat(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
         vcf = row[0]
         vcf_filebase = get_vcf_filebase(vcf)
 
-        phased_vcfs_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_scatter')
+        imputed_vcfs_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Imputation/{vcf_filebase}/imputed_chunks')
 
         for i in range(1, 24):
             if reference == 'GRCh38':
@@ -101,10 +101,10 @@ def run_concat(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
 
             chrom_phased_files_to_concat = []
 
-            for file in phased_vcfs_chunks:
+            for file in imputed_vcfs_chunks:
                 f = file['path']
                 vcf_basename = get_vcf_filebase(f)
-                file_index = int(vcf_basename.split('.')[-3])
+                file_index = int(vcf_basename.split('.')[-4])
                 file_region = regions_dict[file_index]
                 map_chrom = file_region.split(':')[0]
                 if map_chrom == chrom:
