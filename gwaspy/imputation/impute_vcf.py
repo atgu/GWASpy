@@ -51,9 +51,13 @@ def imputation(b: hb.batch.Batch,
     '''
 
     impute.command(cmd)
+    # index file to use when merging
+    impute.command(f'bcftools index {output_file_name}')
 
     impute.command(f'mv {output_file_name} {impute.ofile}')
+    impute.command(f'mv {output_file_name}.csi {impute.ind}')
     b.write_output(impute.ofile, f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{output_file_name}')
+    b.write_output(impute.ind, f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{output_file_name}.csi')
 
 
 def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
