@@ -42,10 +42,9 @@ def concat_vcfs(b: hb.batch.Batch,
     concat.cpu(cpu)
 
     for line in vcfs_to_merge:
-        input_vcf = b.read_input(line)
-        merge_vcf_i += f'{input_vcf} '
-        # bcftools requires all the files to be merged to be indexed
-        concat.command(f'bcftools index {input_vcf}')
+        input_vcf = b.read_input_group(vcf=line,
+                                       ind=f'{line}.csi')
+        merge_vcf_i += f'{input_vcf.vcf} '
 
     cmd = f'''
         bcftools concat \
@@ -84,7 +83,7 @@ def run_concat(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
         vcf = row[0]
         vcf_filebase = get_vcf_filebase(vcf)
 
-        imputed_vcfs_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Imputation/{vcf_filebase}/imputed_chunks')
+        imputed_vcfs_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Imputation/{vcf_filebase}/imputed_chunks/*.vcf.gz')
 
         for i in range(1, 24):
             if i == 23:
