@@ -1,12 +1,68 @@
 __author__ = 'Lindo Nkambule'
 
 import hailtop.batch as hb
+import hail as hl
+import pandas as pd
 from typing import Union
 from gwaspy.utils.get_file_size import bytes_to_gb
+from gwaspy.phasing.get_filebase import get_vcf_filebase
 
 
-def imputation(b: hb.batch.Batch,
+def aut_impute(b: hb.batch.Batch,
                vcf: str = None,
+               vcf_filename_no_ext: str = None,
+               ref: hb.ResourceGroup = None,
+               ref_size: Union[int, float] = None,
+               region: str = None,
+               chromosome: str = None,
+               cpu: int = 8,
+               memory: str = 'highmem',
+               img: str = 'docker.io/lindonkambule/gwaspy:v1',
+               threads: int = 7,
+               out_dir: str = None):
+
+    # in_vcf = b.read_input(vcf)
+    in_vcf = b.read_input_group(**{'bcf': vcf,
+                                'bcf.csi': f'{vcf}.csi'})
+    vcf_size = bytes_to_gb(vcf)
+
+    out_file_name = vcf_filename_no_ext + '.imputed.vcf.gz'
+    file_dir = vcf_filename_no_ext.split('.')[0]
+
+    disk_size = ref_size + (vcf_size * 4)
+
+    map_file = f'/shapeit4/maps/b38/{chromosome}.b38.gmap.gz'
+
+    impute = b.new_job(name=out_file_name)
+    impute.cpu(cpu)
+    impute.memory(memory)
+    impute.storage(f'{disk_size}Gi')
+    impute.image(img)
+
+    cmd = f'''
+        impute5_1.1.5_static \
+            --h {ref.bcf} \
+            --m {map_file} \
+            --g {in_vcf.bcf} \
+            --r {region} \
+            --out-gp-field \
+            --o {out_file_name} \
+            --threads {threads}
+    '''
+
+    impute.command(cmd)
+    # index file to use when merging
+    impute.command(f'bcftools index {out_file_name}')
+
+    impute.command(f'mv {out_file_name} {impute.ofile}')
+    impute.command(f'mv {out_file_name}.csi {impute.idx}')
+    b.write_output(impute.ofile, f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{out_file_name}')
+    b.write_output(impute.idx, f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{out_file_name}.csi')
+
+
+def sex_impute(b: hb.batch.Batch,
+               vcf: str = None,
+               females_list: str = None,
                vcf_filename_no_ext: str = None,
                ref: hb.ResourceGroup = None,
                ref_size: Union[int, float] = None,
@@ -20,56 +76,44 @@ def imputation(b: hb.batch.Batch,
 
     global cmd
     in_vcf = b.read_input(vcf)
+    in_females = b.read_input(females_list)
     vcf_size = bytes_to_gb(vcf)
 
-    output_file_name = vcf_filename_no_ext + '.imputed.vcf.gz'
+    out_file_name = vcf_filename_no_ext + '.imputed.bcf'
+    file_dir = vcf_filename_no_ext.split('.')[0]
+
     disk_size = ref_size + (vcf_size * 4)
 
     map_file = f'/shapeit4/maps/b38/{chromosome}.b38.gmap.gz'
 
-    impute = b.new_job(name=output_file_name)
+    impute = b.new_job(name=out_file_name)
     impute.cpu(cpu)
     impute.memory(memory)
     impute.storage(f'{disk_size}Gi')
     impute.image(img)
 
-    if int(region.split(':')[1].split('-')[1]) < 2781479:
+    if (int(region.split(':')[1].split('-')[1]) <= 2781479) | (int(region.split(':')[1].split('-')[0]) >= 155701383):
         # run diploid imputation
-        print('This chunk is in the PAR1 region, we will run diploid imputation')
+        print('This chunk is in the PAR1 or PAR2 region, we will run diploid imputation')
         cmd = f'''
-                impute5_1.1.5_static \
-                    --h {ref.bcf} \
-                    --m {map_file} \
-                    --g {in_vcf} \
-                    --r {region} \
-                    --out-gp-field \
-                    --o {output_file_name} \
-                    --threads {threads}
-            '''
+            impute5_1.1.5_static \
+                --h {ref.bcf} \
+                --m {map_file} \
+                --g {in_vcf} \
+                --r {region} \
+                --out-gp-field \
+                --o {out_file_name} \
+                --threads {threads}
+        '''
 
         impute.command(cmd)
+        # index file to use when merging
+        impute.command(f'bcftools index {out_file_name}')
 
-        impute.command(f'mv {output_file_name} {impute.ofile}')
-        b.write_output(impute.ofile, f'{out_dir}/GWASpy/Imputation/{vcf_filename_no_ext}/{output_file_name}')
-
-    elif int(region.split(':')[1].split('-')[0]) >= 155701383:
-        # run diploid imputation
-        print('This chunk is in the PAR2 region, we will run diploid imputation')
-        cmd = f'''
-                impute5_1.1.5_static \
-                    --h {ref.bcf} \
-                    --m {map_file} \
-                    --g {in_vcf} \
-                    --r {region} \
-                    --out-gp-field \
-                    --o {output_file_name} \
-                    --threads {threads}
-            '''
-
-        impute.command(cmd)
-
-        impute.command(f'mv {output_file_name} {impute.ofile}')
-        b.write_output(impute.ofile, f'{out_dir}/GWASpy/Imputation/{vcf_filename_no_ext}/{output_file_name}')
+        impute.command(f'mv {out_file_name} {impute.ofile}')
+        impute.command(f'mv {out_file_name}.csi {impute.idx}')
+        b.write_output(impute.ofile, f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{out_file_name}')
+        b.write_output(impute.idx, f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{out_file_name}.csi')
 
     elif (int(region.split(':')[1].split('-')[0]) >= 2781479) & (
             int(region.split(':')[1].split('-')[1]) <= 155701382):
@@ -77,31 +121,103 @@ def imputation(b: hb.batch.Batch,
         print(region)
         # (1) split by sex NB: THE USER SHOULD SUPPLY A FILE CONTAINING EITHER ONLY FEMALES OR MALE SAMPLE IDS
         # WITH ONE SAMPLE ID PER LINE
-        # e.g. subset the VCF to only INCLUDE samples in females.txt
-        # bcftools view -S females.txt hgdp.tgp.gwaspy.merged.19.vcf.gz > females.vcf.gz
-        # e.g. subset the VCF to EXCLUDE samples in females.txt, just put a "^" sign before the file to exclude
-        # bcftools view -S ^females.txt hgdp.tgp.gwaspy.merged.19.vcf.gz > males.vcf.gz
+        cmd_split = f'''
+                bcftools view -S {in_females} {in_vcf} --output-type b --output females.bcf
+                bcftools view -S ^{in_females} {in_vcf} --output-type b --output males.bcf
+        '''
+        impute.command(cmd_split)
 
         # (2) run imputation separately for females and males
-        cmd = f'''
-                impute5_1.1.5_static --h {ref.bcf} --m {map_file} --g females.vcf.gz --r {region} --out-gp-field \
-                --o {output_file_name} --threads {threads}
-                impute5_1.1.5_static --h {ref.bcf} --m {map_file} --g males.vcf.gz --r {region} --out-gp-field \
-                --o {output_file_name} --threads {threads} -- haploid
-            '''
-        impute.command(cmd)
+        cmd_impute = f'''
+                impute5_1.1.5_static --h {ref.bcf} --m {map_file} --g females.bcf --r {region} --out-gp-field \
+                    --o females.imputed.bcf --threads {threads}
+                impute5_1.1.5_static --h {ref.bcf} --m {map_file} --g males.bcf --r {region} --out-gp-field \
+                    --o males.imputed.bcf --threads {threads} -- haploid
+        '''
+        impute.command(cmd_impute)
 
         # (3) merge the imputed files back together into one chunk
-        # bcftools index females.imputed.vcf.gz
-        # bcftools index males.imputed.vcf.gz
-        # echo -e "females.imputed.vcf.gz\nmales.imputed.vcf.gz" > merge.txt
-        # bcftools merge -l merge.txt -Oz -o merge.vcf.gz
+        # (3a) index females and males files to be merged and create a file with these for bcftools
+        cmd_index_chunks = f'''
+                        bcftools index females.imputed.bcf \
+                        bcftools index males.imputed.bcf \
+                        echo -e "females.imputed.bcf\nmales.imputed.bcf" > merge.txt
+        '''
+        impute.command(cmd_index_chunks)
+
+        # (3b) merge the files into one
+        cmd_merge = f'''
+                bcftools merge -l merge.txt --output-type b --output {out_file_name}
+        '''
+        impute.command(cmd_merge)
+
+        cmd_index_out = f'''
+                    bcftools index {out_file_name}
+        '''
+        impute.command(cmd_index_out)
+
+        impute.command(f'mv {out_file_name} {impute.ofile}')
+        impute.command(f'mv {out_file_name}.csi {impute.idx}')
+        b.write_output(impute.ofile, f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{out_file_name}')
+        b.write_output(impute.idx, f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{out_file_name}.csi')
+
     else:
         # split the chunk into PAR AND non-PAR, then split non-PAR data by sex
         print('This chunk is in both PAR and NON-PAR regions, so we will split it by region, then the NON-PAR by sex')
         print(region)
 
-    impute.command(cmd)
 
-    impute.command(f'mv {output_file_name} {impute.ofile}')
-    b.write_output(impute.ofile, f'{out_dir}/GWASpy/Imputation/{vcf_filename_no_ext}/{output_file_name}')
+def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
+               input_vcfs: str = None,
+               females_file: str = None,
+               memory: str = 'highmem',
+               cpu: int = 8,
+               threads: int = 7,
+               out_dir: str = None):
+
+    print('RUNNING IMPUTATION')
+    impute_b = hb.Batch(backend=backend, name=f'impute-phased-chunks')
+
+    vcf_paths = pd.read_csv(input_vcfs, sep='\t', header=None)
+
+    # get the regions so we can map each file to its specific region
+    regions = pd.read_csv(f'{out_dir}/GWASpy/Phasing/regions.lines', sep='\t', names=['reg', 'ind'])
+    regions_dict = pd.Series(regions.reg.values, index=regions.ind).to_dict()
+
+    for index, row in vcf_paths.iterrows():
+        vcf = row[0]
+        vcf_filebase = get_vcf_filebase(vcf)
+
+        phased_vcfs_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_scatter/*.bcf')
+
+        for i in range(1, 24):
+            if i == 23:
+                chrom = 'chrX'
+            else:
+                chrom = f'chr{i}'
+
+            ref_bcf = f'gs://hgdp-1kg/hgdp_tgp_phasing/vcf/hgdp.tgp.gwaspy.merged.{chrom}.merged.bcf'
+            ref_ind = f'gs://hgdp-1kg/hgdp_tgp_phasing/vcf/hgdp.tgp.gwaspy.merged.{chrom}.merged.bcf.csi'
+            ref_size = bytes_to_gb(ref_bcf)
+            ref = impute_b.read_input_group(**{'bcf': ref_bcf,
+                                               'bcf.csi': ref_ind})
+
+            for file in phased_vcfs_chunks:
+                f = file['path']
+                vcf_basename = get_vcf_filebase(f)
+                file_index = int(vcf_basename.split('.')[-3])
+                file_region = regions_dict[file_index]
+                map_chrom = file_region.split(':')[0]
+
+                if map_chrom == chrom:
+                    if chrom == 'chrX':
+                        sex_impute(b=impute_b, vcf=f, females_list=females_file, vcf_filename_no_ext=vcf_basename,
+                                   ref=ref, ref_size=ref_size, region=file_region, chromosome=chrom, cpu=cpu,
+                                   memory=memory, threads=threads, out_dir=out_dir)
+                    else:
+                        aut_impute(b=impute_b, vcf=f, vcf_filename_no_ext=vcf_basename, ref=ref, ref_size=ref_size,
+                                   region=file_region, chromosome=chrom, cpu=cpu, memory=memory,
+                                   threads=threads, out_dir=out_dir)
+
+    impute_b.run()
+
