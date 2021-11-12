@@ -5,6 +5,7 @@ import argparse
 
 
 def genotype_imputation(input_vcfs: str = None,
+                        females_file: str = None,
                         local: bool = False,
                         billing_project: str = None,
                         bucket: str = None,
@@ -36,9 +37,9 @@ def genotype_imputation(input_vcfs: str = None,
 
     # impute genotypes
     if run.lower() == 'impute':
-        from gwaspy.imputation.impute_vcf import run_impute
-        run_impute(backend=backend, input_vcfs=input_vcfs, memory=memory, cpu=cpu, threads=threads,
-                   out_dir=out_dir)
+        from gwaspy.imputation.sex_aut_imp import run_impute
+        run_impute(backend=backend, input_vcfs=input_vcfs, females_file=females_file, memory=memory, cpu=cpu,
+                   threads=threads, out_dir=out_dir)
 
     # Concatenate imputed chunks
     if run.lower() == 'concat':
@@ -49,6 +50,7 @@ def genotype_imputation(input_vcfs: str = None,
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input-vcfs', type=str, required=True)
+    parser.add_argument('--samples-file', type=str, required=True)
     parser.add_argument('--local', action='store_true')
     parser.add_argument('--billing-project', required=True)
     parser.add_argument('--bucket', required=True)
@@ -61,9 +63,9 @@ def main():
 
     args = parser.parse_args()
 
-    genotype_imputation(input_vcfs=args.input_vcfs, local=args.local, billing_project=args.billing_project,
-                        bucket=args.bucket, memory=args.memory, cpu=args.cpu, threads=args.threads,
-                        run=args.run, output_type=args.out_type, out_dir=args.out_dir)
+    genotype_imputation(input_vcfs=args.input_vcfs, females_file=args.samples_file, local=args.local,
+                        billing_project=args.billing_project, bucket=args.bucket, memory=args.memory, cpu=args.cpu,
+                        threads=args.threads, run=args.run, output_type=args.out_type, out_dir=args.out_dir)
 
 
 if __name__ == '__main__':
