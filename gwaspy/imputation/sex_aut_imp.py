@@ -74,7 +74,8 @@ def sex_impute(b: hb.batch.Batch,
                out_dir: str = None):
 
     global cmd
-    in_vcf = b.read_input(vcf)
+    in_vcf = b.read_input_group(**{'bcf': vcf,
+                                   'bcf.csi': f'{vcf}.csi'})
     in_females = b.read_input(females_list)
     vcf_size = bytes_to_gb(vcf)
 
@@ -97,7 +98,7 @@ def sex_impute(b: hb.batch.Batch,
             impute5_1.1.5_static \
                 --h {ref.bcf} \
                 --m {map_file} \
-                --g {in_vcf} \
+                --g {in_vcf.bcf} \
                 --r {region} \
                 --out-gp-field \
                 --o {out_file_name} \
@@ -118,9 +119,12 @@ def sex_impute(b: hb.batch.Batch,
         # (1) split by sex NB: THE USER SHOULD SUPPLY A FILE CONTAINING EITHER ONLY FEMALES OR MALE SAMPLE IDS
         # WITH ONE SAMPLE ID PER LINE
         cmd_split = f'''
-                echo This chunk is only in the NON-PAR region, so we will split it by sex before running imputation
-                bcftools view -S {in_females} {in_vcf} --output-type b --output females.bcf
-                bcftools view -S ^{in_females} {in_vcf} --output-type b --output males.bcf
+                echo THIS CHUNK IS ONLY IN THE NON-PAR REGION, SO WE WILL SPLIT IT BY SEX BEFORE RUNNING IMPUTATION
+                bcftools view -S {in_females} {in_vcf.bcf} --output-type b --output females.bcf
+                bcftools view -S ^{in_females} {in_vcf.bcf} --output-type b --output males.bcf
+                echo INDEXING THE FILES BEFORE RUNNING IMPUTATION
+                bcftools index females.bcf
+                bcftools index males.bcf    
         '''
         impute.command(cmd_split)
 
@@ -160,24 +164,32 @@ def sex_impute(b: hb.batch.Batch,
         if (int(region.split(':')[1].split('-')[0]) <= 2781479) & (int(region.split(':')[1].split('-')[1]) >= 2781479):
             cmd_split = f'''
                     echo SPLITTING OUT THE PAR1 REGION
-                    bcftools view {in_vcf} --regions chrX:10001-2781479 --output-type b --output par.bcf
+                    bcftools view {in_vcf.bcf} --regions chrX:10001-2781479 --output-type b --output par.bcf
                     echo SPLITTING OUT THE NON-PAR REGION
-                    bcftools view {in_vcf} --regions chrX:2781479-155701382 --output-type b --output nonpar.bcf
+                    bcftools view {in_vcf.bcf} --regions chrX:2781479-155701382 --output-type b --output nonpar.bcf
                     echo SPLITTING THE NON-PAR REGION BY SEX
                     bcftools view -S {in_females} nonpar.bcf --output-type b --output females.bcf
                     bcftools view -S ^{in_females} nonpar.bcf --output-type b --output males.bcf
+                    echo INDEXING THE FILES BEFORE RUNNING IMPUTATION
+                    bcftools index par.bcf
+                    bcftools index females.bcf
+                    bcftools index males.bcf
                     
             '''
 
         else:
             cmd_split = f'''
                     echo SPLITTING OUT THE PAR2 REGION
-                    bcftools view {in_vcf} --regions chrX:155701383-156030895 --output-type b --output par.bcf
+                    bcftools view {in_vcf.bcf} --regions chrX:155701383-156030895 --output-type b --output par.bcf
                     echo SPLITTING OUT THE NON-PAR REGION
-                    bcftools view {in_vcf} --regions chrX:2781479-155701382 --output-type b --output nonpar.bcf
+                    bcftools view {in_vcf.bcf} --regions chrX:2781479-155701382 --output-type b --output nonpar.bcf
                     echo SPLITTING THE NON-PAR REGION BY SEX
                     bcftools view -S {in_females} nonpar.bcf --output-type b --output females.bcf
                     bcftools view -S ^{in_females} nonpar.bcf --output-type b --output males.bcf
+                    echo INDEXING THE FILES BEFORE RUNNING IMPUTATION
+                    bcftools index par.bcf
+                    bcftools index females.bcf
+                    bcftools index males.bcf
             '''
 
         impute.command(cmd_split)
