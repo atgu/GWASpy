@@ -15,7 +15,7 @@ def concat_vcfs(b: hb.batch.Batch,
                 output_type: str = 'bcf',
                 chrom: str = None,
                 docker_img: str = 'docker.io/lindonkambule/gwaspy:v1',
-                cpu: int = 4,
+                cpu: int = 8,
                 out_dir: str = None):
 
     global index_cmd
@@ -25,27 +25,27 @@ def concat_vcfs(b: hb.batch.Batch,
     vcfs_sizes_sum = 0
     merge_vcf_i = ''
 
-    out_filename = f'{vcf_basename}.{chrom}.merged.bcf' if output_type == 'bcf' else \
-        f'{vcf_basename}.{chrom}.merged.vcf.gz'
-    out_index_name = f'{vcf_basename}.{chrom}.merged.bcf.csi' if output_type == 'bcf' else \
-        f'{vcf_basename}.{chrom}.merged.vcf.gz.csi'
+    out_filename = f'{vcf_basename}.{chrom}.phased.bcf' if output_type == 'bcf' else \
+        f'{vcf_basename}.{chrom}.phased.vcf.gz'
+    out_index_name = f'{vcf_basename}.{chrom}.phased.bcf.csi' if output_type == 'bcf' else \
+        f'{vcf_basename}.{chrom}.phased.vcf.gz.csi'
 
     for line in vcfs_to_merge:
-        vcfs_sizes_sum += 2 + bytes_to_gb(line)
+        vcfs_sizes_sum += 1 + bytes_to_gb(line)
 
     mem = 'highmem' if vcfs_sizes_sum > 2 else 'standard'
+    disk_size = 10 + vcfs_sizes_sum
 
     concat = b.new_job(name=f'concat-{vcf_basename}')
     concat.memory(mem)
-    concat.storage(f'{vcfs_sizes_sum}Gi')
+    concat.storage(f'{disk_size}Gi')
     concat.image(docker_img)
     concat.cpu(cpu)
 
     for line in vcfs_to_merge:
-        input_vcf = b.read_input(line)
-        merge_vcf_i += f'{input_vcf} '
-        # bcftools requires all the files to be merged to be indexed
-        concat.command(f'bcftools index {input_vcf}')
+        input_vcf = b.read_input_group(vcf=line,
+                                       ind=f'{line}.csi')
+        merge_vcf_i += f'{input_vcf.vcf} '
 
     cmd = f'''
         bcftools concat \
@@ -63,8 +63,8 @@ def concat_vcfs(b: hb.batch.Batch,
 
     concat.command(f'mv {out_filename} {concat.ofile}')
     concat.command(f'mv {out_index_name} {concat.idx}')
-    b.write_output(concat.ofile, f'{out_dir}/GWASpy/Imputation/{vcf_basename}/imputed_merged/{out_filename}')
-    b.write_output(concat.idx, f'{out_dir}/GWASpy/Imputation/{vcf_basename}/imputed_merged/{out_index_name}')
+    b.write_output(concat.ofile, f'{out_dir}/GWASpy/Phasing/{vcf_basename}/phased_merged/{out_filename}')
+    b.write_output(concat.idx, f'{out_dir}/GWASpy/Phasing/{vcf_basename}/phased_merged/{out_index_name}')
 
 
 def run_concat(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
@@ -85,7 +85,7 @@ def run_concat(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
         vcf = row[0]
         vcf_filebase = get_vcf_filebase(vcf)
 
-        imputed_vcfs_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Imputation/{vcf_filebase}/imputed_chunks')
+        imputed_vcfs_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_scatter/*.bcf')
 
         for i in range(1, 24):
             if reference == 'GRCh38':
@@ -104,11 +104,15 @@ def run_concat(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
             for file in imputed_vcfs_chunks:
                 f = file['path']
                 vcf_basename = get_vcf_filebase(f)
-                file_index = int(vcf_basename.split('.')[-4])
+                file_index = int(vcf_basename.split('.')[-3])
                 file_region = regions_dict[file_index]
                 map_chrom = file_region.split(':')[0]
                 if map_chrom == chrom:
                     chrom_phased_files_to_concat.append(f)
+
+            # naturally sort the list of files to merge
+            from gwaspy.utils.natural_sort import natural_keys
+            chrom_phased_files_to_concat.sort(key=natural_keys)
 
             concat_vcfs(b=concat_b, vcfs_to_merge=chrom_phased_files_to_concat, vcf_basename=vcf_filebase,
                         output_type=output_type, chrom=out_chrom_name, out_dir=out_dir)
