@@ -54,7 +54,7 @@ windows between consecutive windows so that the process runs faster. Below are e
 ########
 After we've split the input file(s) into chunks, we can run phasing like in the examples below.
 
-Users can run phasing without or with a reference panel. This can be specified using the :code:`--vcf-ref` command (cli)
+Users can run phasing without or with a reference panel. This can be specified using the :code:`--vcf-ref` command-line (cli)
 or :code:`vcf_ref` argument (Python). If specified, phasing will be run with a reference panel,
 otherwise it will be without a reference panel.
 

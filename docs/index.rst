@@ -18,7 +18,3 @@ Contents
     Principal Component Analysis <pca.rst>
     Haplotype Phasing <phasing.rst>
     Genotype Imputation <imputation.rst>
-
-==================
-Indices and tables
-==================
