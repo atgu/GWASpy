@@ -12,11 +12,110 @@ be run with or without a reference panel using either Eagle2 or SHAPEIT4
     If the data set you wish to phase contains more than twice as many samples as the largest reference panel
     available to you, then using a reference panel is unlikely to give much of a boost in phasing accuracy.
 
-.. toctree::
-   :maxdepth: 1
+In GWASpy, the :code:`phasing` is divided into 3 parts: (1) :code:`scatter`; (2) :code:`phase`; (3) :code:`concat`. We
+first split the input file into multiple smaller chunks, run phasing on each chunk, then concatenate (join) the phased
+chunks. Running things this way rather than phasing entire chromosomes speeds up the time it takes to run phasing since
+we can parallelize the phasing of each chunk. All 3 steps can either be run directly from the command line or inside a
+Python script.
 
-        Phasing without a reference panel <phasing/without_ref.rst>
-        Phasing with a reference panel <phasing/with_ref.rst>
+1. Scatter
+##########
+Before running phasing, we need to scatter the input file(s) into multiple chunks of smaller chunks with overlapping
+windows between consecutive windows so that the process runs faster. Below are examples
+
+#. Command line
+
+    .. code-block:: sh
+
+        phasing --input-vcfs gs://path/to/vcf_files.txt --out-dir gs://path/to/output/dir --reference GRCh38 --billing-project project-name --bucket bucket-associated-with-project --run scatter
+
+#. Python (inside a Python script)
+
+    .. code-block:: python
+
+            import gwaspy.phasing as phase
+            phase.phasing.haplotype_phasing(input_vcfs = 'gs://path/to/vcf_files.txt',
+                      vcf_ref = None,
+                      local: bool = False,
+                      billing_project = 'project-name',
+                      bucket = 'bucket-associated-with-project',
+                      software = 'shapeit',
+                      reference= 'GRCh38',
+                      max_win_size_cm: float = 10.0,
+                      overlap_size_cm: float = 2.0,
+                      scatter_memory: int = 26,
+                      cpu: int = 4,
+                      threads: int = 3,
+                      run: str = 'scatter',
+                      output_type: str = 'bcf',
+                      out_dir = 'gs://path/to/output/dir')
+
+2. Phase
+########
+After we've split the input file(s) into chunks, we can run phasing like in the examples below.
+
+Users can run phasing without or with a reference panel. This can be specified using the :code:`--vcf-ref` command-line (cli)
+or :code:`vcf_ref` argument (Python). If specified, phasing will be run with a reference panel,
+otherwise it will be without a reference panel.
+
+#. Command line
+
+    .. code-block:: sh
+
+        phasing --input-vcfs gs://path/to/vcf_files.txt --out-dir gs://path/to/output/dir --reference GRCh38 --billing-project project-name --bucket bucket-associated-with-project --run phase
+
+#. Python (inside a Python script)
+
+    .. code-block:: python
+
+            import gwaspy.phasing as phase
+            phase.phasing.haplotype_phasing(input_vcfs = 'gs://path/to/vcf_files.txt',
+                      vcf_ref = None,
+                      local: bool = False,
+                      billing_project = 'project-name',
+                      bucket = 'bucket-associated-with-project',
+                      software = 'shapeit',
+                      reference= 'GRCh38',
+                      max_win_size_cm: float = 10.0,
+                      overlap_size_cm: float = 2.0,
+                      scatter_memory: int = 26,
+                      cpu: int = 4,
+                      threads: int = 3,
+                      run: str = 'phase',
+                      output_type: str = 'bcf',
+                      out_dir = 'gs://path/to/output/dir')
+
+3. Concat
+#########
+After phasing has completed, you have to merge the overlapping chunks back together by chromosome. In GWASpy, bcftools
+concat is used with the :code:`--ligate` option to concatenate the chunks.
+
+#. Command line
+
+    .. code-block:: sh
+
+        phasing --input-vcfs gs://path/to/vcf_files.txt --out-dir gs://path/to/output/dir --reference GRCh38 --billing-project project-name --bucket bucket-associated-with-project --run phase
+
+#. Python (inside a Python script)
+
+    .. code-block:: python
+
+            import gwaspy.phasing as phase
+            phase.phasing.haplotype_phasing(input_vcfs = 'gs://path/to/vcf_files.txt',
+                      vcf_ref = None,
+                      local: bool = False,
+                      billing_project = 'project-name',
+                      bucket = 'bucket-associated-with-project',
+                      software = 'shapeit',
+                      reference= 'GRCh38',
+                      max_win_size_cm: float = 10.0,
+                      overlap_size_cm: float = 2.0,
+                      scatter_memory: int = 26,
+                      cpu: int = 4,
+                      threads: int = 3,
+                      run: str = 'phase',
+                      output_type: str = 'bcf',
+                      out_dir = 'gs://path/to/output/dir')
 
 Arguments and options
 #####################
@@ -38,15 +137,23 @@ Arguments and options
    * - :code:`--bucket`
      - Bucket associated with the billing project
    * - :code:`--software`
-     - Software to use for phasing. Options: [:code:`eagle`, :code:`shapeit`]. Default is Eagle
+     - Software to use for phasing. Options: [:code:`eagle`, :code:`shapeit`]. Default is :code:`eagle`
+   * - :code:`--reference`
+     - Genome reference build. Default is GRCh38. Options: [:code:`GRCh37`, :code:`GRCh38`]
+   * - :code:`--max-win-size-cm`
+     - Maximum window size to use when chunking the input file. Default is 10.0
+   * - :code:`--overlap-size-cm`
+     - Size of overlap between consecutive overlapping windows. Default is 2.0
    * - :code:`--cpu`
-     - Number of CPUs to use. Default is 8
-   * - :code:`--memory`
-     - Memory to use. Default is :code:`standard` which correspond to ~4Gi/core. :code:`lowmem` ~1Gi/core and :code:`highmem` ~7Gi/core
-   * - :code:`--storage`
-     - Storage to use for the job in gigabytes. Default is 50 Gi
+     - Number of CPUs to use in phasing. Default is 4. [TO BE CHANGED]
+   * - :code:`--scatter-mem`
+     - Memory to use for scattering input into chunks before phasing. [TO BE CHANGED]
    * - :code:`--threads`
-     - Number of threads to use in phasing. Default is 16
+     - Number of threads to use in phasing. Default is 3. [TO BE CHANGED]
+   * - :code:`--run`
+     - Process to run. Options: [:code:`scatter`, :code:`phase`, :code:`concat`]. Default is :code:`scatter`
+   * - :code:`--out-type`
+     - Output type. Options: [:code:`bcf`, :code:`vcf`]. Default is :code:`bcf` [HIGHLY RECOMMENDED SINCE BCFs ARE GENERALLY FASTER TO WORK WITH AND TAKE UP LESS SPACE]
    * - :code:`--out-dir`
      - Path to where output files will be saved
 
