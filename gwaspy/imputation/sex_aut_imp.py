@@ -89,6 +89,7 @@ def sex_impute(b: hb.batch.Batch,
 
     if (int(region.split(':')[1].split('-')[1]) <= 2781479) | (int(region.split(':')[1].split('-')[0]) >= 155701383):
         # run diploid imputation
+        impute.command('echo THIS CHUNK IS IN PAR1 or PAR2 REGION, SO WE WILL RUN DIPLOID IMPUTATION')
         cmd = f'''
             impute5_1.1.5_static \
                 --h {ref.bcf} \
@@ -136,8 +137,8 @@ def sex_impute(b: hb.batch.Batch,
         # (3) merge the imputed files back together into one chunk
         # (3a) index females and males files to be merged and create a file with these for bcftools
         cmd_index_chunks = f'''
-                bcftools index females.imputed.bcf \
-                bcftools index males.imputed.bcf \
+                bcftools index females.imputed.bcf
+                bcftools index males.imputed.bcf
                 echo -e "females.imputed.bcf\nmales.imputed.bcf" > merge.txt
         '''
         impute.command(cmd_index_chunks)
@@ -159,16 +160,14 @@ def sex_impute(b: hb.batch.Batch,
         # (1) split the chunk into PAR AND non-PAR, then split non-PAR data by sex
         if (int(region.split(':')[1].split('-')[0]) <= 2781479) & (int(region.split(':')[1].split('-')[1]) >= 2781479):
             cmd_split = f'''
+                    echo THIS CHUNK IS IN PAR1 and NON-PAR REGION, SO WE WILL SPLIT THESE TWO REGIONS
                     echo SPLITTING OUT THE PAR1 REGION
                     bcftools view {vcf.bcf} --regions chrX:10001-2781479 --output-type b --output par.bcf
-                    bcftools view par.bcf | grep -v "#" | head -n1
                     echo SPLITTING OUT THE NON-PAR REGION
                     bcftools view {vcf.bcf} --regions chrX:2781479-155701382 --output-type b --output nonpar.bcf
                     echo SPLITTING THE NON-PAR REGION BY SEX
                     bcftools view -S {in_females} nonpar.bcf --output-type b --output females.bcf
-                    bcftools view females.bcf | grep -v "#" | head -n1
                     bcftools view -S ^{in_females} nonpar.bcf --output-type b --output males.bcf
-                    bcftools view males.bcf | grep -v "#" | head -n1
                     echo INDEXING THE FILES BEFORE RUNNING IMPUTATION
                     bcftools index par.bcf
                     bcftools index females.bcf
@@ -178,9 +177,9 @@ def sex_impute(b: hb.batch.Batch,
 
         else:
             cmd_split = f'''
+                    echo THIS CHUNK IS IN PAR2 and NON-PAR REGION, SO WE WILL SPLIT THESE TWO REGIONS
                     echo SPLITTING OUT THE PAR2 REGION
                     bcftools view {vcf.bcf} --regions chrX:155701383-156030895 --output-type b --output par.bcf
-                    bcftools view par.bcf | grep -v "#" | head -n1
                     echo SPLITTING OUT THE NON-PAR REGION
                     bcftools view {vcf.bcf} --regions chrX:2781479-155701382 --output-type b --output nonpar.bcf
                     echo SPLITTING THE NON-PAR REGION BY SEX
@@ -210,9 +209,9 @@ def sex_impute(b: hb.batch.Batch,
         # (3) merge the imputed files back together into one chunk
         # (3a) index females and males files to be merged and create a file with these for bcftools
         cmd_index_chunks = f'''
-                    bcftools index par.imputed.bcf \
-                    bcftools index females.imputed.bcf \
-                    bcftools index males.imputed.bcf \
+                    bcftools index par.imputed.bcf
+                    bcftools index females.imputed.bcf
+                    bcftools index males.imputed.bcf
                     echo -e "females.imputed.bcf\nmales.imputed.bcf" > merge_sex.txt
         '''
         impute.command(cmd_index_chunks)
