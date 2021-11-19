@@ -90,12 +90,35 @@ def sex_impute(b: hb.batch.Batch,
     if (int(region.split(':')[1].split('-')[1]) <= 2781479) | (int(region.split(':')[1].split('-')[0]) >= 155701383):
         # run diploid imputation
         impute.command('echo THIS CHUNK IS IN PAR1 or PAR2 REGION, SO WE WILL RUN DIPLOID IMPUTATION')
+
+        if int(region.split(':')[1].split('-')[1]) <= 2781479:
+            cmd_split = f'''
+                    echo THIS CHUNK IS IN PAR1 REGION
+                    bcftools view {vcf.bcf} --regions chrX:10001-2781479 --output-type b --output par.bcf
+                    echo INDEXING THE split par.bcf file BEFORE RUNNING IMPUTATION
+                    bcftools index par.bcf
+            '''
+
+            impute_region = 'chrX:10001-2781479'
+
+        else:
+            cmd_split = f'''
+                    echo THIS CHUNK IS IN PAR2 REGION
+                    bcftools view {vcf.bcf} --regions chrX:155701383-156030895 --output-type b --output par.bcf
+                    echo INDEXING THE split par.bcf file BEFORE RUNNING IMPUTATION
+                    bcftools index par.bcf
+            '''
+
+            impute_region = 'chrX:155701383-156030895'
+
+        impute.command(cmd_split)
+
         cmd = f'''
             impute5_1.1.5_static \
                 --h {ref.bcf} \
                 --m {map_file} \
-                --g {vcf.bcf} \
-                --r {region} \
+                --g par.bcf \
+                --r {impute_region} \
                 --out-gp-field \
                 --o {out_file_name} \
                 --b {buffer} \
@@ -139,12 +162,25 @@ def sex_impute(b: hb.batch.Batch,
         cmd_index_chunks = f'''
                 bcftools index females.imputed.bcf
                 bcftools index males.imputed.bcf
-                echo -e "females.imputed.bcf\nmales.imputed.bcf" > merge.txt
         '''
         impute.command(cmd_index_chunks)
 
-        # (3b) merge the files into one
+        # (3b) sometimes there are duplicates (raw and imputed with flipped alleles) and this causes an error when
+        # merging, so we remove any duplicates
+        # bcftools view Nepal_PTSD_GSA_Updated_May2021_qced.chrX.phased.bcf | grep "#"
+        cmd_sort = f'''
+                echo CHECKING FOR DUPLICATE VARIANTS AND REMOVING THEM
+                bcftools norm -d any females.imputed.bcf --output-type b --output females.imputed.sorted.bcf
+                bcftools norm -d any males.imputed.bcf --output-type b --output males.imputed.sorted.bcf
+                bcftools index females.imputed.sorted.bcf
+                bcftools index males.imputed.sorted.bcf
+                echo -e "females.imputed.sorted.bcf\nmales.imputed.sorted.bcf" > merge.txt
+        '''
+        impute.command(cmd_sort)
+
+        # (3c) merge the files into one
         cmd_merge = f'''
+                echo MERGING THE MALES AND FEMALES FILE BACK TOGETHER
                 bcftools merge --file-list merge.txt --output-type b --output {out_file_name}
         '''
         impute.command(cmd_merge)
@@ -175,6 +211,8 @@ def sex_impute(b: hb.batch.Batch,
                     
             '''
 
+            impute_par_region = 'chrX:10001-2781479'
+
         else:
             cmd_split = f'''
                     echo THIS CHUNK IS IN PAR2 and NON-PAR REGION, SO WE WILL SPLIT THESE TWO REGIONS
@@ -193,15 +231,19 @@ def sex_impute(b: hb.batch.Batch,
                     bcftools index males.bcf
             '''
 
+            impute_par_region = 'chrX:155701383-156030895'
+
+        impute_non_par_region = 'chrX:2781479-155701382'
+
         impute.command(cmd_split)
 
         # (2) run imputation separately for par, females, and males
         cmd_impute = f'''
-                impute5_1.1.5_static --h {ref.bcf} --m {map_file} --g par.bcf --r {region} --out-gp-field \
+                impute5_1.1.5_static --h {ref.bcf} --m {map_file} --g par.bcf --r {impute_par_region} --out-gp-field \
                     --o par.imputed.bcf --b {buffer} --threads {threads}
-                impute5_1.1.5_static --h {ref.bcf} --m {map_file} --g females.bcf --r {region} --out-gp-field \
+                impute5_1.1.5_static --h {ref.bcf} --m {map_file} --g females.bcf --r {impute_non_par_region} --out-gp-field \
                     --o females.imputed.bcf --b {buffer} --threads {threads}
-                impute5_1.1.5_static --h {ref.bcf} --m {map_file} --g males.bcf --r {region} --out-gp-field \
+                impute5_1.1.5_static --h {ref.bcf} --m {map_file} --g males.bcf --r {impute_non_par_region} --out-gp-field \
                     --o males.imputed.bcf --b {buffer} --threads {threads} -- haploid
         '''
         impute.command(cmd_impute)
@@ -212,12 +254,25 @@ def sex_impute(b: hb.batch.Batch,
                     bcftools index par.imputed.bcf
                     bcftools index females.imputed.bcf
                     bcftools index males.imputed.bcf
-                    echo -e "females.imputed.bcf\nmales.imputed.bcf" > merge_sex.txt
         '''
         impute.command(cmd_index_chunks)
 
-        # (3b) merge the sex files into one
+        # (3b) sometimes there are duplicates (raw and imputed with flipped alleles) and this causes an error when
+        # merging, so we remove any duplicates
+        # bcftools view Nepal_PTSD_GSA_Updated_May2021_qced.chrX.phased.bcf | grep "#"
+        cmd_sort = f'''
+                echo CHECKING FOR DUPLICATE VARIANTS AND REMOVING THEM
+                bcftools norm -d any females.imputed.bcf --output-type b --output females.imputed.sorted.bcf
+                bcftools norm -d any males.imputed.bcf --output-type b --output males.imputed.sorted.bcf
+                bcftools index females.imputed.sorted.bcf
+                bcftools index males.imputed.sorted.bcf
+                echo -e "females.imputed.sorted.bcf\nmales.imputed.sorted.bcf" > merge_sex.txt
+        '''
+        impute.command(cmd_sort)
+
+        # (3c) merge the sex files into one
         cmd_merge_sex = f'''
+                echo MERGING THE MALES AND FEMALES FILE BACK TOGETHER
                 bcftools merge --file-list merge_sex.txt --output-type b --output nonpar.imputed.bcf
         '''
         impute.command(cmd_merge_sex)
@@ -299,7 +354,7 @@ def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
 
         phased_vcfs_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_scatter/*.bcf')
 
-        for i in range(1, 24):
+        for i in range(23, 24):
             if i == 23:
                 chrom = 'chrX'
             else:
