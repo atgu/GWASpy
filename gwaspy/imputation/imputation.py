@@ -14,7 +14,7 @@ def genotype_imputation(input_vcfs: str = None,
                         billing_project: str = None,
                         bucket: str = None,
                         memory: str = 'highmem',
-                        cpu: int = 8,
+                        cpu: int = 16,
                         run: str = 'impute',
                         output_type: str = 'bcf',
                         out_dir: str = None):
@@ -64,7 +64,7 @@ def main():
     parser.add_argument('--billing-project', required=True)
     parser.add_argument('--bucket', required=True)
     parser.add_argument('--memory', type=str, default='highmem', choices=['lowmem', 'standard', 'highmem'])
-    parser.add_argument('--cpu-concat', type=int, default=8)
+    parser.add_argument('--cpu-concat', type=int, default=16)
     parser.add_argument('--n-samples', type=int, required=True)
     parser.add_argument('--buffer-region', type=int, default=250)
     parser.add_argument('--run', type=str, default='impute', choices=['impute', 'concat'])

@@ -14,7 +14,7 @@ def concat_vcfs(b: hb.batch.Batch,
                 vcfs_to_merge: List = None,
                 output_type: str = 'vcf',
                 chrom: str = None,
-                cpu: int = 8,
+                cpu: int = 16,
                 memory: str = 'standard',
                 docker_img: str = 'docker.io/lindonkambule/gwaspy:v1',
                 out_dir: str = None):
@@ -69,7 +69,7 @@ def concat_vcfs(b: hb.batch.Batch,
 def run_concat(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
                input_vcfs: str = None,
                output_type: str = 'vcf',
-               cpu: int = 8,
+               cpu: int = 16,
                memory: str = 'standard',
                out_dir: str = None):
 
