@@ -79,46 +79,36 @@ def sex_impute(b: hb.batch.Batch,
 
     threads = cpu - 1
 
-    map_file = f'/shapeit4/maps/b38/{chromosome}.b38.gmap.gz'
-
     impute = b.new_job(name=out_file_name)
     impute.cpu(cpu)
     impute.memory(memory)
     impute.storage(f'{storage}Gi')
     impute.image(img)
 
-    if (int(region.split(':')[1].split('-')[1]) <= 2781479) | (int(region.split(':')[1].split('-')[0]) >= 155701383):
+    start = int(region.split(':')[1].split('-')[0])
+    end = int(region.split(':')[1].split('-')[1])
+
+    # A. PAR1 REGION ONLY
+    if end <= 2781479:
         # run diploid imputation
-        impute.command('echo THIS CHUNK IS IN PAR1 or PAR2 REGION, SO WE WILL RUN DIPLOID IMPUTATION')
+        impute.command('echo THIS CHUNK IS IN PAR1 REGION, SO WE WILL RUN DIPLOID IMPUTATION')
+        map_file = '/shapeit4/maps/b38/chrX_par1.b38.gmap.gz'
 
-        if int(region.split(':')[1].split('-')[1]) <= 2781479:
-            cmd_split = f'''
-                    echo THIS CHUNK IS IN PAR1 REGION
-                    bcftools view {vcf.bcf} --regions chrX:10001-2781479 --output-type b --output par.bcf
-                    echo INDEXING THE split par.bcf file BEFORE RUNNING IMPUTATION
-                    bcftools index par.bcf
-            '''
-
-            impute_region = 'chrX:10001-2781479'
-
+        if start < 10001:
+            start_new = 10001
+            end_new = end
         else:
-            cmd_split = f'''
-                    echo THIS CHUNK IS IN PAR2 REGION
-                    bcftools view {vcf.bcf} --regions chrX:155701383-156030895 --output-type b --output par.bcf
-                    echo INDEXING THE split par.bcf file BEFORE RUNNING IMPUTATION
-                    bcftools index par.bcf
-            '''
+            start_new = start
+            end_new = end
 
-            impute_region = 'chrX:155701383-156030895'
-
-        impute.command(cmd_split)
+        new_imp_region = f'chrX:{start_new}-{end_new}'
 
         cmd = f'''
             impute5_1.1.5_static \
                 --h {ref.bcf} \
                 --m {map_file} \
-                --g par.bcf \
-                --r {impute_region} \
+                --g {vcf.bcf} \
+                --r {new_imp_region} \
                 --out-gp-field \
                 --o {out_file_name} \
                 --b {buffer} \
@@ -134,25 +124,69 @@ def sex_impute(b: hb.batch.Batch,
         b.write_output(impute.ofile, f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{out_file_name}')
         b.write_output(impute.idx, f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{out_file_name}.csi')
 
-    elif (int(region.split(':')[1].split('-')[0]) >= 2781479) & (
-            int(region.split(':')[1].split('-')[1]) <= 155701382):
+    # B. PAR2 REGION ONLY
+    elif start >= 155701383:
+        # run diploid imputation
+        impute.command('echo THIS CHUNK IS IN PAR2 REGION, SO WE WILL RUN DIPLOID IMPUTATION')
+        map_file = '/shapeit4/maps/b38/chrX_par2.b38.gmap.gz'
+
+        if end > 156030895:
+            end_new = 156030895
+            start_new = start
+        else:
+            start_new = start
+            end_new = end
+
+        new_imp_region = f'chrX:{start_new}-{end_new}'
+
+        cmd = f'''
+            impute5_1.1.5_static \
+                --h {ref.bcf} \
+                --m {map_file} \
+                --g {vcf.bcf} \
+                --r {new_imp_region} \
+                --out-gp-field \
+                --o {out_file_name} \
+                --b {buffer} \
+                --threads {threads}
+        '''
+
+        impute.command(cmd)
+        # index file to use when merging
+        impute.command(f'bcftools index {out_file_name}')
+
+        impute.command(f'mv {out_file_name} {impute.ofile}')
+        impute.command(f'mv {out_file_name}.csi {impute.idx}')
+        b.write_output(impute.ofile, f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{out_file_name}')
+        b.write_output(impute.idx, f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{out_file_name}.csi')
+
+    # C. NON-PAR REGION ONLY
+    elif (start >= 2781479) & (end <= 155701382):
+        map_file = '/shapeit4/maps/b38/chrX.b38.gmap.gz'
+        start_new = start
+        end_new = end
+        new_imp_region = f'chrX:{start_new}-{end_new}'
+
         # (1) split by sex NB: THE USER SHOULD SUPPLY A FILE CONTAINING EITHER ONLY FEMALES OR MALE SAMPLE IDS
         # WITH ONE SAMPLE ID PER LINE
         cmd_split = f'''
                 echo THIS CHUNK IS ONLY IN THE NON-PAR REGION, SO WE WILL SPLIT IT BY SEX BEFORE RUNNING IMPUTATION
+                echo GETTING THE ORDER OF SAMPLES
+                bcftools query -l {vcf.bcf} > samples_order.txt
+                echo SPLITTING SAMPLES BY SEX
                 bcftools view -S {in_females} {vcf.bcf} --output-type b --output females.bcf
                 bcftools view -S ^{in_females} {vcf.bcf} --output-type b --output males.bcf
                 echo INDEXING THE FILES BEFORE RUNNING IMPUTATION
                 bcftools index females.bcf
-                bcftools index males.bcf    
+                bcftools index males.bcf
         '''
         impute.command(cmd_split)
 
         # (2) run imputation separately for females and males
         cmd_impute = f'''
-                impute5_1.1.5_static --h {ref.bcf} --m {map_file} --g females.bcf --r {region} --out-gp-field \
+                impute5_1.1.5_static --h {ref.bcf} --m {map_file} --g females.bcf --r {new_imp_region} --out-gp-field \
                     --o females.imputed.bcf --b {buffer} --threads {threads}
-                impute5_1.1.5_static --h {ref.bcf} --m {map_file} --g males.bcf --r {region} --out-gp-field \
+                impute5_1.1.5_static --h {ref.bcf} --m {map_file} --g males.bcf --r {new_imp_region} --out-gp-field \
                     --o males.imputed.bcf --b {buffer} --threads {threads} -- haploid
         '''
         impute.command(cmd_impute)
@@ -162,28 +196,40 @@ def sex_impute(b: hb.batch.Batch,
         cmd_index_chunks = f'''
                 bcftools index females.imputed.bcf
                 bcftools index males.imputed.bcf
+                rm females.bcf* males.bcf*
         '''
         impute.command(cmd_index_chunks)
 
         # (3b) sometimes there are duplicates (raw and imputed with flipped alleles) and this causes an error when
         # merging, so we remove any duplicates
-        # bcftools view Nepal_PTSD_GSA_Updated_May2021_qced.chrX.phased.bcf | grep "#"
         cmd_sort = f'''
                 echo CHECKING FOR DUPLICATE VARIANTS AND REMOVING THEM
                 bcftools norm -d any females.imputed.bcf --output-type b --output females.imputed.sorted.bcf
+                rm females.imputed.bcf*
                 bcftools norm -d any males.imputed.bcf --output-type b --output males.imputed.sorted.bcf
+                rm males.imputed.bcf*
                 bcftools index females.imputed.sorted.bcf
                 bcftools index males.imputed.sorted.bcf
                 echo -e "females.imputed.sorted.bcf\nmales.imputed.sorted.bcf" > merge.txt
         '''
+
         impute.command(cmd_sort)
 
         # (3c) merge the files into one
         cmd_merge = f'''
                 echo MERGING THE MALES AND FEMALES FILE BACK TOGETHER
-                bcftools merge --file-list merge.txt --output-type b --output {out_file_name}
+                bcftools merge --file-list merge.txt --output-type b --output merged.sex.bcf
         '''
         impute.command(cmd_merge)
+
+        # (3d) reorder samples back to how they were initially
+        # splitting and re-merging samples will result in change in order compared to the initial file
+        # so we have to use the initial samples order for the concat step by chromosome of imputation
+        cmd_order = f'''
+                echo ORDERING SAMPLES TO HOW THEY WERE INITIALLY
+                bcftools view -S samples_order.txt merged.sex.bcf --output-type b --output {out_file_name}
+        '''
+        impute.command(cmd_order)
 
         impute.command(f'bcftools index {out_file_name}')
 
@@ -192,58 +238,73 @@ def sex_impute(b: hb.batch.Batch,
         b.write_output(impute.ofile, f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{out_file_name}')
         b.write_output(impute.idx, f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{out_file_name}.csi')
 
+    # D. MIXED REGIONS
     else:
-        # (1) split the chunk into PAR AND non-PAR, then split non-PAR data by sex
-        if (int(region.split(':')[1].split('-')[0]) <= 2781479) & (int(region.split(':')[1].split('-')[1]) >= 2781479):
-            cmd_split = f'''
-                    echo THIS CHUNK IS IN PAR1 and NON-PAR REGION, SO WE WILL SPLIT THESE TWO REGIONS
-                    echo SPLITTING OUT THE PAR1 REGION
-                    bcftools view {vcf.bcf} --regions chrX:10001-2781479 --output-type b --output par.bcf
-                    echo SPLITTING OUT THE NON-PAR REGION
-                    bcftools view {vcf.bcf} --regions chrX:2781479-155701382 --output-type b --output nonpar.bcf
-                    echo SPLITTING THE NON-PAR REGION BY SEX
-                    bcftools view -S {in_females} nonpar.bcf --output-type b --output females.bcf
-                    bcftools view -S ^{in_females} nonpar.bcf --output-type b --output males.bcf
-                    echo INDEXING THE FILES BEFORE RUNNING IMPUTATION
-                    bcftools index par.bcf
-                    bcftools index females.bcf
-                    bcftools index males.bcf
-                    
-            '''
+        if (start <= 2781479) & (end >= 2781479):
+            map_file_par = '/shapeit4/maps/b38/chrX_par1.b38.gmap.gz'
+            par_region = f'chrX:{start}-{2781479}'
+            non_par_region = f'chrX:{2781479}-{end}'
 
-            impute_par_region = 'chrX:10001-2781479'
+            # to be used in step 3d
+            cmd_merge_regs = f'''
+                    echo ORDERING PAR1 SAMPLES TO HOW THEY WERE INITIALLY
+                    bcftools view -S samples_order.txt par.imputed.bcf --output-type b --output par.imputed.sort.bcf
+                    bcftools index par.imputed.sort.bcf
+                    rm par.imputed.bcf*
+                    echo MERGING THE PAR1 AND NON-PAR FILES BACK TOGETHER
+                    echo -e "par.imputed.sort.bcf\nnonpar.imputed.sort.bcf" > merge_regions.txt
+                    bcftools concat --naive --file-list merge_regions.txt --output-type b --output {out_file_name}
+            '''
 
         else:
-            cmd_split = f'''
-                    echo THIS CHUNK IS IN PAR2 and NON-PAR REGION, SO WE WILL SPLIT THESE TWO REGIONS
-                    echo SPLITTING OUT THE PAR2 REGION
-                    bcftools view {vcf.bcf} --regions chrX:155701383-156030895 --output-type b --output par.bcf
-                    echo SPLITTING OUT THE NON-PAR REGION
-                    bcftools view {vcf.bcf} --regions chrX:2781479-155701382 --output-type b --output nonpar.bcf
-                    echo SPLITTING THE NON-PAR REGION BY SEX
-                    bcftools view -S {in_females} nonpar.bcf --output-type b --output females.bcf
-                    bcftools view females.bcf | grep -v "#" | head -n1
-                    bcftools view -S ^{in_females} nonpar.bcf --output-type b --output males.bcf
-                    bcftools view males.bcf | grep -v "#" | head -n1
-                    echo INDEXING THE FILES BEFORE RUNNING IMPUTATION
-                    bcftools index par.bcf
-                    bcftools index females.bcf
-                    bcftools index males.bcf
+            map_file_par = '/shapeit4/maps/b38/chrX_par2.b38.gmap.gz'
+            if end > 156030895:
+                par_region = f'chrX:{155701383}-{156030895}'
+            else:
+                par_region = f'chrX:{155701383}-{end}'
+
+            non_par_region = f'chrX:{start}-{155701382}'
+
+            # to be used in step 3c
+            cmd_merge_regs = f'''
+                    echo ORDERING PAR2 SAMPLES TO HOW THEY WERE INITIALLY
+                    bcftools view -S samples_order.txt par.imputed.bcf --output-type b --output par.imputed.sort.bcf
+                    bcftools index par.imputed.sort.bcf
+                    rm par.imputed.bcf*
+                    echo MERGING THE PAR2 AND NON-PAR FILES BACK TOGETHER
+                    echo -e "nonpar.imputed.sort.bcf\npar.imputed.sort.bcf" > merge_regions.txt
+                    bcftools concat --naive --file-list merge_regions.txt --output-type b --output {out_file_name}
             '''
 
-            impute_par_region = 'chrX:155701383-156030895'
-
-        impute_non_par_region = 'chrX:2781479-155701382'
+        cmd_split = f'''
+                echo THIS CHUNK IS IN PAR1/2 and NON-PAR REGION, SO WE WILL SPLIT THESE TWO REGIONS
+                echo GETTING THE ORDER OF SAMPLES
+                bcftools query -l {vcf.bcf} > samples_order.txt
+                echo SPLITTING OUT THE PAR REGION
+                bcftools view {vcf.bcf} --regions {par_region} --output-type b --output par.bcf
+                echo SPLITTING OUT THE NON-PAR REGION
+                bcftools view {vcf.bcf} --regions {non_par_region} --output-type b --output nonpar.bcf
+                echo SPLITTING THE NON-PAR REGION BY SEX
+                bcftools view -S {in_females} nonpar.bcf --output-type b --output females.bcf
+                bcftools view -S ^{in_females} nonpar.bcf --output-type b --output males.bcf
+                echo INDEXING THE FILES BEFORE RUNNING IMPUTATION
+                bcftools index par.bcf
+                bcftools index females.bcf
+                bcftools index males.bcf
+                rm {vcf.bcf}
+                rm nonpar.bcf
+        '''
 
         impute.command(cmd_split)
 
         # (2) run imputation separately for par, females, and males
+        map_file = '/shapeit4/maps/b38/chrX.b38.gmap.gz'
         cmd_impute = f'''
-                impute5_1.1.5_static --h {ref.bcf} --m {map_file} --g par.bcf --r {impute_par_region} --out-gp-field \
+                impute5_1.1.5_static --h {ref.bcf} --m {map_file_par} --g par.bcf --r {par_region} --out-gp-field \
                     --o par.imputed.bcf --b {buffer} --threads {threads}
-                impute5_1.1.5_static --h {ref.bcf} --m {map_file} --g females.bcf --r {impute_non_par_region} --out-gp-field \
+                impute5_1.1.5_static --h {ref.bcf} --m {map_file} --g females.bcf --r {non_par_region} --out-gp-field \
                     --o females.imputed.bcf --b {buffer} --threads {threads}
-                impute5_1.1.5_static --h {ref.bcf} --m {map_file} --g males.bcf --r {impute_non_par_region} --out-gp-field \
+                impute5_1.1.5_static --h {ref.bcf} --m {map_file} --g males.bcf --r {non_par_region} --out-gp-field \
                     --o males.imputed.bcf --b {buffer} --threads {threads} -- haploid
         '''
         impute.command(cmd_impute)
@@ -263,7 +324,9 @@ def sex_impute(b: hb.batch.Batch,
         cmd_sort = f'''
                 echo CHECKING FOR DUPLICATE VARIANTS AND REMOVING THEM
                 bcftools norm -d any females.imputed.bcf --output-type b --output females.imputed.sorted.bcf
+                rm females.imputed.bcf*
                 bcftools norm -d any males.imputed.bcf --output-type b --output males.imputed.sorted.bcf
+                rm males.imputed.bcf*
                 bcftools index females.imputed.sorted.bcf
                 bcftools index males.imputed.sorted.bcf
                 echo -e "females.imputed.sorted.bcf\nmales.imputed.sorted.bcf" > merge_sex.txt
@@ -274,20 +337,15 @@ def sex_impute(b: hb.batch.Batch,
         cmd_merge_sex = f'''
                 echo MERGING THE MALES AND FEMALES FILE BACK TOGETHER
                 bcftools merge --file-list merge_sex.txt --output-type b --output nonpar.imputed.bcf
+                bcftools index nonpar.imputed.bcf
+                echo ORDERING NON-PAR SAMPLES TO HOW THEY WERE INITIALLY
+                bcftools view -S samples_order.txt nonpar.imputed.bcf --output-type b --output nonpar.imputed.sort.bcf
+                bcftools index nonpar.imputed.sort.bcf
+                rm nonpar.imputed.bcf* females.imputed.sorted.bcf* males.imputed.sorted.bcf
         '''
         impute.command(cmd_merge_sex)
 
-        # (3c) merge the non-par and par regions together
-        if (int(region.split(':')[1].split('-')[0]) <= 2781479) & (int(region.split(':')[1].split('-')[1]) >= 2781479):
-            cmd_merge_regs = f'''
-                    echo -e "par.imputed.bcf\nnonpar.imputed.bcf" > merge_regions.txt
-                    bcftools concat --naive --file-list merge_regions.txt --output-type b --output {out_file_name}
-            '''
-        else:
-            cmd_merge_regs = f'''
-                    echo -e "nonpar.imputed.bcf\npar.imputed.bcf" > merge_regions.txt
-                    bcftools concat --naive --file-list merge_regions.txt --output-type b --output {out_file_name}
-            '''
+        # (3d) merge the non-par and par regions together
         impute.command(cmd_merge_regs)
 
         impute.command(f'bcftools index {out_file_name}')
@@ -354,7 +412,7 @@ def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
 
         phased_vcfs_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_scatter/*.bcf')
 
-        for i in range(23, 24):
+        for i in range(1, 24):
             if i == 23:
                 chrom = 'chrX'
             else:
