@@ -176,7 +176,7 @@ def run_phase(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
     for index, row in vcf_paths.iterrows():
         vcf = row[0]
         vcf_filebase = get_vcf_filebase(vcf)
-        scatter_vcfs_paths = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/scatter_vcfs')
+        scatter_vcfs_paths = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/scatter_vcfs/*.bcf')
 
         vcfs = []
         for i in scatter_vcfs_paths:
@@ -184,21 +184,28 @@ def run_phase(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
 
         phased_vcf_out_dir = f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_scatter'
 
-        for file in vcfs:
-            # get specific region for file using regions.line file
-            vcf_basename = get_vcf_filebase(file)
-            file_index = int(vcf_basename.split('.')[-1])
-            file_region = regions_dict[file_index]
-            map_chrom = file_region.split(':')[0]
-
-            if software == 'eagle':
-                eagle_phasing(b=phasing, vcf_file=file, ref_vcf_file=vcf_ref_path, reference=reference, cpu=cpu,
-                              threads=threads, out_dir=phased_vcf_out_dir)
-
+        for i in range(1, 24):
+            if i == 23:
+                chrom = 'chrX'
             else:
-                shapeit_phasing(b=phasing, vcf_file=file, ref_vcf_file=vcf_ref_path, reference=reference,
-                                region=file_region, map_chromosome=map_chrom, cpu=cpu, threads=threads,
-                                out_dir=phased_vcf_out_dir)
+                chrom = f'chr{i}'
+
+            for file in vcfs:
+                # get specific region for file using regions.line file
+                vcf_basename = get_vcf_filebase(file)
+                file_index = int(vcf_basename.split('.')[-1])
+                file_region = regions_dict[file_index]
+                map_chrom = file_region.split(':')[0]
+
+                if map_chrom == chrom:
+                    if software == 'eagle':
+                        eagle_phasing(b=phasing, vcf_file=file, ref_vcf_file=vcf_ref_path, reference=reference, cpu=cpu,
+                                      threads=threads, out_dir=phased_vcf_out_dir)
+
+                    else:
+                        shapeit_phasing(b=phasing, vcf_file=file, ref_vcf_file=vcf_ref_path, reference=reference,
+                                        region=file_region, map_chromosome=map_chrom, cpu=cpu, threads=threads,
+                                        out_dir=phased_vcf_out_dir)
 
     phasing.run()
 
