@@ -5,9 +5,9 @@ import hail as hl
 
 
 def pca(
-        ref_dirname: str = 'gs://african-seq-data/hgdp_tgp/gwaspy_pca_ref/',
+        ref_dirname: str = 'gs://hgdp-1kg/hgdp_tgp/gwaspy_pca_ref/',
         ref_basename: str = 'hgdp_1kg_filtered_maf_5_GRCh38',
-        ref_info: str = 'gs://african-seq-data/hgdp_tgp/gwaspy_pca_ref/hgdp_1kg_sample_info.tsv',
+        ref_info: str = 'gs://hgdp-1kg/hgdp_tgp/gwaspy_pca_ref/hgdp_1kg_sample_info.tsv',
         reference: str = 'GRCh38', with_ref: bool = False,
         data_dirname: str = None, data_basename: str = None, input_type: str = None,
         maf: float = 0.05, hwe: float = 1e-3, call_rate: float = 0.98,
@@ -37,9 +37,9 @@ def pca(
 def main():
     parser = argparse.ArgumentParser()
     # reference args
-    parser.add_argument('--ref-dirname', default='gs://african-seq-data/hgdp_tgp/gwaspy_pca_ref/')
+    parser.add_argument('--ref-dirname', default='gs://hgdp-1kg/hgdp_tgp/gwaspy_pca_ref/')
     parser.add_argument('--ref-basename', default='hgdp_1kg_filtered_maf_5_GRCh38')
-    parser.add_argument('--ref-info', default='gs://african-seq-data/hgdp_tgp/gwaspy_pca_ref/hgdp_1kg_sample_info.tsv')
+    parser.add_argument('--ref-info', default='gs://hgdp-1kg/hgdp_tgp/gwaspy_pca_ref/hgdp_1kg_sample_info.tsv')
     parser.add_argument('--reference', type=str, default='GRCh38')
     parser.add_argument('--with-ref', action='store_true')
 

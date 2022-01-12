@@ -50,7 +50,7 @@ def pc_project(
 
 
 def intersect_ref(
-        ref_dirname: str = 'gs://african-seq-data/hgdp_tgp/gwaspy_pca_ref/',
+        ref_dirname: str = 'gs://hgdp-1kg/hgdp_tgp/gwaspy_pca_ref/',
         ref_basename: str = 'hgdp_1kg_filtered_maf_5_GRCh38',
         data_mt: hl.MatrixTable = None,
         data_basename: str = None, out_dir: str = None):
@@ -237,9 +237,9 @@ def plot_pca_ref(data_scores, ref_scores, ref_info, x_pc, y_pc):
 
 
 def pca_with_ref(
-        ref_dirname: str = 'gs://african-seq-data/hgdp_tgp/gwaspy_pca_ref/',
+        ref_dirname: str = 'gs://hgdp-1kg/hgdp_tgp/gwaspy_pca_ref/',
         ref_basename: str = 'hgdp_1kg_filtered_maf_5_GRCh38',
-        ref_info: str = 'gs://african-seq-data/hgdp_tgp/gwaspy_pca_ref/hgdp_1kg_sample_info.tsv',
+        ref_info: str = 'gs://hgdp-1kg/hgdp_tgp/gwaspy_pca_ref/hgdp_1kg_sample_info.tsv',
         data_dirname: str = None,
         data_basename: str = None,
         out_dir: str = None,
