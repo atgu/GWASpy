@@ -13,32 +13,32 @@ def pca_filter_mt(
 
     print("\nInitial number of SNPs before filtering: {}".format(in_mt.count_rows()))
     mt = hl.variant_qc(in_mt)
+    print(f'\nFiltering out variants with MAF < {maf}')
     mt_filt = mt.annotate_rows(maf=hl.min(mt.variant_qc.AF))
     mt_filt = mt_filt.filter_rows(mt_filt.maf > maf)
-    # mt_filt = mt.filter_rows((mt.variant_qc.AF[0] > 0.001) & (mt.variant_qc.AF[0] < 0.999))
-    print("\nNumber of SNPs after MAF filtering: {}".format(mt_filt.count_rows()))
 
+    print(f'\nFiltering out variants with HWE < {hwe:1e}')
     mt_filt = mt_filt.filter_rows(mt_filt.variant_qc.p_value_hwe > hwe)
-    print("\nNumber of SNPs after HWE filtering: {}".format(mt_filt.count_rows()))
 
+    print(f'\nFiltering out variants with Call Rate < {call_rate}')
     mt_filt = mt_filt.filter_rows(mt_filt.variant_qc.call_rate >= call_rate)
-    print("\nNumber of SNPs after Call Rate filtering: {}".format(mt_filt.count_rows()))
 
     # no strand ambiguity
+    print('\nFiltering out strand ambigous variants')
     mt_filt = mt_filt.filter_rows(~hl.is_strand_ambiguous(mt_filt.alleles[0], mt_filt.alleles[1]))
-    print("\nNumber of SNPs after strand ambiguity filtering: {}".format(mt_filt.count_rows()))
 
     # MHC chr6:25-35Mb
     # chr8.inversion chr8:7-13Mb
+    print('\nFiltering out variants in MHC [chr6:25M-35M] and chromosome 8 inversions [chr8:7M-13M]')
     intervals = ['chr6:25M-35M', 'chr8:7M-13M']
     mt_filt = hl.filter_intervals(mt_filt, [hl.parse_locus_interval(x, reference_genome='GRCh38') for x in intervals],
                                   keep=False)
-    print("\nNumber of SNPs after MHC and chr8 inversions filtering: {}".format(mt_filt.count_rows()))
 
     # This step is expensive (on local machine)
+    print(f'\nLD pruning using correlation threshold of {ld_cor} and window size of {ld_window}')
     mt_ld_prune = hl.ld_prune(mt_filt.GT, r2=ld_cor, bp_window_size=ld_window)
-    mt_ld_pruned = mt.filter_rows(hl.is_defined(mt_ld_prune[mt.row_key]))
-    print("\nNumber of SNPs after LD pruning: {}".format(mt_ld_pruned.count_rows()))
+    mt_ld_pruned = mt_filt.filter_rows(hl.is_defined(mt_ld_prune[mt_filt.row_key]))
+    print("\nNumber of SNPs after filtering: {}".format(mt_ld_pruned.count_rows()))
 
     return mt_ld_pruned
 
