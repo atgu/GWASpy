@@ -14,8 +14,8 @@ def haplotype_phasing(input_vcfs: str = None,
                       max_win_size_cm: float = 10.0,
                       overlap_size_cm: float = 2.0,
                       scatter_memory: int = 26,
-                      cpu: int = 4,
-                      threads: int = 3,
+                      cpu: int = 8,
+                      threads: int = 7,
                       run: str = 'scatter',
                       output_type: str = 'bcf',
                       out_dir: str = None):
@@ -66,9 +66,9 @@ def main():
     parser.add_argument('--reference', type=str, default='GRCh38', choices=['GRCh37', 'GRCh38'])
     parser.add_argument('--max-win-size-cm', type=float, default=10.0)
     parser.add_argument('--overlap-size-cm', type=float, default=2.0)
-    parser.add_argument('--cpu', type=int, default=4)
+    parser.add_argument('--cpu', type=int, default=8)
     parser.add_argument('--scatter-mem', type=int, default=26)
-    parser.add_argument('--threads', type=int, default=3)
+    parser.add_argument('--threads', type=int, default=7)
     parser.add_argument('--run', type=str, default='scatter', choices=['scatter', 'phase', 'concat'])
     parser.add_argument('--out-type', type=str, default='bcf', choices=['bcf', 'vcf'])
     parser.add_argument('--out-dir', required=True)
