@@ -6,14 +6,14 @@ def read_plink(dirname: str, basename: str) -> hl.MatrixTable:
         in_mt: hl.MatrixTable = hl.import_plink(bed=dirname + basename + '.bed',
                                                 bim=dirname + basename + '.bim',
                                                 fam=dirname + basename + '.fam',
-                                                n_partitions=100)
+                                                block_size=16)
         in_mt.write(dirname + basename + '.mt')
     return hl.read_matrix_table(dirname + basename + '.mt')
 
 
 def read_vcf(dirname: str, basename: str, annotations: str) -> hl.MatrixTable:
     vcf_file = '{}{}.vcf.gz'.format(dirname, basename)
-    hl.import_vcf(vcf_file, force_bgz=True).write('{}GWASpy.preimpQC.mt'.format(dirname), overwrite=True)
+    hl.import_vcf(vcf_file, force_bgz=True, block_size=16).write('{}GWASpy.preimpQC.mt'.format(dirname), overwrite=True)
     in_mt = hl.read_matrix_table('{}GWASpy.preimpQC.mt'.format(dirname))
 
     # Unlike array data, a VCF might have multi-allelic sites
