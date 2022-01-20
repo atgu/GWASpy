@@ -27,7 +27,7 @@ windows between consecutive windows so that the process runs faster. Below are e
 
     .. code-block:: sh
 
-        phasing --input-vcfs gs://path/to/vcf_files.txt --out-dir gs://path/to/output/dir --reference GRCh38 --billing-project project-name --bucket bucket-associated-with-project --run scatter
+        phasing --input-vcfs gs://path/to/vcf_files.txt --out-dir gs://path/to/output/dir --reference GRCh38 --billing-project project-name --run scatter
 
 #. Python (inside a Python script)
 
@@ -38,7 +38,6 @@ windows between consecutive windows so that the process runs faster. Below are e
                       vcf_ref = None,
                       local: bool = False,
                       billing_project = 'project-name',
-                      bucket = 'bucket-associated-with-project',
                       software = 'shapeit',
                       reference= 'GRCh38',
                       max_win_size_cm: float = 10.0,
@@ -54,15 +53,17 @@ windows between consecutive windows so that the process runs faster. Below are e
 ########
 After we've split the input file(s) into chunks, we can run phasing like in the examples below.
 
-Users can run phasing without or with a reference panel. This can be specified using the :code:`--vcf-ref` command-line (cli)
+Users can run phasing: **(1) without or (2) with a reference panel**. This can be specified using the :code:`--vcf-ref` command-line (cli)
 or :code:`vcf_ref` argument (Python). If specified, phasing will be run with a reference panel,
 otherwise it will be without a reference panel.
+
+**2.1 Phasing WITHOUT a reference panel**
 
 #. Command line
 
     .. code-block:: sh
 
-        phasing --input-vcfs gs://path/to/vcf_files.txt --out-dir gs://path/to/output/dir --reference GRCh38 --billing-project project-name --bucket bucket-associated-with-project --run phase
+        phasing --input-vcfs gs://path/to/vcf_files.txt --out-dir gs://path/to/output/dir --reference GRCh38 --billing-project project-name --run phase
 
 #. Python (inside a Python script)
 
@@ -73,7 +74,6 @@ otherwise it will be without a reference panel.
                       vcf_ref = None,
                       local: bool = False,
                       billing_project = 'project-name',
-                      bucket = 'bucket-associated-with-project',
                       software = 'shapeit',
                       reference= 'GRCh38',
                       max_win_size_cm: float = 10.0,
@@ -85,6 +85,32 @@ otherwise it will be without a reference panel.
                       output_type: str = 'bcf',
                       out_dir = 'gs://path/to/output/dir')
 
+**2.2 Phasing WITH a reference panel**
+Users can run phasing with a reference panel by specifying the :code:`--vcf-ref`
+command-line (cli) or :code:`vcf_ref` argument (Python). Users can use the following
+as a reference panel:
+
+2.2.1 HGDP+1KG dataset
+
+.. code-block:: sh
+
+        phasing --input-vcfs gs://path/to/vcf_files.txt --out-dir gs://path/to/output/dir --reference GRCh38 --billing-project project-name --run phase --vcf-ref hgdp_1kg
+
+2.2.2 Their own reference panel
+
+Say you have your reference panel VCF/BCF files by chromosomes stored in gs://ref_panel/ALL.chr{1..22,X}.vcf,
+you would pass the path to :code:`--vcf-ref` as gs://ref_panel/ALL.chr\ **CNUMBER**\ .vcf,
+GWASpy uses **CNUMBER** as a placeholder for the chromosomes. Then you can run phasing as:
+
+.. code-block:: sh
+
+        phasing --input-vcfs gs://path/to/vcf_files.txt --out-dir gs://path/to/output/dir --reference GRCh38 --billing-project project-name --run phase --vcf-ref gs://ref_panel/ALL.chrCNUMBER.vcf
+
+.. note::
+    1. If you're using your own reference panel, make sure the files are bgzip compressed.
+    2. Chromosome X reference file must be name X and not 23
+
+
 3. Concat
 #########
 After phasing has completed, you have to merge the overlapping chunks back together by chromosome. In GWASpy, bcftools
@@ -94,7 +120,7 @@ concat is used with the :code:`--ligate` option to concatenate the chunks.
 
     .. code-block:: sh
 
-        phasing --input-vcfs gs://path/to/vcf_files.txt --out-dir gs://path/to/output/dir --reference GRCh38 --billing-project project-name --bucket bucket-associated-with-project --run phase
+        phasing --input-vcfs gs://path/to/vcf_files.txt --out-dir gs://path/to/output/dir --reference GRCh38 --billing-project project-name --run phase
 
 #. Python (inside a Python script)
 
@@ -105,7 +131,6 @@ concat is used with the :code:`--ligate` option to concatenate the chunks.
                       vcf_ref = None,
                       local: bool = False,
                       billing_project = 'project-name',
-                      bucket = 'bucket-associated-with-project',
                       software = 'shapeit',
                       reference= 'GRCh38',
                       max_win_size_cm: float = 10.0,
@@ -134,8 +159,6 @@ Arguments and options
      - Type of service. Default is Service backend where jobs are executed on a multi-tenant compute cluster in Google Cloud
    * - :code:`--billing-project`
      - Billing project to be used for the job(s)
-   * - :code:`--bucket`
-     - Bucket associated with the billing project
    * - :code:`--software`
      - Software to use for phasing. Options: [:code:`eagle`, :code:`shapeit`]. Default is :code:`eagle`
    * - :code:`--reference`

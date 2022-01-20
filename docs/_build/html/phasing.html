@@ -99,7 +99,7 @@ windows between consecutive windows so that the process runs faster. Below are e
 <ol class="arabic">
 <li><p>Command line</p>
 <blockquote>
-<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>phasing --input-vcfs gs://path/to/vcf_files.txt --out-dir gs://path/to/output/dir --reference GRCh38 --billing-project project-name --bucket bucket-associated-with-project --run scatter
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>phasing --input-vcfs gs://path/to/vcf_files.txt --out-dir gs://path/to/output/dir --reference GRCh38 --billing-project project-name --run scatter
 </pre></div>
 </div>
 </div></blockquote>
@@ -111,7 +111,6 @@ windows between consecutive windows so that the process runs faster. Below are e
           <span class="n">vcf_ref</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
           <span class="n">local</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
           <span class="n">billing_project</span> <span class="o">=</span> <span class="s1">&#39;project-name&#39;</span><span class="p">,</span>
-          <span class="n">bucket</span> <span class="o">=</span> <span class="s1">&#39;bucket-associated-with-project&#39;</span><span class="p">,</span>
           <span class="n">software</span> <span class="o">=</span> <span class="s1">&#39;shapeit&#39;</span><span class="p">,</span>
           <span class="n">reference</span><span class="o">=</span> <span class="s1">&#39;GRCh38&#39;</span><span class="p">,</span>
           <span class="n">max_win_size_cm</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">10.0</span><span class="p">,</span>
@@ -131,13 +130,14 @@ windows between consecutive windows so that the process runs faster. Below are e
 <section id="phase">
 <h2>2. Phase<a class="headerlink" href="#phase" title="Permalink to this headline"></a></h2>
 <p>After we’ve split the input file(s) into chunks, we can run phasing like in the examples below.</p>
-<p>Users can run phasing without or with a reference panel. This can be specified using the <code class="code docutils literal notranslate"><span class="pre">--vcf-ref</span></code> command-line (cli)
+<p>Users can run phasing: <strong>(1) without or (2) with a reference panel</strong>. This can be specified using the <code class="code docutils literal notranslate"><span class="pre">--vcf-ref</span></code> command-line (cli)
 or <code class="code docutils literal notranslate"><span class="pre">vcf_ref</span></code> argument (Python). If specified, phasing will be run with a reference panel,
 otherwise it will be without a reference panel.</p>
+<p><strong>2.1 Phasing WITHOUT a reference panel</strong></p>
 <ol class="arabic">
 <li><p>Command line</p>
 <blockquote>
-<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>phasing --input-vcfs gs://path/to/vcf_files.txt --out-dir gs://path/to/output/dir --reference GRCh38 --billing-project project-name --bucket bucket-associated-with-project --run phase
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>phasing --input-vcfs gs://path/to/vcf_files.txt --out-dir gs://path/to/output/dir --reference GRCh38 --billing-project project-name --run phase
 </pre></div>
 </div>
 </div></blockquote>
@@ -149,7 +149,6 @@ otherwise it will be without a reference panel.</p>
           <span class="n">vcf_ref</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
           <span class="n">local</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
           <span class="n">billing_project</span> <span class="o">=</span> <span class="s1">&#39;project-name&#39;</span><span class="p">,</span>
-          <span class="n">bucket</span> <span class="o">=</span> <span class="s1">&#39;bucket-associated-with-project&#39;</span><span class="p">,</span>
           <span class="n">software</span> <span class="o">=</span> <span class="s1">&#39;shapeit&#39;</span><span class="p">,</span>
           <span class="n">reference</span><span class="o">=</span> <span class="s1">&#39;GRCh38&#39;</span><span class="p">,</span>
           <span class="n">max_win_size_cm</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">10.0</span><span class="p">,</span>
@@ -165,6 +164,28 @@ otherwise it will be without a reference panel.</p>
 </div></blockquote>
 </li>
 </ol>
+<p><strong>2.2 Phasing WITH a reference panel</strong>
+Users can run phasing with a reference panel by specifying the <code class="code docutils literal notranslate"><span class="pre">--vcf-ref</span></code>
+command-line (cli) or <code class="code docutils literal notranslate"><span class="pre">vcf_ref</span></code> argument (Python). Users can use the following
+as a reference panel:</p>
+<p>2.2.1 HGDP+1KG dataset</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>phasing --input-vcfs gs://path/to/vcf_files.txt --out-dir gs://path/to/output/dir --reference GRCh38 --billing-project project-name --run phase --vcf-ref hgdp_1kg
+</pre></div>
+</div>
+<p>2.2.2 Their own reference panel</p>
+<p>Say you have your reference panel VCF/BCF files by chromosomes stored in gs://ref_panel/ALL.chr{1..22,X}.vcf,
+you would pass the path to <code class="code docutils literal notranslate"><span class="pre">--vcf-ref</span></code> as gs://ref_panel/ALL.chr<strong>CNUMBER</strong>.vcf,
+GWASpy uses <strong>CNUMBER</strong> as a placeholder for the chromosomes. Then you can run phasing as:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>phasing --input-vcfs gs://path/to/vcf_files.txt --out-dir gs://path/to/output/dir --reference GRCh38 --billing-project project-name --run phase --vcf-ref gs://ref_panel/ALL.chrCNUMBER.vcf
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ol class="arabic simple">
+<li><p>If you’re using your own reference panel, make sure the files are bgzip compressed.</p></li>
+<li><p>Chromosome X reference file must be name X and not 23</p></li>
+</ol>
+</div>
 </section>
 <section id="concat">
 <h2>3. Concat<a class="headerlink" href="#concat" title="Permalink to this headline"></a></h2>
@@ -173,7 +194,7 @@ concat is used with the <code class="code docutils literal notranslate"><span cl
 <ol class="arabic">
 <li><p>Command line</p>
 <blockquote>
-<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>phasing --input-vcfs gs://path/to/vcf_files.txt --out-dir gs://path/to/output/dir --reference GRCh38 --billing-project project-name --bucket bucket-associated-with-project --run phase
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>phasing --input-vcfs gs://path/to/vcf_files.txt --out-dir gs://path/to/output/dir --reference GRCh38 --billing-project project-name --run phase
 </pre></div>
 </div>
 </div></blockquote>
@@ -185,7 +206,6 @@ concat is used with the <code class="code docutils literal notranslate"><span cl
           <span class="n">vcf_ref</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
           <span class="n">local</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
           <span class="n">billing_project</span> <span class="o">=</span> <span class="s1">&#39;project-name&#39;</span><span class="p">,</span>
-          <span class="n">bucket</span> <span class="o">=</span> <span class="s1">&#39;bucket-associated-with-project&#39;</span><span class="p">,</span>
           <span class="n">software</span> <span class="o">=</span> <span class="s1">&#39;shapeit&#39;</span><span class="p">,</span>
           <span class="n">reference</span><span class="o">=</span> <span class="s1">&#39;GRCh38&#39;</span><span class="p">,</span>
           <span class="n">max_win_size_cm</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">10.0</span><span class="p">,</span>
@@ -227,37 +247,34 @@ concat is used with the <code class="code docutils literal notranslate"><span cl
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--billing-project</span></code></p></td>
 <td><p>Billing project to be used for the job(s)</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--bucket</span></code></p></td>
-<td><p>Bucket associated with the billing project</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--software</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--software</span></code></p></td>
 <td><p>Software to use for phasing. Options: [<code class="code docutils literal notranslate"><span class="pre">eagle</span></code>, <code class="code docutils literal notranslate"><span class="pre">shapeit</span></code>]. Default is <code class="code docutils literal notranslate"><span class="pre">eagle</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--reference</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--reference</span></code></p></td>
 <td><p>Genome reference build. Default is GRCh38. Options: [<code class="code docutils literal notranslate"><span class="pre">GRCh37</span></code>, <code class="code docutils literal notranslate"><span class="pre">GRCh38</span></code>]</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--max-win-size-cm</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--max-win-size-cm</span></code></p></td>
 <td><p>Maximum window size to use when chunking the input file. Default is 10.0</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--overlap-size-cm</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--overlap-size-cm</span></code></p></td>
 <td><p>Size of overlap between consecutive overlapping windows. Default is 2.0</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--cpu</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--cpu</span></code></p></td>
 <td><p>Number of CPUs to use in phasing. Default is 4. [TO BE CHANGED]</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--scatter-mem</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--scatter-mem</span></code></p></td>
 <td><p>Memory to use for scattering input into chunks before phasing. [TO BE CHANGED]</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--threads</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--threads</span></code></p></td>
 <td><p>Number of threads to use in phasing. Default is 3. [TO BE CHANGED]</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--run</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--run</span></code></p></td>
 <td><p>Process to run. Options: [<code class="code docutils literal notranslate"><span class="pre">scatter</span></code>, <code class="code docutils literal notranslate"><span class="pre">phase</span></code>, <code class="code docutils literal notranslate"><span class="pre">concat</span></code>]. Default is <code class="code docutils literal notranslate"><span class="pre">scatter</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--out-type</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--out-type</span></code></p></td>
 <td><p>Output type. Options: [<code class="code docutils literal notranslate"><span class="pre">bcf</span></code>, <code class="code docutils literal notranslate"><span class="pre">vcf</span></code>]. Default is <code class="code docutils literal notranslate"><span class="pre">bcf</span></code> [HIGHLY RECOMMENDED SINCE BCFs ARE GENERALLY FASTER TO WORK WITH AND TAKE UP LESS SPACE]</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--out-dir</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--out-dir</span></code></p></td>
 <td><p>Path to where output files will be saved</p></td>
 </tr>
 </tbody>
