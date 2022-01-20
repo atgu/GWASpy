@@ -10,22 +10,21 @@ from typing import Union
 
 def eagle_phasing(b: hb.batch.Batch,
                   vcf_file: str = None,
-                  ref_vcf_file: str = None,
+                  ref_vcf_file: hb.ResourceFile = None,
+                  ref_size: Union[float, int] = None,
                   reference: str = 'GRCh38',
                   cpu: int = 8,
                   img: str = 'docker.io/lindonkambule/gwaspy:v1',
-                  threads: int = 16,
+                  threads: int = 7,
                   out_dir: str = None):
-    global ref_size, vcf_ref
+
     vcf_size = bytes_to_gb(vcf_file)
-    if ref_vcf_file:
-        ref_size = bytes_to_gb(ref_vcf_file)
-        vcf_ref = b.read_input(ref_vcf_file)
     mem = 'highmem' if vcf_size > 1 else 'standard'
     disk_size = round(5.0 + 3.0 * vcf_size) + round(5.0 + 3.0 * ref_size) if ref_vcf_file else round(5.0 + 3.0 * vcf_size)
 
     vcf_filename_no_ext = get_vcf_filebase(vcf_file)
-    output_file_name = f'{vcf_filename_no_ext}.phased.eagle'
+    output_file_name = f'{vcf_filename_no_ext}.phased.withref.eagle' if ref_vcf_file else \
+        f'{vcf_filename_no_ext}.phased.eagle'
     vcf = b.read_input(vcf_file)
 
     map_file = '/opt/genetic_map_hg38_withX.txt.gz' if reference == 'GRCh38' else '/opt/genetic_map_hg19_withX.txt.gz'
@@ -37,13 +36,15 @@ def eagle_phasing(b: hb.batch.Batch,
     phase.image(img)
 
     if ref_vcf_file:
+        phase.command('echo INDEXING REFERENCE FILE')
+        phase.command(f'bcftools index {ref_vcf_file}')
         cmd = f'''
         eagle \
             --geneticMapFile {map_file} \
             --numThreads {threads} \
             --outPrefix {output_file_name} \
             --vcfOutFormat b \
-            --vcfRef {vcf_ref} \
+            --vcfRef {ref_vcf_file} \
             --vcfTarget {vcf}
         '''
 
@@ -57,6 +58,9 @@ def eagle_phasing(b: hb.batch.Batch,
             --vcf {vcf}
         '''
 
+    phase.command('echo INDEXING INPUT FILE')
+    phase.command(f'bcftools index {vcf}')
+    phase.command('echo RUNNING PHASING')
     phase.command(cmd)
     # index the output
     phase.command(f'bcftools index {output_file_name}.bcf')
@@ -71,25 +75,23 @@ def eagle_phasing(b: hb.batch.Batch,
 
 def shapeit_phasing(b: hb.batch.Batch,
                     vcf_file: str = None,
-                    ref_vcf_file: str = None,
+                    ref_vcf_file: hb.ResourceFile = None,
+                    ref_size: Union[float, int] = None,
                     reference: str = 'GRCh38',
                     region: Union[str, int] = None,
                     map_chromosome: str = None,
-                    cpu: int = 4,
+                    cpu: int = 8,
                     img: str = 'docker.io/lindonkambule/gwaspy:v1',
-                    threads: int = 3,
+                    threads: int = 7,
                     out_dir: str = None):
 
-    global ref_size, vcf_ref
     vcf_size = bytes_to_gb(vcf_file)
-    if ref_vcf_file:
-        ref_size = bytes_to_gb(ref_vcf_file)
-        vcf_ref = b.read_input(ref_vcf_file)
     mem = 'highmem' if vcf_size > 1 else 'standard'
     disk_size = round(5.0 + 3.0 * vcf_size) + round(5.0 + 3.0 * ref_size) if ref_vcf_file else round(5.0 + 3.0 * vcf_size)
 
     vcf_filename_no_ext = get_vcf_filebase(vcf_file)
-    output_file_name = f'{vcf_filename_no_ext}.phased.shapeit.bcf'
+    output_file_name = f'{vcf_filename_no_ext}.phased.withref.shapeit.bcf'if ref_vcf_file else \
+        f'{vcf_filename_no_ext}.phased.shapeit.bcf'
     vcf = b.read_input(vcf_file)
 
     chrom = map_chromosome if reference == 'GRCh38' else f'chr{map_chromosome}'
@@ -108,14 +110,14 @@ def shapeit_phasing(b: hb.batch.Batch,
     phase.image(img)
 
     if ref_vcf_file:
-        # shapeit requires that the VCF be indexed
-        phase.command(f'bcftools index {vcf_ref}')
+        phase.command('echo INDEXING REFERENCE FILE')
+        phase.command(f'bcftools index {ref_vcf_file}')
         cmd = f'''
         shapeit4.2 \
             --input {vcf} \
             --map {map_file} \
             --region {region} \
-            --reference {vcf_ref} \
+            --reference {ref_vcf_file} \
             --output {output_file_name} \
             --thread {threads}
         '''
@@ -130,7 +132,9 @@ def shapeit_phasing(b: hb.batch.Batch,
             --thread {threads}
         '''
 
+    phase.command('echo INDEXING INPUT FILE')
     phase.command(f'bcftools index {vcf}')
+    phase.command('echo RUNNING PHASING')
     phase.command(cmd)
     # index the output
     phase.command(f'bcftools index {output_file_name}')
@@ -148,11 +152,12 @@ def run_phase(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
               vcf_ref_path: str = None,
               software: str = 'shapeit',
               reference: str = 'GRCh38',
-              cpu: int = 4,
-              threads: int = 3,
+              cpu: int = 8,
+              threads: int = 7,
               out_dir: str = None):
 
     # error handling
+    global ref_path
     if software.lower() not in ['eagle', 'shapeit']:
         raise SystemExit(f'Incorrect software {software} selected. Options are [eagle, shapeit]')
 
@@ -163,7 +168,12 @@ def run_phase(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
                        name=f'haplotype-phasing-{software}')
 
     if vcf_ref_path:
-        print('RUNNING PHASING WITH A REFERENCE PANEL\n')
+        if vcf_ref_path == 'hgdp_1kg':
+            print('RUNNING PHASING WITH HGDP + 1000 GENOMES REFERENCE PANEL\n')
+            ref_path = 'gs://hgdp-1kg/hgdp_tgp_phasing/vcf/hgdp.tgp.gwaspy.merged.chrCNUMBER.merged.bcf'
+        else:
+            print('RUNNING PHASING WITH USER-DEFINED REFERENCE PANEL\n')
+            ref_path = vcf_ref_path
     else:
         print('RUNNING PHASING WITHOUT A REFERENCE PANEL\n')
 
@@ -187,8 +197,14 @@ def run_phase(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
         for i in range(1, 24):
             if i == 23:
                 chrom = 'chrX'
+                ref_chr = 'X'
             else:
                 chrom = f'chr{i}'
+                ref_chr = i
+
+            ref_chrom_path = ref_path.replace('CNUMBER', str(ref_chr)) if vcf_ref_path else None
+            ref_vcf_chrom_file = phasing.read_input(ref_chrom_path) if vcf_ref_path else None
+            ref_vcf_chrom_file_size = bytes_to_gb(ref_chrom_path) if vcf_ref_path else None
 
             for file in vcfs:
                 # get specific region for file using regions.line file
@@ -199,13 +215,14 @@ def run_phase(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
 
                 if map_chrom == chrom:
                     if software == 'eagle':
-                        eagle_phasing(b=phasing, vcf_file=file, ref_vcf_file=vcf_ref_path, reference=reference, cpu=cpu,
-                                      threads=threads, out_dir=phased_vcf_out_dir)
+                        eagle_phasing(b=phasing, vcf_file=file, ref_vcf_file=ref_vcf_chrom_file, reference=reference,
+                                      ref_size=ref_vcf_chrom_file_size, cpu=cpu, threads=threads,
+                                      out_dir=phased_vcf_out_dir)
 
                     else:
-                        shapeit_phasing(b=phasing, vcf_file=file, ref_vcf_file=vcf_ref_path, reference=reference,
-                                        region=file_region, map_chromosome=map_chrom, cpu=cpu, threads=threads,
-                                        out_dir=phased_vcf_out_dir)
+                        shapeit_phasing(b=phasing, vcf_file=file, ref_vcf_file=ref_vcf_chrom_file,
+                                        ref_size=ref_vcf_chrom_file_size, reference=reference, region=file_region,
+                                        map_chromosome=map_chrom, cpu=cpu, threads=threads, out_dir=phased_vcf_out_dir)
 
     phasing.run()
 
