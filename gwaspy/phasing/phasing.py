@@ -8,7 +8,6 @@ def haplotype_phasing(input_vcfs: str = None,
                       vcf_ref: str = None,
                       local: bool = False,
                       billing_project: str = None,
-                      bucket: str = None,
                       software: str = 'shapeit',
                       reference: str = 'GRCh38',
                       max_win_size_cm: float = 10.0,
@@ -34,7 +33,7 @@ def haplotype_phasing(input_vcfs: str = None,
         backend = hb.LocalBackend()
     else:
         backend = hb.ServiceBackend(billing_project=billing_project,
-                                    bucket=bucket)
+                                    remote_tmpdir=f'{out_dir}/tmp/')
 
     # Scatter VCF/BCF file(s)
     if run.lower() == 'scatter':
@@ -61,7 +60,6 @@ def main():
     parser.add_argument('--vcf-ref', type=str, default=None)
     parser.add_argument('--local', action='store_true')
     parser.add_argument('--billing-project', required=True)
-    parser.add_argument('--bucket', required=True)
     parser.add_argument('--software', type=str, default='shapeit', choices=['eagle', 'shapeit'])
     parser.add_argument('--reference', type=str, default='GRCh38', choices=['GRCh37', 'GRCh38'])
     parser.add_argument('--max-win-size-cm', type=float, default=10.0)
@@ -75,7 +73,7 @@ def main():
 
     args = parser.parse_args()
 
-    haplotype_phasing(input_vcfs=args.input_vcfs, vcf_ref=args.vcf_ref, local=args.local, bucket=args.bucket,
+    haplotype_phasing(input_vcfs=args.input_vcfs, vcf_ref=args.vcf_ref, local=args.local,
                       billing_project=args.billing_project, software=args.software, reference=args.reference,
                       max_win_size_cm=args.max_win_size_cm, overlap_size_cm=args.overlap_size_cm,
                       scatter_memory=args.scatter_mem, cpu=args.cpu, threads=args.threads, run=args.run,
