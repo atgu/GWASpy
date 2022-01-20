@@ -222,9 +222,9 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
     for col in column_filters:
         mt = mt.filter_cols(mt[col].filters == True, keep=False)
 
-    mt.repartition(100).write(f'{output_directory}{basename}.filtered.mt', overwrite=True)
-    mt_filtered = hl.read_matrix_table(f'{output_directory}{basename}.filtered.mt')
-    mt_filtered, pos_qc_counts = summary_stats(mt_filtered)
+    # mt.repartition(100).write(f'{output_directory}{basename}.filtered.mt', overwrite=True)
+    # mt_filtered = hl.read_matrix_table(f'{output_directory}{basename}.filtered.mt')
+    mt_filtered, pos_qc_counts = summary_stats(mt)
 
     if 'is_case' in mt.col:
         gwas_pos, n_sig_var_pos = manhattan(qqtitle='Post-QC QQ Plot', mantitle='Post-QC Manhattan Plot').filter(mt)
