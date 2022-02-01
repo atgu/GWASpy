@@ -20,11 +20,11 @@ def pca(
     if pca_type == 'project':
         print('\nRunning PCA using projection method')
 
-        from gwaspy.pca.pca_with_ref import pca_with_ref
-        pca_with_ref(ref_dirname=ref_dirname, ref_basename=ref_basename, ref_info=ref_info, data_dirname=data_dirname,
-                     data_basename=data_basename, out_dir=out_dir, input_type=input_type, reference=reference,
-                     maf=maf, hwe=hwe, call_rate=call_rate, ld_cor=ld_cor, ld_window=ld_window,
-                     prob_threshold=prob_threshold)
+        from gwaspy.pca.pca_project import run_pca_project
+        run_pca_project(ref_dirname=ref_dirname, ref_basename=ref_basename, ref_info=ref_info,
+                        data_dirname=data_dirname, data_basename=data_basename, out_dir=out_dir, input_type=input_type,
+                        reference=reference, maf=maf, hwe=hwe, call_rate=call_rate, ld_cor=ld_cor, ld_window=ld_window,
+                        prob_threshold=prob_threshold)
 
     elif pca_type == 'joint':
         print('\nRunning PCA using joint method')
@@ -37,7 +37,7 @@ def pca(
 
     else:
         print('\nRunning PCA without a reference')
-        from gwaspy.pca.pca_no_ref import run_pca_normal
+        from gwaspy.pca.pca_normal import run_pca_normal
         run_pca_normal(dirname=data_dirname, basename=data_basename, input_type=input_type, out_dir=out_dir,
                        reference=reference, maf=maf, hwe=hwe, call_rate=call_rate, ld_cor=ld_cor, ld_window=ld_window,
                        n_pcs=n_pcs, relatedness_method=relatedness_method, relatedness_thresh=relatedness_thresh)
