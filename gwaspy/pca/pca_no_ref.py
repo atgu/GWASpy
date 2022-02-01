@@ -88,6 +88,11 @@ def run_pca_normal(
 
     mt = relatedness_check(in_mt=mt, method=relatedness_method, outdir=out_dir, kin_estimate=relatedness_thresh)
 
+    pca_snps = mt.count_rows()
+    if pca_snps > 1000000:
+        import warnings
+        warnings.warn(f'Too many SNPs to be used in PCA: {pca_snps}. This will make PCA run longer')
+
     print('\nRunning PCA')
     eigenvalues, pcs, _ = hl.hwe_normalized_pca(mt.GT, k=n_pcs)
 
