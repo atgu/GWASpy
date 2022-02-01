@@ -240,7 +240,7 @@ def run_pca_project(
     data_scores = f'{out_dir}GWASpy/PCA/pca_project/{data_basename}.project.pca.scores.tsv'
     data_ref = merge_data_with_ref(ref_scores=ref_scores, ref_info=ref_info, data_scores=data_scores)
 
-    from assign_pop_labels import assign_population_pcs
+    from gwaspy.pca.assign_pop_labels import  assign_population_pcs
     pcs_df, clf = assign_population_pcs(pop_pc_pd=data_ref, num_pcs=npcs, min_prob=prob_threshold)
 
     data_pops = pcs_df.loc[pcs_df['SuperPop'].isnull()]
