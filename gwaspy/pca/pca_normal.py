@@ -77,8 +77,13 @@ def run_pca_normal(
 
     print('\nReading mt')
     if reference.lower() == 'grch37':
-        from gwaspy.utils.reference_liftover import liftover_to_grch38
-        mt = liftover_to_grch38(dirname=dirname, basename=basename, input_type=input_type)
+        lifted_over = f'{dirname}{basename}.liftover.grch38.mt'
+        if not hl.hadoop_exists(lifted_over):
+            from gwaspy.utils.reference_liftover import liftover_to_grch38
+            mt = liftover_to_grch38(dirname=dirname, basename=basename, input_type=input_type)
+        else:
+            print(f'\nFound lifted-over over file: {lifted_over}')
+            mt = hl.read_matrix_table(lifted_over)
     else:
         from gwaspy.utils.read_file import read_infile
         mt = read_infile(input_type=input_type, dirname=dirname, basename=basename)
