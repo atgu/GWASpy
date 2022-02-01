@@ -4,8 +4,7 @@ import hail as hl
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
-from gwaspy.pca.pca_filter_snps import pca_filter_mt
-from gwaspy.pca.pca_filter_snps import relatedness_check
+from gwaspy.pca.pca_filter_snps import pca_filter_mt, relatedness_check
 
 
 def plot_pca(
