@@ -2,13 +2,13 @@ import hail as hl
 
 
 def read_plink(dirname: str, basename: str) -> hl.MatrixTable:
+    global in_mt
     if not hl.hadoop_exists(dirname + basename + '.mt'):
         in_mt: hl.MatrixTable = hl.import_plink(bed=dirname + basename + '.bed',
                                                 bim=dirname + basename + '.bim',
                                                 fam=dirname + basename + '.fam',
                                                 block_size=16)
-        in_mt.write(dirname + basename + '.mt')
-    return hl.read_matrix_table(dirname + basename + '.mt')
+    return in_mt
 
 
 def read_vcf(dirname: str, basename: str, annotations: str) -> hl.MatrixTable:
