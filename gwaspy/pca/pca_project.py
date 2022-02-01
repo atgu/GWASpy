@@ -66,12 +66,12 @@ def intersect_ref(
     # filter data to sites in ref & array data
     data_in_ref = data_mt.filter_rows(hl.is_defined(ref_mt.rows()[data_mt.row_key]))
     print('\nsites in ref and data, inds in data: {}'.format(data_in_ref.count()))
-    data_in_ref.write(f'{out_dir}GWASpy/PCA/{data_basename}_intersect_1kg_hgdp.mt', overwrite=True)
+    data_in_ref.write(f'{out_dir}GWASpy/PCA/pca_project/{data_basename}_intersect_1kg_hgdp.mt', overwrite=True)
 
     # filter ref to data sites
     ref_in_data = ref_mt.filter_rows(hl.is_defined(data_mt.rows()[ref_mt.row_key]))
     print('\nsites in ref and data, inds in ref: {}'.format(ref_in_data.count()))  #
-    ref_in_data.write(f'{out_dir}GWASpy/PCA/1kg_hgdp_intersect_{data_basename}.mt', overwrite=True)
+    ref_in_data.write(f'{out_dir}GWASpy/PCA/pca_project/1kg_hgdp_intersect_{data_basename}.mt', overwrite=True)
 
 
 def run_ref_pca(
@@ -92,9 +92,9 @@ def run_ref_pca(
     # pca_scores.write(out_dir + 'GWASpy/PCA/' + '1000G_scores.ht', overwrite=True)
     # pca_scores = hl.read_table(out_dir + 'GWASpy/PCA/' + '1000G_scores.ht')
     pca_scores = pca_scores.transmute(**{f'PC{i}': pca_scores.scores[i - 1] for i in range(1, npcs+1)})
-    pca_scores.export(f'{out_dir}GWASpy/PCA/1kg_hgdp.project.pca.scores.txt.bgz')  # individual-level PCs
+    pca_scores.export(f'{out_dir}GWASpy/PCA/pca_project/1kg_hgdp.project.pca.scores.txt.bgz')  # individual-level PCs
 
-    pca_loadings.write(f'{out_dir}GWASpy/PCA/1kg_hgdp_loadings.ht', overwrite=True)  # PCA loadings
+    pca_loadings.write(f'{out_dir}GWASpy/PCA/pca_project/1kg_hgdp_loadings.ht', overwrite=True)  # PCA loadings
 
 
 def merge_data_with_ref(
@@ -223,21 +223,21 @@ def run_pca_project(
     intersect_ref(ref_dirname=ref_dirname, ref_basename=ref_basename, data_mt=mt, data_basename=data_basename,
                   out_dir=out_dir)
 
-    ref_in_data = hl.read_matrix_table(f'{out_dir}GWASpy/PCA/1kg_hgdp_intersect_{data_basename}.mt')
+    ref_in_data = hl.read_matrix_table(f'{out_dir}GWASpy/PCA/pca_project/1kg_hgdp_intersect_{data_basename}.mt')
 
     print('\nComputing reference PCs')
     run_ref_pca(mt=ref_in_data, npcs=npcs, out_dir=out_dir)
 
     # project data
-    pca_loadings = hl.read_table(f'{out_dir}GWASpy/PCA/1kg_hgdp_loadings.ht')
-    project_mt = hl.read_matrix_table(f'{out_dir}GWASpy/PCA/{data_basename}_intersect_1kg_hgdp.mt')
+    pca_loadings = hl.read_table(f'{out_dir}GWASpy/PCA/pca_project/1kg_hgdp_loadings.ht')
+    project_mt = hl.read_matrix_table(f'{out_dir}GWASpy/PCA/pca_project/{data_basename}_intersect_1kg_hgdp.mt')
 
     ht_projections = pc_project(mt=project_mt, loadings_ht=pca_loadings)
     ht_projections = ht_projections.transmute(**{f'PC{i}': ht_projections.scores[i - 1] for i in range(1, npcs+1)})
-    ht_projections.export(f'{out_dir}GWASpy/PCA/{data_basename}.project.pca.scores.tsv')
+    ht_projections.export(f'{out_dir}GWASpy/PCA/pca_project/{data_basename}.project.pca.scores.tsv')
 
-    ref_scores = f'{out_dir}GWASpy/PCA/1kg_hgdp.project.pca.scores.txt.bgz'
-    data_scores = f'{out_dir}GWASpy/PCA/{data_basename}.project.pca.scores.tsv'
+    ref_scores = f'{out_dir}GWASpy/PCA/pca_project/1kg_hgdp.project.pca.scores.txt.bgz'
+    data_scores = f'{out_dir}GWASpy/PCA/pca_project/{data_basename}.project.pca.scores.tsv'
     data_ref = merge_data_with_ref(ref_scores=ref_scores, ref_info=ref_info, data_scores=data_scores)
 
     from assign_pop_labels import assign_population_pcs
@@ -249,11 +249,11 @@ def run_pca_project(
                                                                                                       range(1, npcs+1)]
     data_pops_df = data_pops[cols]
 
-    data_pops_df.to_csv(f'{out_dir}GWASpy/PCA/pca_sup_pops_{prob_threshold}_probs.project.pca.txt',
+    data_pops_df.to_csv(f'{out_dir}GWASpy/PCA/pca_project/pca_sup_pops_{prob_threshold}_probs.project.pca.txt',
                         sep='\t', index=False)
 
     print("\nGenerating PCA plots")
-    data_scores_prob = f'{out_dir}GWASpy/PCA/pca_sup_pops_{prob_threshold}_probs.project.pca.txt'
+    data_scores_prob = f'{out_dir}GWASpy/PCA/pca_project/pca_sup_pops_{prob_threshold}_probs.project.pca.txt'
 
     figs_dict = {}
     for i in range(1, npcs, 2):
@@ -268,7 +268,8 @@ def run_pca_project(
     for figname, figure in figs_dict.items():
         pdf.savefig(figure)
     pdf.close()
-    hl.hadoop_copy('file:///tmp/pca.project.plots.pdf', f'{out_dir}GWASpy/PCA/{data_basename}.pca.project.plots.pdf')
+    hl.hadoop_copy('file:///tmp/pca.project.plots.pdf',
+                   f'{out_dir}GWASpy/PCA/pca_project/{data_basename}.pca.project.plots.pdf')
 
 
 

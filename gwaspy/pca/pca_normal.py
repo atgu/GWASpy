@@ -119,7 +119,7 @@ def run_pca_normal(
     pcs_ht = pcs_ht.annotate(is_female=annotations_ht[pcs_ht.s].is_female)
 
     print('\nSaving PC scores file')
-    out_scores_file = f'{out_dir}GWASpy/PCA/{basename}.pca.normal.scores.tsv'
+    out_scores_file = f'{out_dir}GWASpy/PCA/pca_normal/{basename}.pca.normal.scores.tsv'
     pcs_ht.export(out_scores_file)
 
     print('\nGenerating PCA plots')
@@ -141,5 +141,6 @@ def run_pca_normal(
     for figname, figure in figs_dict.items():
         pdf.savefig(figure)
     pdf.close()
-    hl.hadoop_copy('file:///tmp/pca.no.ref.plots.pdf', f'{out_dir}GWASpy/PCA/{basename}.pca.no.ref.plots.pdf')
+    hl.hadoop_copy('file:///tmp/pca.no.ref.plots.pdf',
+                   f'{out_dir}GWASpy/PCA/pca_normal/{basename}.pca.no.ref.plots.pdf')
 
