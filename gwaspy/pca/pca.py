@@ -5,10 +5,10 @@ import hail as hl
 
 
 def pca(
-        ref_dirname: str = 'gs://hgdp-1kg/hgdp_tgp/gwaspy_pca_ref/',
-        ref_basename: str = 'hgdp_1kg_filtered_maf_5_GRCh38',
-        ref_info: str = 'gs://hgdp-1kg/hgdp_tgp/gwaspy_pca_ref/hgdp_1kg_sample_info.tsv',
-        reference: str = 'GRCh38', with_ref: str = None,
+        ref_dirname: str = 'gs://hgdp-1kg/hgdp_tgp/ds_without_outliers/',
+        ref_basename: str = 'unrelated',
+        ref_info: str = 'gs://hgdp-1kg/hgdp_tgp/gwaspy_pca_ref/hgdp_1kg_sample_info.unrelateds.pca_outliers_removed.tsv',
+        reference: str = 'GRCh38', pca_type: str = None,
         data_dirname: str = None, data_basename: str = None, input_type: str = None,
         maf: float = 0.05, hwe: float = 1e-3, call_rate: float = 0.98,
         ld_cor: float = 0.2, ld_window: int = 250000, n_pcs: int = 20, relatedness_method: str = 'pc_relate',
@@ -17,16 +17,16 @@ def pca(
     if not out_dir:
         raise Exception('\nOutput directory where files will be saved is not specified')
 
-    if with_ref == 'project':
+    if pca_type == 'project':
         print('\nRunning PCA using projection method')
 
         from gwaspy.pca.pca_with_ref import pca_with_ref
         pca_with_ref(ref_dirname=ref_dirname, ref_basename=ref_basename, ref_info=ref_info, data_dirname=data_dirname,
-                     data_basename=data_basename,out_dir=out_dir, input_type=input_type, reference=reference,
+                     data_basename=data_basename, out_dir=out_dir, input_type=input_type, reference=reference,
                      maf=maf, hwe=hwe, call_rate=call_rate, ld_cor=ld_cor, ld_window=ld_window,
                      prob_threshold=prob_threshold)
 
-    elif with_ref == 'joint':
+    elif pca_type == 'joint':
         print('\nRunning PCA using joint method')
         from gwaspy.pca.pca_joint import run_pca_joint
         run_pca_joint(ref_dirname=ref_dirname, ref_basename=ref_basename, ref_info=ref_info, data_dirname=data_dirname,
@@ -50,7 +50,7 @@ def main():
     parser.add_argument('--ref-basename', default='unrelated')
     parser.add_argument('--ref-info', default='gs://hgdp-1kg/hgdp_tgp/gwaspy_pca_ref/hgdp_1kg_sample_info.unrelateds.pca_outliers_removed.tsv')
     parser.add_argument('--reference', type=str, default='GRCh38')
-    parser.add_argument('--with-ref', type=str, default='normal', choices=['normal', 'project', 'joint'])
+    parser.add_argument('--pca-type', type=str, default='normal', choices=['normal', 'project', 'joint'])
 
     # data args
     parser.add_argument('--data-dirname', type=str, required=True)
@@ -81,7 +81,7 @@ def main():
     hl.init(default_reference=args.reference)
 
     pca(ref_dirname=args.ref_dirname, ref_basename=args.ref_basename, ref_info=args.ref_info, reference=args.reference,
-        with_ref=args.with_ref, input_type=args.input_type, data_dirname=args.data_dirname,
+        pca_type=args.pca_type, input_type=args.input_type, data_dirname=args.data_dirname,
         data_basename=args.data_basename, maf=args.maf, hwe=args.hwe, call_rate=args.geno, ld_cor=args.ld_cor,
         ld_window=args.ld_window, relatedness_method=args.relatedness_method,
         relatedness_thresh=args.relatedness_thresh, prob_threshold=args.prob, out_dir=args.out_dir)
