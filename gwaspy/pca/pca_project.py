@@ -162,7 +162,7 @@ def plot_pca_ref(data_scores, ref_scores, ref_info, x_pc, y_pc):
     return fig
 
 
-def pca_with_ref(
+def run_pca_project(
         ref_dirname: str = 'gs://hgdp-1kg/hgdp_tgp/ds_without_outliers/',
         ref_basename: str = 'unrelated',
         ref_info: str = 'gs://hgdp-1kg/hgdp_tgp/gwaspy_pca_ref/hgdp_1kg_sample_info.unrelateds.pca_outliers_removed.tsv',
