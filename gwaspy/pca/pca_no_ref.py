@@ -60,7 +60,7 @@ def plot_pca(
     return fig
 
 
-def pca_without_ref(
+def run_pca_normal(
         dirname: str = None,
         basename: str = None,
         input_type: str = None,
@@ -75,7 +75,7 @@ def pca_without_ref(
         relatedness_thresh: float = 0.98,
         out_dir: str = None):
 
-    print("Reading mt")
+    print('\nReading mt')
     if reference.lower() == 'grch37':
         from gwaspy.utils.reference_liftover import liftover_to_grch38
         mt = liftover_to_grch38(dirname=dirname, basename=basename, input_type=input_type)
@@ -83,12 +83,12 @@ def pca_without_ref(
         from gwaspy.utils.read_file import read_infile
         mt = read_infile(input_type=input_type, dirname=dirname, basename=basename)
 
-    print("\nFiltering mt")
+    print('\nFiltering mt')
     mt = pca_filter_mt(in_mt=mt, maf=maf, hwe=hwe, call_rate=call_rate, ld_cor=ld_cor, ld_window=ld_window)
 
     mt = relatedness_check(in_mt=mt, method=relatedness_method, outdir=out_dir, kin_estimate=relatedness_thresh)
 
-    print("\nRunning PCA")
+    print('\nRunning PCA')
     eigenvalues, pcs, _ = hl.hwe_normalized_pca(mt.GT, k=n_pcs)
 
     pcs_ht = pcs.transmute(**{f'PC{i}': pcs.scores[i - 1] for i in range(1, n_pcs+1)})
@@ -108,11 +108,11 @@ def pca_without_ref(
         pcs_ht = pcs_ht.annotate(is_case=annotations_ht[pcs_ht.s].is_case)
     pcs_ht = pcs_ht.annotate(is_female=annotations_ht[pcs_ht.s].is_female)
 
-    print("\nSaving PC scores file")
-    out_scores_file = out_dir + 'GWASpy/PCA/' + basename + '_scores.tsv'
+    print('\nSaving PC scores file')
+    out_scores_file = f'{out_dir}GWASpy/PCA/{basename}_scores.tsv'
     pcs_ht.export(out_scores_file)
 
-    print("\nGenerating PCA plots")
+    print('\nGenerating PCA plots')
     pcs_scores = pd.read_table(out_scores_file, header=0, sep='\t')
 
     if 'is_case' in all_column_field_names:
@@ -131,6 +131,5 @@ def pca_without_ref(
     for figname, figure in figs_dict.items():
         pdf.savefig(figure)
     pdf.close()
-    hl.hadoop_copy(f'file:///tmp/pca.no.ref.plots.pdf',
-                   '{}GWASpy/PCA/{}.pca.no.ref.plots.pdf'.format(out_dir, basename))
+    hl.hadoop_copy('file:///tmp/pca.no.ref.plots.pdf', f'{out_dir}GWASpy/PCA/{basename}.pca.no.ref.plots.pdf')
 
