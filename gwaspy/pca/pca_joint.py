@@ -129,7 +129,7 @@ def run_pca_joint(
     scores_without_pop_label = f'{out_dir}GWASpy/PCA/pca_joint/{data_basename}.1kg_hgdp.joint.pca.scores.txt.bgz'
     scores_with_pop_label_df = add_ref_superpop_labels(joint_scores=scores_without_pop_label, ref_info=ref_info)
 
-    from assign_pop_labels import assign_population_pcs
+    from gwaspy.pca.assign_pop_labels import  assign_population_pcs
     pcs_df, clf = assign_population_pcs(pop_pc_pd=scores_with_pop_label_df, num_pcs=npcs, min_prob=prob_threshold)
 
     data_pops = pcs_df.loc[pcs_df['SuperPop'].isnull()]
