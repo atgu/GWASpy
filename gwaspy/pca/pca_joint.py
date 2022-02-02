@@ -60,7 +60,7 @@ def add_ref_superpop_labels(joint_scores: str = None, ref_info: str = None) -> p
     print('\nAdding SuperPop labels to reference samples')
     joint_data = pd.read_table(joint_scores, header=0, sep='\t', compression='gzip')
     ref_info = pd.read_table(ref_info, header=0, sep='\t')
-    updated_joint_data = pd.merge(left=joint_data, right=ref_info, left_on='s', right_on='Sample', how='inner')
+    updated_joint_data = pd.merge(left=joint_data, right=ref_info, left_on='s', right_on='Sample', how='left')
 
     return updated_joint_data
 
@@ -129,7 +129,7 @@ def run_pca_joint(
     scores_without_pop_label = f'{out_dir}GWASpy/PCA/pca_joint/{data_basename}.1kg_hgdp.joint.pca.scores.txt.bgz'
     scores_with_pop_label_df = add_ref_superpop_labels(joint_scores=scores_without_pop_label, ref_info=ref_info)
 
-    from gwaspy.pca.assign_pop_labels import  assign_population_pcs
+    from gwaspy.pca.assign_pop_labels import assign_population_pcs
     pcs_df, clf = assign_population_pcs(pop_pc_pd=scores_with_pop_label_df, num_pcs=npcs, min_prob=prob_threshold)
 
     data_pops = pcs_df.loc[pcs_df['SuperPop'].isnull()]
