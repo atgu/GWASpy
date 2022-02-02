@@ -207,5 +207,5 @@ def run_pca_joint(
         pdf.savefig(figure)
     pdf.close()
     hl.hadoop_copy('file:///tmp/joint.pca.plots.pdf',
-                   f'{out_dir}GWASpy/PCA/pca_project/{data_basename}.joint.pca.plots.pdf')
+                   f'{out_dir}GWASpy/PCA/pca_joint/{data_basename}.joint.pca.plots.pdf')
 
