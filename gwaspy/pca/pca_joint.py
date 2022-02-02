@@ -3,6 +3,9 @@ __author__ = 'Lindo Nkambule'
 import hail as hl
 import pandas as pd
 from gwaspy.pca.pca_filter_snps import pca_filter_mt, relatedness_check
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+from matplotlib.backends.backend_pdf import PdfPages
 
 
 def joint_pca(
@@ -63,6 +66,55 @@ def add_ref_superpop_labels(joint_scores: str = None, ref_info: str = None) -> p
     updated_joint_data = pd.merge(left=joint_data, right=ref_info, left_on='s', right_on='Sample', how='left')
 
     return updated_joint_data
+
+
+def plot_pca_joint(joint_scores: pd.DataFrame = None, x_pc: str = None, y_pc: str = None) -> plt.plot:
+    """
+    Plot PCs
+    :param joint_scores: pandas dataframe of joint data+ref scores
+    :param x_pc: x-axis pc
+    :param y_pc: y-axis pc
+    :return: pc plot
+    """
+    # split data and ref into separate dfs
+    data = joint_scores.loc[joint_scores['SuperPop'].isnull()]
+    ref = joint_scores.loc[joint_scores['SuperPop'].notnull()]
+
+    # subset the data and ref scores dfs
+    ref_cols = ['s', 'SuperPop', x_pc, y_pc]
+    ref = ref[ref_cols]
+
+    data_cols = ['s', 'pop', x_pc, y_pc]
+    data = data[data_cols]
+
+    cbPalette = {'AFR': "#984EA3", 'EAS': "#4DAF4A", 'EUR': "#377EB8", 'CSA': "#FF7F00", 'AMR': "#E41A1C",
+                 'MID': "#A65628", 'OCE': "#999999", 'oth': "#F0E442"}
+
+    # PLOT
+    fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(15, 15))
+
+    # get population counts so we can add them to legend
+    handles = []
+    pop_counts = (data['pop'].value_counts(sort=True)).to_dict()
+
+    for key in cbPalette:
+        # if the key is not in the dict, add it
+        if key not in pop_counts:
+            pop_counts[key] = 0
+        # manually define a new patch
+        data_key = Line2D([0], [0], marker='o', color='w', label='{} (n={})'.format(key, pop_counts.get(key)),
+                          markerfacecolor=cbPalette[key], markersize=10)
+        handles.append(data_key)
+
+    axs.scatter(ref[x_pc], ref[y_pc], c=ref['SuperPop'].map(cbPalette), s=5, alpha=0.1)
+
+    axs.scatter(data[x_pc], data[y_pc], c=data['pop'].map(cbPalette), s=5, alpha=1)
+    axs.set_xlabel(xlabel=x_pc, fontsize=15)
+    axs.set_ylabel(ylabel=y_pc, fontsize=15)
+    fig.legend(handles=handles, title='Populations', loc='right', frameon=False)
+    plt.close()
+
+    return fig
 
 
 def run_pca_joint(
@@ -140,4 +192,20 @@ def run_pca_joint(
 
     data_pops_df.to_csv(f'{out_dir}GWASpy/PCA/pca_joint/pca_sup_pops_{prob_threshold}_probs.joint.pca.txt',
                         sep='\t', index=False)
+
+    print('\nGenerating PCA plots')
+
+    figs_dict = {}
+    for i in range(1, npcs, 2):
+        xpc = f'PC{i}'
+        ypc = f'PC{i + 1}'
+
+        figs_dict[f'fig{xpc}{ypc}'] = plot_pca_joint(joint_scores=pcs_df, x_pc=xpc, y_pc=ypc)
+
+    pdf = PdfPages('/tmp/joint.pca.plots.pdf')
+    for figname, figure in figs_dict.items():
+        pdf.savefig(figure)
+    pdf.close()
+    hl.hadoop_copy('file:///tmp/joint.pca.plots.pdf',
+                   f'{out_dir}GWASpy/PCA/pca_project/{data_basename}.joint.pca.plots.pdf')
 
