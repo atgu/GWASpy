@@ -215,14 +215,29 @@ def run_phase(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
 
                 if map_chrom == chrom:
                     if software == 'eagle':
-                        eagle_phasing(b=phasing, vcf_file=file, ref_vcf_file=ref_vcf_chrom_file, reference=reference,
-                                      ref_size=ref_vcf_chrom_file_size, cpu=cpu, threads=threads,
-                                      out_dir=phased_vcf_out_dir)
+                        # check if files exist before running things
+                        out_phased_filename = f'{vcf_basename}.phased.withref.eagle.bcf' if ref_vcf_chrom_file else \
+                            f'{vcf_basename}.phased.eagle.bcf'
+
+                        # check if file exists to avoid re-doing things
+                        if hl.hadoop_exists(out_phased_filename):
+                            continue
+                        else:
+                            eagle_phasing(b=phasing, vcf_file=file, ref_vcf_file=ref_vcf_chrom_file, reference=reference,
+                                          ref_size=ref_vcf_chrom_file_size, cpu=cpu, threads=threads,
+                                          out_dir=phased_vcf_out_dir)
 
                     else:
-                        shapeit_phasing(b=phasing, vcf_file=file, ref_vcf_file=ref_vcf_chrom_file,
-                                        ref_size=ref_vcf_chrom_file_size, reference=reference, region=file_region,
-                                        map_chromosome=map_chrom, cpu=cpu, threads=threads, out_dir=phased_vcf_out_dir)
+                        out_phased_filename = f'{vcf_basename}.phased.withref.shapeit.bcf' if ref_vcf_chrom_file else \
+                            f'{vcf_basename}.phased.shapeit.bcf'
+
+                        # check if file exists to avoid re-doing things
+                        if hl.hadoop_exists(out_phased_filename):
+                            continue
+                        else:
+                            shapeit_phasing(b=phasing, vcf_file=file, ref_vcf_file=ref_vcf_chrom_file,
+                                            ref_size=ref_vcf_chrom_file_size, reference=reference, region=file_region,
+                                            map_chromosome=map_chrom, cpu=cpu, threads=threads, out_dir=phased_vcf_out_dir)
 
     phasing.run()
 
