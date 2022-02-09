@@ -144,8 +144,6 @@ def shapeit_phasing(b: hb.batch.Batch,
     b.write_output(phase.ofile, f'{out_dir}/{output_file_name}')
     b.write_output(phase.csi, f'{out_dir}/{output_file_name}.csi')
 
-    return phase
-
 
 def run_phase(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
               input_vcfs: str = None,
@@ -215,12 +213,11 @@ def run_phase(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
 
                 if map_chrom == chrom:
                     if software == 'eagle':
-                        # check if files exist before running things
+                        # check if file exists to avoid re-doing things
                         out_phased_filename = f'{vcf_basename}.phased.withref.eagle.bcf' if ref_vcf_chrom_file else \
                             f'{vcf_basename}.phased.eagle.bcf'
 
-                        # check if file exists to avoid re-doing things
-                        if hl.hadoop_exists(out_phased_filename):
+                        if hl.hadoop_exists(f'{phased_vcf_out_dir}/{out_phased_filename}'):
                             continue
                         else:
                             eagle_phasing(b=phasing, vcf_file=file, ref_vcf_file=ref_vcf_chrom_file, reference=reference,
@@ -232,7 +229,7 @@ def run_phase(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
                             f'{vcf_basename}.phased.shapeit.bcf'
 
                         # check if file exists to avoid re-doing things
-                        if hl.hadoop_exists(out_phased_filename):
+                        if hl.hadoop_exists(f'{phased_vcf_out_dir}/{out_phased_filename}'):
                             continue
                         else:
                             shapeit_phasing(b=phasing, vcf_file=file, ref_vcf_file=ref_vcf_chrom_file,
