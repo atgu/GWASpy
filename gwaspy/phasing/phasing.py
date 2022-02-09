@@ -51,7 +51,7 @@ def haplotype_phasing(input_vcfs: str = None,
     if run.lower() == 'concat':
         from gwaspy.phasing.concat_vcfs import run_concat
         run_concat(backend=backend, input_vcfs=input_vcfs, output_type=output_type, reference=reference,
-                   out_dir=out_dir)
+                   software=software, out_dir=out_dir)
 
 
 def main():

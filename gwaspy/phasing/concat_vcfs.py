@@ -13,6 +13,7 @@ def concat_vcfs(b: hb.batch.Batch,
                 vcf_basename: str = None,
                 vcfs_to_merge: List = None,
                 output_type: str = 'bcf',
+                software: str = None,
                 chrom: str = None,
                 docker_img: str = 'docker.io/lindonkambule/gwaspy:v1',
                 cpu: int = 8,
@@ -25,10 +26,10 @@ def concat_vcfs(b: hb.batch.Batch,
     vcfs_sizes_sum = 0
     merge_vcf_i = ''
 
-    out_filename = f'{vcf_basename}.{chrom}.phased.bcf' if output_type == 'bcf' else \
-        f'{vcf_basename}.{chrom}.phased.vcf.gz'
-    out_index_name = f'{vcf_basename}.{chrom}.phased.bcf.csi' if output_type == 'bcf' else \
-        f'{vcf_basename}.{chrom}.phased.vcf.gz.csi'
+    out_filename = f'{vcf_basename}.{chrom}.phased.{software}.bcf' if output_type == 'bcf' else \
+        f'{vcf_basename}.{chrom}.phased.{software}.vcf.gz'
+    out_index_name = f'{vcf_basename}.{chrom}.phased.{software}.bcf.csi' if output_type == 'bcf' else \
+        f'{vcf_basename}.{chrom}.phased.{software}.vcf.gz.csi'
 
     for line in vcfs_to_merge:
         vcfs_sizes_sum += 1 + bytes_to_gb(line)
@@ -71,6 +72,7 @@ def run_concat(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
                input_vcfs: str = None,
                output_type: str = 'bcf',
                reference: str = 'GRCh38',
+               software: str = None,
                out_dir: str = None):
 
     concat_b = hb.Batch(backend=backend, name=f'concat-phased-chunks')
@@ -85,7 +87,10 @@ def run_concat(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
         vcf = row[0]
         vcf_filebase = get_vcf_filebase(vcf)
 
-        imputed_vcfs_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_scatter/*.bcf')
+        if software == 'shapeit':
+            imputed_vcfs_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_scatter/*.shapeit.bcf')
+        else:
+            imputed_vcfs_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_scatter/*.eagle.bcf')
 
         for i in range(1, 24):
             if reference == 'GRCh38':
@@ -114,7 +119,15 @@ def run_concat(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
             from gwaspy.utils.natural_sort import natural_keys
             chrom_phased_files_to_concat.sort(key=natural_keys)
 
-            concat_vcfs(b=concat_b, vcfs_to_merge=chrom_phased_files_to_concat, vcf_basename=vcf_filebase,
-                        output_type=output_type, chrom=out_chrom_name, out_dir=out_dir)
+            # checkpoint to see if file already exists to avoid redoing things
+            chrom_out_filename = f'{vcf_filebase}.{out_chrom_name}.phased.{software}.bcf' if output_type == 'bcf' else \
+                f'{vcf_filebase}.{out_chrom_name}.phased.{software}.vcf.gz'
+            chrom_out_filname_path = f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_merged/{chrom_out_filename}'
+
+            if hl.hadoop_exists(chrom_out_filname_path):
+                continue
+            else:
+                concat_vcfs(b=concat_b, vcfs_to_merge=chrom_phased_files_to_concat, vcf_basename=vcf_filebase,
+                            output_type=output_type, software=software, chrom=out_chrom_name, out_dir=out_dir)
 
     concat_b.run()
