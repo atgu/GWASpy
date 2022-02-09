@@ -88,9 +88,9 @@ def run_concat(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
         vcf_filebase = get_vcf_filebase(vcf)
 
         if software == 'shapeit':
-            imputed_vcfs_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_scatter/*.shapeit.bcf')
+            phased_vcf_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_scatter/*.shapeit.bcf')
         else:
-            imputed_vcfs_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_scatter/*.eagle.bcf')
+            phased_vcf_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_scatter/*.eagle.bcf')
 
         for i in range(1, 24):
             if reference == 'GRCh38':
@@ -106,7 +106,7 @@ def run_concat(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
 
             chrom_phased_files_to_concat = []
 
-            for file in imputed_vcfs_chunks:
+            for file in phased_vcf_chunks:
                 f = file['path']
                 vcf_basename = get_vcf_filebase(f)
                 file_index = int(vcf_basename.split('.')[-3])
