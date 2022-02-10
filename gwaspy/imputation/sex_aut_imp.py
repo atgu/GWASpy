@@ -62,7 +62,6 @@ def sex_impute(b: hb.batch.Batch,
                females_list: hb.ResourceFile = None,
                ref: hb.ResourceGroup = None,
                region: str = None,
-               chromosome: str = None,
                buffer: int = 250,
                storage: int = None,
                memory: str = None,
@@ -361,11 +360,13 @@ def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
                females_file: str = None,
                n_samples: int = None,
                n_panel_samples: int = 4099,
+               phasing_software: str = None,
                memory: str = 'highmem',
                buffer_region: int = 250,
                out_dir: str = None):
 
-    print('RUNNING IMPUTATION')
+    global phased_bcf
+    print(f'RUNNING IMPUTATION ON FILES PHASED WITH {phasing_software.upper()}')
     impute_b = hb.Batch(backend=backend, name=f'impute-phased-chunks')
 
     vcf_paths = pd.read_csv(input_vcfs, sep='\t', header=None)
@@ -410,7 +411,10 @@ def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
         vcf = row[0]
         vcf_filebase = get_vcf_filebase(vcf)
 
-        phased_vcfs_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_scatter/*.bcf')
+        if phasing_software == 'shapeit':
+            phased_vcfs_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_scatter/*.shapeit.bcf')
+        else:
+            phased_vcfs_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_scatter/*.eagle.bcf')
 
         for i in range(1, 24):
             if i == 23:
@@ -423,7 +427,13 @@ def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
             ref = impute_b.read_input_group(**{'bcf': ref_bcf,
                                                'bcf.csi': f'{ref_bcf}.csi'})
 
-            phased_bcf = f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_merged/{vcf_filebase}.{chrom}.phased.bcf'
+            # output is not always bcf
+            phased_filename = f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_merged/{vcf_filebase}.{chrom}.phased.{phasing_software}'
+            if hl.hadoop_exists(f'{phased_filename}.bcf'):
+                phased_bcf = f'{phased_filename}.bcf'
+            elif hl.hadoop_exists(f'{phased_filename}.vcf.gz'):
+                phased_bcf = f'{phased_filename}.vcf.gz'
+
             in_vcf = impute_b.read_input_group(**{'bcf': phased_bcf,
                                                   'bcf.csi': f'{phased_bcf}.csi'})
             vcf_size = bytes_to_gb(vcf)
@@ -439,17 +449,26 @@ def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
                 file_region = regions_dict[file_index]
                 map_chrom = file_region.split(':')[0]
 
-                if map_chrom == chrom:
-                    if chrom == 'chrX':
-                        females_in = impute_b.read_input(females_file)
+                imp_out_filename = f'{vcf_basename}.imputed.bcf'
+                file_dir = vcf_basename.split('.')[0]
+                output_filepath_name = f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{imp_out_filename}'
 
-                        sex_impute(b=impute_b, vcf=in_vcf, females_list=females_in, vcf_filename_no_ext=vcf_basename,
-                                   ref=ref, region=file_region, chromosome=chrom, buffer=buffer_region,
-                                   storage=disk_size, memory=job_memory, cpu=job_cpu, out_dir=out_dir)
+                if map_chrom == chrom:
+                    # check if imputed file already exists
+                    if hl.hadoop_exists(output_filepath_name):
+                        continue
+
                     else:
-                        aut_impute(b=impute_b, vcf=in_vcf, vcf_filename_no_ext=vcf_basename, ref=ref,
-                                   region=file_region, chromosome=chrom, buffer=buffer_region, storage=disk_size,
-                                   memory=job_memory, cpu=job_cpu, out_dir=out_dir)
+                        if chrom == 'chrX':
+                            females_in = impute_b.read_input(females_file)
+
+                            sex_impute(b=impute_b, vcf=in_vcf, females_list=females_in, vcf_filename_no_ext=vcf_basename,
+                                       ref=ref, region=file_region, buffer=buffer_region,
+                                       storage=disk_size, memory=job_memory, cpu=job_cpu, out_dir=out_dir)
+                        else:
+                            aut_impute(b=impute_b, vcf=in_vcf, vcf_filename_no_ext=vcf_basename, ref=ref,
+                                       region=file_region, chromosome=chrom, buffer=buffer_region, storage=disk_size,
+                                       memory=job_memory, cpu=job_cpu, out_dir=out_dir)
 
     impute_b.run()
 

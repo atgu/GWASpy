@@ -10,9 +10,9 @@ def genotype_imputation(input_vcfs: str = None,
                         n_samples: int = None,
                         n_panel_samples: int = 4099,
                         buffer_region: int = 250,
+                        phasing_software: str = None,
                         local: bool = False,
                         billing_project: str = None,
-                        bucket: str = None,
                         memory: str = 'highmem',
                         cpu: int = 16,
                         run: str = 'impute',
@@ -41,13 +41,14 @@ def genotype_imputation(input_vcfs: str = None,
         backend = hb.LocalBackend()
     else:
         backend = hb.ServiceBackend(billing_project=billing_project,
-                                    bucket=bucket)
+                                    remote_tmpdir=f'{out_dir}/tmp/')
 
     # impute genotypes
     if run.lower() == 'impute':
         from gwaspy.imputation.sex_aut_imp import run_impute
         run_impute(backend=backend, input_vcfs=input_vcfs, females_file=females_file, n_samples=n_samples,
-                   n_panel_samples=n_panel_samples, memory=memory, buffer_region=buffer_region, out_dir=out_dir)
+                   n_panel_samples=n_panel_samples, phasing_software=phasing_software, memory=memory,
+                   buffer_region=buffer_region, out_dir=out_dir)
 
     # Concatenate imputed chunks
     if run.lower() == 'concat':
@@ -62,7 +63,7 @@ def main():
     parser.add_argument('--samples-file', type=str, required=True)
     parser.add_argument('--local', action='store_true')
     parser.add_argument('--billing-project', required=True)
-    parser.add_argument('--bucket', required=True)
+    parser.add_argument('--phasing-software', type=str, default='shapeit', choices=['eagle', 'shapeit'])
     parser.add_argument('--memory', type=str, default='highmem', choices=['lowmem', 'standard', 'highmem'])
     parser.add_argument('--cpu-concat', type=int, default=16)
     parser.add_argument('--n-samples', type=int, required=True)
@@ -74,8 +75,8 @@ def main():
     args = parser.parse_args()
 
     genotype_imputation(input_vcfs=args.input_vcfs, females_file=args.samples_file, n_samples=args.n_samples,
-                        buffer_region=args.buffer_region, local=args.local, billing_project=args.billing_project,
-                        bucket=args.bucket, memory=args.memory, cpu=args.cpu_concat, run=args.run,
+                        buffer_region=args.buffer_region, phasing_software=args.phasing_software, local=args.local,
+                        billing_project=args.billing_project, memory=args.memory, cpu=args.cpu_concat, run=args.run,
                         output_type=args.out_type, out_dir=args.out_dir)
 
 
