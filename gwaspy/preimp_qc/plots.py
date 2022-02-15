@@ -96,8 +96,12 @@ def manhattan_plot(pvals, significance_threshold: float = -np.log10(5E-08), titl
 
     data = ht.to_pandas()
     data = data.drop('alleles', 1)  # remove the 'allele' column
-    data.columns = ['chromosome', 'position', 'p']  # rename columns
+    data['locus'] = data['locus'].astype(str)
+    data[['CHROM', 'POS']] = data.locus.str.split(":", expand=True)
+    data.columns = ['locus', 'p', 'chromosome', 'position'] # rename columns
+    data['position'] = data['position'].astype(int)
     data['chromosome'].replace({"X": 23, "Y": 24, "MT": 25}, inplace=True)
+    data['chromosome'] = data['chromosome'].astype(int)
     data.dropna(subset=['p'], inplace=True)  # drop NAs as log10(val) won't work
 
     data['-log10(p_value)'] = -np.log10(data['p'])  # compute log10(pvals)
