@@ -62,6 +62,7 @@ def read_infile(
     else:
         mt = read_mt(dirname, basename)
 
-    mt = add_sample_annotations(mt, annotations)
+    if annotations:
+        mt = add_sample_annotations(mt, annotations)
 
     return mt
