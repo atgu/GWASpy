@@ -33,6 +33,7 @@ def assign_population_pcs(
     :rtype: DataFrame, RandomForestClassifier
     """
 
+    print(f'{num_pcs} PCs to be used in population assignment')
     # Expand PC column
     pc_cols = ['PC{}'.format(i + 1) for i in range(num_pcs)]
     train_data = pop_pc_pd.loc[~pop_pc_pd[known_col].isnull()]
