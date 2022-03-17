@@ -5,7 +5,7 @@ import hail as hl
 
 
 def pca(
-        ref_dirname: str = 'gs://hgdp-1kg/hgdp_tgp/ds_without_outliers/',
+        ref_dirname: str = 'gs://hgdp-1kg/hgdp_tgp/datasets_for_others/lindo/ds_without_outliers/',
         ref_basename: str = 'unrelated',
         ref_info: str = 'gs://hgdp-1kg/hgdp_tgp/gwaspy_pca_ref/hgdp_1kg_sample_info.unrelateds.pca_outliers_removed.tsv',
         reference: str = 'GRCh38', pca_type: str = None,
@@ -46,7 +46,7 @@ def pca(
 def main():
     parser = argparse.ArgumentParser()
     # reference args
-    parser.add_argument('--ref-dirname', default='gs://hgdp-1kg/hgdp_tgp/ds_without_outliers/')
+    parser.add_argument('--ref-dirname', default='gs://hgdp-1kg/hgdp_tgp/datasets_for_others/lindo/ds_without_outliers/')
     parser.add_argument('--ref-basename', default='unrelated')
     parser.add_argument('--ref-info', default='gs://hgdp-1kg/hgdp_tgp/gwaspy_pca_ref/hgdp_1kg_sample_info.unrelateds.pca_outliers_removed.tsv')
     parser.add_argument('--reference', type=str, default='GRCh38')
