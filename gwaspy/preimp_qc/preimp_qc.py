@@ -188,6 +188,8 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
             if i == key:
                 print(key, ': ', value)
 
+    mt.write(f'{output_directory}ally_debug.mt')
+
     if report:
         fstat_fig = fhet_sex(pre_row_filter='pre_geno', fstat_x=fstat_x, fstat_y=fstat_y, figsize=(15, 20)).plot(mt)
         fstat_fig.savefig('gwaspy_tmp/gwaspy_fstat_fig.png', dpi=300)
