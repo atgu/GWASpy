@@ -344,7 +344,7 @@ class hwe_con(BaseFilter):
 
         mt = mt.annotate_rows(**{
             'hwe_con': hl.struct(
-                filters=(row_filter != True) & (hl.agg.filter(((pre_filter == False) & (mt.is_case == False)),
+                filters=(row_filter != True) & (hl.agg.filter(((pre_filter == False) & (mt.is_case == False) & (mt.should_include_in_hwe == True)),
                                                               variant_qc_aggregator(
                                                                   mt).p_value_hwe) < self._hwe_th_co))})
 
@@ -370,7 +370,7 @@ class hwe_cas(BaseFilter):
 
         mt = mt.annotate_rows(**{
             'hwe_cas': hl.struct(
-                filters=((row_filter == False) & (hl.agg.filter(((pre_filter == False) & (mt.is_case == True)),
+                filters=((row_filter == False) & (hl.agg.filter(((pre_filter == False) & (mt.is_case == True) & (mt.should_include_in_hwe == True)),
                                                                 variant_qc_aggregator(
                                                                     mt).p_value_hwe) < self._hwe_th_ca)))})
 
@@ -396,7 +396,7 @@ class hwe_all(BaseFilter):
 
         mt = mt.annotate_rows(**{
             'hwe_all': hl.struct(
-                filters=((row_filter == False) & (hl.agg.filter((pre_filter == False),
+                filters=((row_filter == False) & (hl.agg.filter(((pre_filter == False) & (mt.should_include_in_hwe == True)),
                                                                 variant_qc_aggregator(
                                                                     mt).p_value_hwe) < self._hwe_th_all)))})
 

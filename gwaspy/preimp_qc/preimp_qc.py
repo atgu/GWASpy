@@ -126,6 +126,15 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
     mt = geno(pre_row_filter='pre_geno', pre_col_filter='id_pass', geno_thresh=geno_thresh, data_type=data_type).filter(mt)
     mt = invariant(pre_col_filter='id_pass').filter(mt)
 
+    # for HWE, markers in: (1) autosomes - include males+females; (2) chrX - include ONLY females; (3) exclude chrY
+    mt = mt.annotate_entries(
+        should_include_in_hwe=(hl.case()
+                               .when(mt.locus.contig == "X", mt.is_female)
+                               .when(mt.locus.contig == "Y", False)
+                               .default(True)
+                               )
+    )
+
     if 'is_case' in mt.col:
         mt = call_rate_diff(pre_row_filter='geno', pre_col_filter='id_pass', initial_row_filter='pre_geno',
                             cr_thresh=cr_diff_thresh).filter(mt)
