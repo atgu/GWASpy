@@ -128,11 +128,16 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
 
     # for HWE, markers in: (1) autosomes - include males+females; (2) chrX - include ONLY females; (3) exclude chrY
     mt = mt.annotate_entries(
-        should_include_in_hwe=(hl.case()
-                               .when(mt.locus.contig == "X", mt.is_female)
-                               .when(mt.locus.contig == "Y", False)
-                               .default(True)
-                               )
+        hwe_aut=(hl.case()
+                 .when(mt.locus.contig == "X", False)
+                 .when(mt.locus.contig == "Y", False)
+                 .default(True)
+                 ),
+        hwe_sex=(hl.case()
+                 .when(mt.locus.contig == "X", mt.is_female)
+                 .when(mt.locus.contig == "Y", False)
+                 .default(False)
+                 )
     )
 
     if 'is_case' in mt.col:

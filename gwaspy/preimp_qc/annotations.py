@@ -343,10 +343,25 @@ class hwe_con(BaseFilter):
         pre_filter = row_filter | col_filter
 
         mt = mt.annotate_rows(**{
+            'hwe_con_aut': hl.struct(
+                filters=((row_filter == False) &
+                         (hl.agg.filter(((pre_filter == False) &
+                                         (mt.is_case == False) &
+                                         (mt.hwe_aut == True)),
+                                        variant_qc_aggregator(mt).p_value_hwe) < self._hwe_th_co))),
+            'hwe_con_sex': hl.struct(
+                filters=((row_filter == False) &
+                         (hl.agg.filter(((pre_filter == False) &
+                                         (mt.is_case == False) &
+                                         (mt.hwe_sex == True)),
+                                        variant_qc_aggregator(mt).p_value_hwe) < self._hwe_th_co)))
+        })
+
+        mt = mt.annotate_rows(**{
             'hwe_con': hl.struct(
-                filters=(row_filter != True) & (hl.agg.filter(((pre_filter == False) & (mt.is_case == False) & (mt.should_include_in_hwe == True)),
-                                                              variant_qc_aggregator(
-                                                                  mt).p_value_hwe) < self._hwe_th_co))})
+                filters=((hl.agg.any(mt['hwe_con_aut'].filters) == True) |
+                         (hl.agg.any(mt['hwe_con_sex'].filters) == True))
+            )})
 
         return mt
 
@@ -369,10 +384,25 @@ class hwe_cas(BaseFilter):
         pre_filter = row_filter | col_filter
 
         mt = mt.annotate_rows(**{
+            'hwe_cas_aut': hl.struct(
+                filters=((row_filter == False) &
+                         (hl.agg.filter(((pre_filter == False) &
+                                         (mt.is_case == True) &
+                                         (mt.hwe_aut == True)),
+                                        variant_qc_aggregator(mt).p_value_hwe) < self._hwe_th_ca))),
+            'hwe_cas_sex': hl.struct(
+                filters=((row_filter == False) &
+                         (hl.agg.filter(((pre_filter == False) &
+                                         (mt.is_case == True) &
+                                         (mt.hwe_sex == True)),
+                                        variant_qc_aggregator(mt).p_value_hwe) < self._hwe_th_ca)))
+        })
+
+        mt = mt.annotate_rows(**{
             'hwe_cas': hl.struct(
-                filters=((row_filter == False) & (hl.agg.filter(((pre_filter == False) & (mt.is_case == True) & (mt.should_include_in_hwe == True)),
-                                                                variant_qc_aggregator(
-                                                                    mt).p_value_hwe) < self._hwe_th_ca)))})
+                filters=((hl.agg.any(mt['hwe_cas_aut'].filters) == True) |
+                         (hl.agg.any(mt['hwe_cas_sex'].filters) == True))
+            )})
 
         return mt
 
@@ -395,10 +425,23 @@ class hwe_all(BaseFilter):
         pre_filter = row_filter | col_filter
 
         mt = mt.annotate_rows(**{
+            'hwe_all_aut': hl.struct(
+                filters=((row_filter == False) &
+                         (hl.agg.filter(((pre_filter == False) &
+                                         (mt.hwe_aut == True)),
+                                        variant_qc_aggregator(mt).p_value_hwe) < self._hwe_th_all))),
+            'hwe_all_sex': hl.struct(
+                filters=((row_filter == False) &
+                         (hl.agg.filter(((pre_filter == False) &
+                                         (mt.hwe_sex == True)),
+                                        variant_qc_aggregator(mt).p_value_hwe) < self._hwe_th_all)))
+        })
+
+        mt = mt.annotate_rows(**{
             'hwe_all': hl.struct(
-                filters=((row_filter == False) & (hl.agg.filter(((pre_filter == False) & (mt.should_include_in_hwe == True)),
-                                                                variant_qc_aggregator(
-                                                                    mt).p_value_hwe) < self._hwe_th_all)))})
+                filters=((hl.agg.any(mt['hwe_all_aut'].filters) == True) |
+                         (hl.agg.any(mt['hwe_all_sex'].filters) == True))
+            )})
 
         return mt
 
