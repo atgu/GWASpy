@@ -110,6 +110,18 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
     else:
         data_type = 'no-pheno'
 
+    # we need to compute call rate for chr1-23 and chrY separately since females have no chrY
+    mt = mt.annotate_entries(
+        geno_y_excluded=(hl.case()
+                         .when(mt.locus.contig == "Y", False)
+                         .default(True)
+                         ),
+        geno_y_only=(hl.case()
+                     .when(mt.locus.contig == "Y", mt.is_female == False)
+                     .default(False)
+                     )
+    )
+
     mt = pre_geno(pre_geno_cr=pre_geno_thresh).filter(mt)
     mt = id_call_rate(mind=mind_thresh, pre_row_filter='pre_geno').filter(mt)
 
@@ -135,7 +147,6 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
                  ),
         hwe_sex=(hl.case()
                  .when(mt.locus.contig == "X", mt.is_female)
-                 .when(mt.locus.contig == "Y", False)
                  .default(False)
                  )
     )

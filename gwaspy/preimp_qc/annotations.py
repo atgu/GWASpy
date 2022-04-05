@@ -31,9 +31,18 @@ class pre_geno(BaseFilter):
         pre_filter = row_filter | col_filter
 
         mt = mt.annotate_rows(**{
-            'pre_geno': hl.struct(
-                filters=hl.agg.filter(pre_filter == False,
+            'pre_geno_noy': hl.struct(
+                filters=hl.agg.filter(((pre_filter == False) & (mt.geno_y_excluded == True)),
+                                      variant_qc_aggregator(mt).call_rate) < self._pre_geno_cr),
+            'pre_geno_y': hl.struct(
+                filters=hl.agg.filter(((pre_filter == False) & (mt.geno_y_only == True)),
                                       variant_qc_aggregator(mt).call_rate) < self._pre_geno_cr)})
+
+        mt = mt.annotate_rows(**{
+            'pre_geno': hl.struct(
+                filters=((hl.agg.any(mt['pre_geno_noy'].filters) == True) |
+                         (hl.agg.any(mt['pre_geno_y'].filters) == True))
+            )})
 
         return mt
 
@@ -219,9 +228,18 @@ class geno(BaseFilter):
         pre_filter = row_filter | col_filter
 
         mt = mt.annotate_rows(**{
-            'geno': hl.struct(
-                filters=hl.agg.filter(pre_filter == False,
+            'geno_noy': hl.struct(
+                filters=hl.agg.filter(((pre_filter == False) & (mt.geno_y_excluded == True)),
+                                      variant_qc_aggregator(mt).call_rate) < self._geno),
+            'geno_y': hl.struct(
+                filters=hl.agg.filter(((pre_filter == False) & (mt.geno_y_only == True)),
                                       variant_qc_aggregator(mt).call_rate) < self._geno)})
+
+        mt = mt.annotate_rows(**{
+            'geno': hl.struct(
+                filters=((hl.agg.any(mt['geno_noy'].filters) == True) |
+                         (hl.agg.any(mt['geno_y'].filters) == True))
+            )})
 
         return mt
 
