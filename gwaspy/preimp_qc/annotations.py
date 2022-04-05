@@ -197,14 +197,27 @@ class fhet_sex_warnings(BaseFilter):
 
         pre_filter = row_filter | col_filter
 
+        # sex warnings are for ambiguous genotypes (F_male < 0.8, F_female > 0.2) and undefined phenotypes
         mt = mt.annotate_cols(**{
-            'sex_warnings': hl.struct(
+            'sex_ambiguous': hl.struct(
                 filters=hl.agg.filter(pre_filter == False,
                                       ((hl.agg.filter(mt.is_female == True,
                                                       impute_sex_aggregator(mt.GT, mt.aaf).f_stat)) > self._fstat_y) |
                                       ((hl.agg.filter(mt.is_female == False,
                                                       impute_sex_aggregator(mt.GT, mt.aaf).f_stat)) < self._fstat_x))
             )})
+
+        if 'is_case' in mt.col:
+            mt = mt.annotate_cols(**{
+                'sex_warnings': hl.struct(
+                    filters=((hl.agg.any(mt['sex_ambiguous'].filters) == True) |
+                             (hl.agg.any(hl.is_missing(mt.is_case)))
+                             ))})
+        else:
+            mt = mt.annotate_cols(**{
+                'sex_warnings': hl.struct(
+                    filters=((hl.agg.any(mt['sex_ambiguous'].filters) == True)
+                             ))})
 
         return mt
 
