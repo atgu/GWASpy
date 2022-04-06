@@ -143,6 +143,7 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
         hwe_aut=(hl.case()
                  .when(mt.locus.contig == "X", False)
                  .when(mt.locus.contig == "Y", False)
+                 .when(mt.locus.contig == "MT", False)
                  .default(True)
                  ),
         hwe_sex=(hl.case()
