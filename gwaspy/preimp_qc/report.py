@@ -28,14 +28,14 @@ class MyDocument(Document):
                    ['Case-Control ratio Post-QC', cas_con_ratio, 0.0625, 0.0278, 0, 'green'],
                    ['Number of IDs lost ratio', nids_lost, 0.01, 0.1, 0, 'green'],
                    ['Number of IDs with no Phenotype Post-QC', pos_qc_counts['is_case_counts']['unknown'], 0, 10, 0, 'green'],
-                   ['Ratio of IDs that failed sex checks', nids_sex_check, 0.005, 0.0025, 0, 'green'],
+                   ['Ratio of IDs that failed sex checks', nids_sex_check, 0.005, 0.025, 0, 'green'],
                    ['Lambda GC Post-QC', lambda_gc, 1.1, 1.2, 0, 'green'],
                    ['Number of Significant GWAS hits Post-QC', sig_vars, 0, 1, 0, 'green']]
 
         else:
             tbl = [['Number of SNPs Post-QC', pos_qc_counts['n_variants'], 250000, 200000, 0, 'green'],
                    ['Number of IDs lost ratio', nids_lost, 0.01, 0.1, 0, 'green'],
-                   ['Ratio of IDs that failed sex checks', nids_sex_check, 0.005, 0.0025, 0, 'green']]
+                   ['Ratio of IDs that failed sex checks', nids_sex_check, 0.005, 0.025, 0, 'green']]
 
         for i in tbl:
             if (i[0] == 'Number of SNPs Post-QC') | (i[0] == 'Number of Cases Post-QC') |\
