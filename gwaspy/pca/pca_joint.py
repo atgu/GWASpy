@@ -98,7 +98,7 @@ def plot_pca_joint(joint_scores: pd.DataFrame = None, x_pc: str = None, y_pc: st
 def run_pca_joint(
         ref_dirname: str = 'gs://hgdp-1kg/hgdp_tgp/datasets_for_others/lindo/ds_without_outliers/',
         ref_basename: str = 'unrelated',
-        ref_info: str = 'gs://hgdp-1kg/hgdp_tgp/gwaspy_pca_ref/hgdp_1kg_sample_info.unrelateds.pca_outliers_removed.tsv',
+        ref_info: str = 'gs://hgdp-1kg/hgdp_tgp/gwaspy_pca_ref/hgdp_1kg_sample_info.unrelateds.pca_outliers_removed.with_project.tsv',
         data_dirname: str = None,
         data_basename: str = None,
         out_dir: str = None,
