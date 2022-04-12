@@ -3,9 +3,7 @@ __author__ = 'Lindo Nkambule'
 import hail as hl
 import pandas as pd
 from gwaspy.pca.pca_filter_snps import pca_filter_mt, relatedness_check
-import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
-from matplotlib.backends.backend_pdf import PdfPages
+import plotly.express as px
 
 
 def pc_project(
@@ -124,40 +122,25 @@ def merge_data_with_ref(
 
 def plot_pca_ref(data_scores, ref_scores, ref_info, x_pc, y_pc):
     pcs = pd.read_table(data_scores, header=0, sep='\t')
+    pcs['Project'] = "Input Dataset"
+    pcs = pcs[['s', 'pop', 'Project', x_pc, y_pc]]
+
     ref = pd.read_table(ref_scores, header=0, sep='\t', compression='gzip')
     ref_info = pd.read_table(ref_info, header=0, sep='\t')
 
     ref_info.rename(columns={'Sample': 's'}, inplace=True)
     ref_update = pd.merge(ref, ref_info, how='left', on=['s'])
-    # only take s, PC1-20, and POP columns
-    ref_update = ref_update.iloc[:, 0:22]
+    ref_update.rename(columns={'SuperPop': 'pop'}, inplace=True)
+    ref_update = ref_update[['s', 'pop', 'Project', x_pc, y_pc]]
 
-    cbPalette = {'AFR': "#984EA3", 'EAS': "#4DAF4A", 'EUR': "#377EB8", 'CSA': "#FF7F00", 'AMR': "#E41A1C",
-                 'MID': "#A65628", 'OCE': "#999999", 'oth': "#F0E442"}
+    # concatenate the two dfs together
+    concatenated = pd.concat([ref_update, pcs], axis=0)
 
-    # PLOT
-    fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(15, 15))
-
-    # get population counts so we can add them to legend
-    handles = []
-    pop_counts = (pcs['pop'].value_counts(sort=True)).to_dict()
-
-    for key in cbPalette:
-        # if the key is not in the dict, add it
-        if key not in pop_counts:
-            pop_counts[key] = 0
-        # manually define a new patch
-        data_key = Line2D([0], [0], marker='o', color='w', label='{} (n={})'.format(key, pop_counts.get(key)),
-                          markerfacecolor=cbPalette[key], markersize=10)
-        handles.append(data_key)
-
-    axs.scatter(ref_update[x_pc], ref_update[y_pc], c=ref_update['SuperPop'].map(cbPalette), s=5, alpha=0.1)
-
-    axs.scatter(pcs[x_pc], pcs[y_pc], c=pcs['pop'].map(cbPalette), s=5, alpha=1)
-    axs.set_xlabel(xlabel=x_pc, fontsize=15)
-    axs.set_ylabel(ylabel=y_pc, fontsize=15)
-    fig.legend(handles=handles, title='Populations', loc='right', frameon=False)
-    plt.close()
+    fig = px.scatter(concatenated, x=x_pc, y=y_pc, color='pop',
+                     hover_data=[x_pc, y_pc, 'pop', 'Project'],
+                     color_discrete_map={'AFR': "#984EA3", 'EAS': "#4DAF4A", 'EUR': "#377EB8", 'CSA': "#FF7F00",
+                                         'AMR': "#E41A1C", 'MID': "#A65628", 'OCE': "#999999",
+                                         'oth': "#F0E442"}).update_traces(marker_size=4)
 
     return fig
 
@@ -256,20 +239,20 @@ def run_pca_project(
     data_scores_prob = f'{out_dir}GWASpy/PCA/pca_project/pca_sup_pops_{prob_threshold}_probs.project.pca.txt'
 
     figs_dict = {}
-    for i in range(1, npcs, 2):
+    # plotting more than 10 PCA plots in HTML generates wobbly, large files
+    for i in range(1, 10, 2):
         xpc = f'PC{i}'
         ypc = f'PC{i + 1}'
-
         figs_dict["fig{}{}".format(xpc, ypc)] = plot_pca_ref(data_scores=data_scores_prob,
                                                              ref_scores=ref_scores,
                                                              ref_info=ref_info,
                                                              x_pc=xpc, y_pc=ypc)
-    pdf = PdfPages('/tmp/pca.project.plots.pdf')
-    for figname, figure in figs_dict.items():
-        pdf.savefig(figure)
-    pdf.close()
-    hl.hadoop_copy('file:///tmp/pca.project.plots.pdf',
-                   f'{out_dir}GWASpy/PCA/pca_project/{data_basename}.pca.project.plots.pdf')
+    with open('/tmp/pca.project.plots.html', 'a') as f:
+        for figname, figure in figs_dict.items():
+            f.write(figure.to_html(include_plotlyjs='cdn'))
+
+    hl.hadoop_copy('file:///tmp/pca.project.plots.html',
+                   f'{out_dir}GWASpy/PCA/pca_project/{data_basename}.pca.project.plots.html')
 
 
 
