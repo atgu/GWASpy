@@ -87,7 +87,7 @@ def plot_pca_joint(joint_scores: pd.DataFrame = None, x_pc: str = None, y_pc: st
     concatenated = pd.concat([ref, data], axis=0)
 
     fig = px.scatter(concatenated, x=x_pc, y=y_pc, color='pop',
-                     hover_data=[x_pc, y_pc, 'pop', 'Project'],
+                     hover_data=['s', x_pc, y_pc, 'pop', 'Project'],
                      color_discrete_map={'AFR': "#984EA3", 'EAS': "#4DAF4A", 'EUR': "#377EB8", 'CSA': "#FF7F00",
                                          'AMR': "#E41A1C", 'MID': "#A65628", 'OCE': "#999999",
                                          'oth': "#F0E442"}).update_traces(marker_size=4)
