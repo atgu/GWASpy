@@ -48,7 +48,7 @@ def joint_pca(
 
     pca_scores = pca_scores.transmute(**{f'PC{i}': pca_scores.scores[i - 1] for i in range(1, npcs+1)})
     print(f'\nExporting PCA scores to {out_dir}')
-    pca_scores.export(f'{out_dir}GWASpy/PCA/pca_joint/{data_basename}.1kg_hgdp.joint.pca.scores.txt.bgz')
+    pca_scores.export(f'{out_dir}GWASpy/PCA/{data_basename}/pca_joint/{data_basename}.1kg_hgdp.joint.pca.scores.txt.bgz')
 
 
 def add_ref_superpop_labels(joint_scores: str = None, ref_info: str = None) -> pd.DataFrame:
@@ -156,7 +156,7 @@ def run_pca_joint(
     joint_pca(ref_dirname=ref_dirname, ref_basename=ref_basename, in_mt=data_mt, data_basename=data_basename, npcs=npcs,
               out_dir=out_dir)
 
-    scores_without_pop_label = f'{out_dir}GWASpy/PCA/pca_joint/{data_basename}.1kg_hgdp.joint.pca.scores.txt.bgz'
+    scores_without_pop_label = f'{out_dir}GWASpy/PCA/{data_basename}/pca_joint/{data_basename}.1kg_hgdp.joint.pca.scores.txt.bgz'
     scores_with_pop_label_df = add_ref_superpop_labels(joint_scores=scores_without_pop_label, ref_info=ref_info)
 
     from gwaspy.pca.assign_pop_labels import assign_population_pcs
@@ -168,7 +168,7 @@ def run_pca_joint(
                                                                                                       range(1, npcs+1)]
     data_pops_df = data_pops[cols]
 
-    data_pops_df.to_csv(f'{out_dir}GWASpy/PCA/pca_joint/pca_sup_pops_{prob_threshold}_probs.joint.pca.txt',
+    data_pops_df.to_csv(f'{out_dir}GWASpy/PCA/{data_basename}/pca_joint/pca_sup_pops_{prob_threshold}_probs.joint.pca.txt',
                         sep='\t', index=False)
 
     print('\nGenerating PCA plots')
@@ -186,5 +186,5 @@ def run_pca_joint(
             f.write(figure.to_html(include_plotlyjs='cdn'))
 
     hl.hadoop_copy('file:///tmp/joint.pca.plots.html',
-                   f'{out_dir}GWASpy/PCA/pca_joint/{data_basename}.joint.pca.plots.html')
+                   f'{out_dir}GWASpy/PCA/{data_basename}/pca_joint/{data_basename}.joint.pca.plots.html')
 
