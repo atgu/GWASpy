@@ -70,7 +70,7 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
               export_type: str = 'hail', out_dir: str = None, reference: str = 'GRCh38'):
     print('\nRunning QC')
 
-    global mt, row_filters, filters, data_type, lambda_gc_pos, lambda_gc_pre, n_sig_var_pre, n_sig_var_pos, man_table_results
+    global mt, row_filters, filters, data_type, lambda_gc_pos, lambda_gc_pre, n_sig_var_pre, n_sig_var_pos, man_table_results, remove_fields
 
     # create temp directory for storing temp files
     if not os.path.exists('gwaspy_tmp'):
@@ -110,14 +110,20 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
     else:
         data_type = 'no-pheno'
 
+    chroms = mt.aggregate_rows(hl.agg.collect_as_set(mt.locus.contig))
+    if ('chrX' or 'chrY' or 'chrMT') in chroms:
+        chromx, chromy, chrommt = 'chrX', 'chrY', 'chrMT'
+    else:
+        chromx, chromy, chrommt = 'X', 'Y', 'MT'
+
     # we need to compute call rate for chr1-23 and chrY separately since females have no chrY
     mt = mt.annotate_entries(
         geno_y_excluded=(hl.case()
-                         .when(mt.locus.contig == "Y", False)
+                         .when(mt.locus.contig == chromy, False)
                          .default(True)
                          ),
         geno_y_only=(hl.case()
-                     .when(mt.locus.contig == "Y", mt.is_female == False)
+                     .when(mt.locus.contig == chromy, mt.is_female == False)
                      .default(False)
                      )
     )
@@ -141,13 +147,13 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
     # for HWE, markers in: (1) autosomes - include males+females; (2) chrX - include ONLY females; (3) exclude chrY
     mt = mt.annotate_entries(
         hwe_aut=(hl.case()
-                 .when(mt.locus.contig == "X", False)
-                 .when(mt.locus.contig == "Y", False)
-                 .when(mt.locus.contig == "MT", False)
+                 .when(mt.locus.contig == chromx, False)
+                 .when(mt.locus.contig == chromy, False)
+                 .when(mt.locus.contig == chrommt, False)
                  .default(True)
                  ),
         hwe_sex=(hl.case()
-                 .when(mt.locus.contig == "X", mt.is_female)
+                 .when(mt.locus.contig == chromx, mt.is_female)
                  .default(False)
                  )
     )
@@ -164,6 +170,7 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
             row_filters = ['pre_geno', 'geno', 'cr_diff', 'monomorphic_var', 'hwe_cas']
             filters = ['pre_geno', 'mind', 'fstat', 'sex_violations', 'sex_warnings', 'geno', 'cr_diff',
                        'monomorphic_var', 'hwe_cas']
+            remove_fields = ['cr', 'diff', 'hwe_cas_aut', 'hwe_cas_sex']
         # (b) Control-Only
         elif data_type == 'Control-only':
             print("\n" + data_type)
@@ -171,6 +178,7 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
             row_filters = ['pre_geno', 'geno', 'cr_diff', 'monomorphic_var', 'hwe_con']
             filters = ['pre_geno', 'mind', 'fstat', 'sex_violations', 'sex_warnings', 'geno', 'cr_diff',
                        'monomorphic_var', 'hwe_con']
+            remove_fields = ['cr', 'diff', 'hwe_con_aut', 'hwe_con_sex']
         elif data_type == 'Case-Control':
             print("\n" + data_type)
             mt = hwe_cas(pre_col_filter='id_pass', pre_row_filter='geno', hwe_th_ca=hwe_th_cas_thresh).filter(mt)
@@ -178,6 +186,7 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
             row_filters = ['pre_geno', 'geno', 'cr_diff', 'monomorphic_var', 'hwe_con', 'hwe_cas']
             filters = ['pre_geno', 'mind', 'fstat', 'sex_violations', 'sex_warnings', 'geno', 'cr_diff',
                        'monomorphic_var', 'hwe_con', 'hwe_cas']
+            remove_fields = ['cr', 'diff', 'hwe_cas_aut', 'hwe_cas_sex', 'hwe_con_aut', 'hwe_con_sex']
         else:
             # trio data
             print(data_type)
@@ -187,6 +196,7 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
         row_filters = ['pre_geno', 'geno', 'monomorphic_var', 'hwe_all']
         filters = ['pre_geno', 'mind', 'fstat', 'sex_violations', 'sex_warnings', 'geno',
                    'monomorphic_var', 'hwe_all']
+        remove_fields = ['hwe_all_aut', 'hwe_all_sex']
 
     results = {}
     column_filters = ['mind', 'fstat', 'sex_violations', 'sex_warnings']
@@ -248,9 +258,14 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
     for col in column_filters:
         mt = mt.filter_cols(mt[col].filters == True, keep=False)
 
-    # mt.repartition(100).write(f'{output_directory}{basename}.filtered.mt', overwrite=True)
-    # mt_filtered = hl.read_matrix_table(f'{output_directory}{basename}.filtered.mt')
     mt_filtered, pos_qc_counts = summary_stats(mt)
+
+    # drop entry fields we added as they will cause errors when exporting to VCF
+    # e.g. Error summary: HailException: Invalid type for format field 'geno_y_excluded'. Found 'bool'.
+    drop_fields = filters + ['geno_y_excluded', 'geno_y_only', 'pre_geno_noy', 'pre_geno_y', 'hwe_aut', 'hwe_sex',
+                             'exclude_col', 'exclude_row', 'variant_qc', 'aaf', 'geno_noy', 'geno_y', 'sex_ambiguous',
+                             'id_pass'] + remove_fields
+    mt_filtered = mt_filtered.drop(*drop_fields)
 
     if 'is_case' in mt.col:
         gwas_pos, n_sig_var_pos = manhattan(qqtitle='Post-QC QQ Plot', mantitle='Post-QC Manhattan Plot').filter(mt)
