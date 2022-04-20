@@ -168,7 +168,7 @@ def run_phase(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
     if vcf_ref_path:
         if vcf_ref_path == 'hgdp_1kg':
             print('RUNNING PHASING WITH HGDP + 1000 GENOMES REFERENCE PANEL\n')
-            ref_path = 'gs://hgdp-1kg/hgdp_tgp_phasing/vcf/hgdp.tgp.gwaspy.merged.chrCNUMBER.merged.bcf'
+            ref_path = 'gs://gcp-public-data--gnomad/resources/hgdp_1kg/phased_haplotypes/hgdp.tgp.gwaspy.merged.chrCNUMBER.merged.bcf'
         else:
             print('RUNNING PHASING WITH USER-DEFINED REFERENCE PANEL\n')
             ref_path = vcf_ref_path
