@@ -14,6 +14,7 @@ def create_windows_bed(reference: str = 'GRCh38',
                        overlap_size_cm: float = 2.0,
                        out_dir: str = None):
     print('creating BED file with overlapping windows to be used in splitting the input VCF')
+    maps_path = 'https://storage.googleapis.com/broad-alkesgroup-public/Eagle/downloads/tables'
     if reference == 'GRCh38':
         chrom_lens = {'chr1': 248956422, 'chr2': 242193529, 'chr3': 198295559, 'chr4': 190214555, 'chr5': 181538259,
                       'chr6': 170805979, 'chr7': 159345973, 'chr8': 145138636, 'chr9': 248956422, 'chr10': 242193529,
@@ -21,7 +22,7 @@ def create_windows_bed(reference: str = 'GRCh38',
                       'chr15': 159345973, 'chr16': 145138636, 'chr17': 248956422, 'chr18': 242193529,
                       'chr19': 198295559, 'chr20': 190214555, 'chr21': 181538259, 'chr22': 170805979, 'chrX': 159345973}
 
-        df_map = pd.read_csv('gs://african-seq-data/GWASpy/maps/genetic_map_hg38_withX.txt.gz', delim_whitespace=True,
+        df_map = pd.read_csv(f'{maps_path}/genetic_map_hg38_withX.txt.gz', delim_whitespace=True,
                              compression='gzip', header=0, names=['CHR', 'POS', 'RATE', 'CM'])
     else:
         chrom_lens = {'1': 249250621, '2': 243199373, '3': 198022430, '4': 191154276, '5': 180915260, '6': 171115067,
@@ -29,7 +30,7 @@ def create_windows_bed(reference: str = 'GRCh38',
                       '13': 115169878, '14': 107349540, '15': 102531392, '16': 90354753, '17': 81195210, '18': 78077248,
                       '19': 59128983, '20': 63025520, '21': 48129895, '22': 51304566, '23': 155270560}
 
-        df_map = pd.read_csv('gs://african-seq-data/GWASpy/maps/genetic_map_hg19_withX.txt.gz', delim_whitespace=True,
+        df_map = pd.read_csv(f'{maps_path}/genetic_map_hg19_withX.txt.gz', delim_whitespace=True,
                              compression='gzip', header=0, names=['CHR', 'POS', 'RATE', 'CM'])
     df_out = {}
 
