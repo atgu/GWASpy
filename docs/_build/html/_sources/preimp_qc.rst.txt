@@ -49,8 +49,10 @@ Arguments and options
      - Input type. Options: [:code:`hail`, :code:`plink`, :code:`vcf`]
    * - :code:`--export-type`
      - Export type. Options: [:code:`hail`, :code:`plink`, :code:`vcf`]
+   * - :code:`--out-dir`
+     - Directory path to where output files are going to be saved
    * - :code:`--annotations`
-     - Annotations file to be used for annotating<br>the VCF file (ONLY for VCF input)
+     - Annotations file to be used for annotating sample with information such as Sex and Phenotype
    * - :code:`--reference`
      - Reference genome build. Default is GRCh38. Options: [:code:`GRCh37`, :code:`GRCh38`]
    * - :code:`--report`

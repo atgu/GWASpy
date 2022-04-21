@@ -127,46 +127,49 @@ of the filters applied when QC’ing input data:</p>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--export-type</span></code></p></td>
 <td><p>Export type. Options: [<code class="code docutils literal notranslate"><span class="pre">hail</span></code>, <code class="code docutils literal notranslate"><span class="pre">plink</span></code>, <code class="code docutils literal notranslate"><span class="pre">vcf</span></code>]</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--annotations</span></code></p></td>
-<td><p>Annotations file to be used for annotating&lt;br&gt;the VCF file (ONLY for VCF input)</p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--out-dir</span></code></p></td>
+<td><p>Directory path to where output files are going to be saved</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--reference</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--annotations</span></code></p></td>
+<td><p>Annotations file to be used for annotating sample with information such as Sex and Phenotype</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--reference</span></code></p></td>
 <td><p>Reference genome build. Default is GRCh38. Options: [<code class="code docutils literal notranslate"><span class="pre">GRCh37</span></code>, <code class="code docutils literal notranslate"><span class="pre">GRCh38</span></code>]</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--report</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--report</span></code></p></td>
 <td><p>Generate a QC PDF report or not. Default is True</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--pre-geno</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--pre-geno</span></code></p></td>
 <td><p>include only SNPs with missing-rate &lt; NUM (before ID filter), important for post merge of multiple platforms</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--mind</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--mind</span></code></p></td>
 <td><p>include only IDs with missing-rate &lt; NUM</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--fhet-aut</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--fhet-aut</span></code></p></td>
 <td><p>include only IDs within NUM &lt; FHET &lt; NUM</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--fstat-y</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--fstat-y</span></code></p></td>
 <td><p>include only female IDs with fhet &lt; NUM</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--fstat-x</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--fstat-x</span></code></p></td>
 <td><p>include only male IDs with fhet &gt; NUM</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--geno</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--geno</span></code></p></td>
 <td><p>include only SNPs with missing-rate &lt; NUM</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--midi</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--midi</span></code></p></td>
 <td><p>include only SNPs with missing-rate-difference (case/control) &lt; NUM</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--withpna</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--withpna</span></code></p></td>
 <td><p>include monomorphic (invariant) SNPs</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--maf</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--maf</span></code></p></td>
 <td><p>include only SNPs with MAF &gt;= NUM</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--hwe-th-con</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--hwe-th-con</span></code></p></td>
 <td><p>HWE_controls &lt; NUM</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--hwe-th-cas</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--hwe-th-cas</span></code></p></td>
 <td><p>HWE_cases &lt; NUM</p></td>
 </tr>
 </tbody>

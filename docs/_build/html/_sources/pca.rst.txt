@@ -5,13 +5,14 @@ Principal Component Analysis
 ============================
 
 Principal components analysis (PCA) can be used to detect and quantify the genetic structure of populations.
-In GWASpy, the :code:`pca` module can be run in two different ways: (1) without a reference panel; and (2) with a reference panel.
+In GWASpy, the :code:`pca` module can be run in 3 different ways: (1) normal PCA without a reference panel; (2) joint PCA; or (3) Projection PCA.
 
 .. toctree::
    :maxdepth: 1
 
-        PCA without a reference panel <pca/without_ref.rst>
-        PCA with a reference panel <pca/with_ref.rst>
+        Normal PCA <pca/normal.rst>
+        Joint PCA <pca/joint.rst>
+        Projection PCA <pca/project.rst>
 
 Arguments and options
 #####################
@@ -30,8 +31,8 @@ Arguments and options
      - Path to reference information. Tab-delimited file with sample IDs and their SuperPop labels
    * - :code:`--reference`
      - Genome reference build. Default is GRCh38. Options: [:code:`GRCh37`, :code:`GRCh38`]
-   * - :code:`--with-ref`
-     - Run PCA with or without reference. Default is without
+   * - :code:`--pca-type`
+     - Type of PCA to run. Default is normal. Options: [:code:`normal`, :code:`project`, :code:`joint`]
    * - :code:`--data-dirname`
      - Path to where the data is
    * - :code:`--data-basename`
@@ -48,6 +49,8 @@ Arguments and options
      - Squared correlation threshold (exclusive upper bound). Must be in the range [0.0, 1.0]. Default is 0.2
    * - :code:`--ld-window`
      - Window size in base pairs (inclusive upper bound). Default is 250000
+   * - :code:`--npcs`
+     - Number of PCs to use. Default is 20
    * - :code:`--relatedness-method`
      - Method to use for the inference of relatedness. Default is pc_relate. Options: [:code:`pc_relate`, :code:`ibd`, :code:`king`]
    * - :code:`--relatedness-thresh`

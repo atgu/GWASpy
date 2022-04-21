@@ -19,7 +19,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Running PCA without a reference" href="pca/without_ref.html" />
+    <link rel="next" title="Normal PCA (without a reference)" href="pca/normal.html" />
     <link rel="prev" title="Pre-Imputation Quality Control (QC)" href="preimp_qc.html" /> 
 </head>
 
@@ -42,8 +42,9 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="preimp_qc.html">Pre-Imputation QC</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Principal Component Analysis</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pca/without_ref.html">     PCA without a reference panel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pca/with_ref.html">     PCA with a reference panel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pca/normal.html">     Normal PCA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pca/joint.html">     Joint PCA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pca/project.html">     Projection PCA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#arguments-and-options">Arguments and options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#output">Output</a></li>
 </ul>
@@ -79,11 +80,12 @@
   <section id="principal-component-analysis">
 <span id="sec-pca"></span><h1>Principal Component Analysis<a class="headerlink" href="#principal-component-analysis" title="Permalink to this headline"></a></h1>
 <p>Principal components analysis (PCA) can be used to detect and quantify the genetic structure of populations.
-In GWASpy, the <code class="code docutils literal notranslate"><span class="pre">pca</span></code> module can be run in two different ways: (1) without a reference panel; and (2) with a reference panel.</p>
+In GWASpy, the <code class="code docutils literal notranslate"><span class="pre">pca</span></code> module can be run in 3 different ways: (1) normal PCA without a reference panel; (2) joint PCA; or (3) Projection PCA.</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="pca/without_ref.html">     PCA without a reference panel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pca/with_ref.html">     PCA with a reference panel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pca/normal.html">     Normal PCA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pca/joint.html">     Joint PCA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pca/project.html">     Projection PCA</a></li>
 </ul>
 </div>
 <section id="arguments-and-options">
@@ -111,8 +113,8 @@ In GWASpy, the <code class="code docutils literal notranslate"><span class="pre"
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--reference</span></code></p></td>
 <td><p>Genome reference build. Default is GRCh38. Options: [<code class="code docutils literal notranslate"><span class="pre">GRCh37</span></code>, <code class="code docutils literal notranslate"><span class="pre">GRCh38</span></code>]</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--with-ref</span></code></p></td>
-<td><p>Run PCA with or without reference. Default is without</p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--pca-type</span></code></p></td>
+<td><p>Type of PCA to run. Default is normal. Options: [<code class="code docutils literal notranslate"><span class="pre">normal</span></code>, <code class="code docutils literal notranslate"><span class="pre">project</span></code>, <code class="code docutils literal notranslate"><span class="pre">joint</span></code>]</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--data-dirname</span></code></p></td>
 <td><p>Path to where the data is</p></td>
@@ -138,16 +140,19 @@ In GWASpy, the <code class="code docutils literal notranslate"><span class="pre"
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--ld-window</span></code></p></td>
 <td><p>Window size in base pairs (inclusive upper bound). Default is 250000</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--relatedness-method</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--npcs</span></code></p></td>
+<td><p>Number of PCs to use. Default is 20</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--relatedness-method</span></code></p></td>
 <td><p>Method to use for the inference of relatedness. Default is pc_relate. Options: [<code class="code docutils literal notranslate"><span class="pre">pc_relate</span></code>, <code class="code docutils literal notranslate"><span class="pre">ibd</span></code>, <code class="code docutils literal notranslate"><span class="pre">king</span></code>]</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--relatedness-thresh</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--relatedness-thresh</span></code></p></td>
 <td><p>Threshold value to use in relatedness checks. Default is 0.98</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--prob</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--prob</span></code></p></td>
 <td><p>Minimum probability of belonging to a given population for the population to be set. Default is 0.8</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--out-dir</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--out-dir</span></code></p></td>
 <td><p>Path to where output files will be saved</p></td>
 </tr>
 </tbody>
@@ -165,7 +170,7 @@ graphical visualizations of the PCs are generated.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="preimp_qc.html" class="btn btn-neutral float-left" title="Pre-Imputation Quality Control (QC)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="pca/without_ref.html" class="btn btn-neutral float-right" title="Running PCA without a reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="pca/normal.html" class="btn btn-neutral float-right" title="Normal PCA (without a reference)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
