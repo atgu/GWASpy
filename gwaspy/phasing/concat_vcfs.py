@@ -64,70 +64,67 @@ def concat_vcfs(b: hb.batch.Batch,
 
     concat.command(f'mv {out_filename} {concat.ofile}')
     concat.command(f'mv {out_index_name} {concat.idx}')
-    b.write_output(concat.ofile, f'{out_dir}/GWASpy/Phasing/{vcf_basename}/phased_merged/{out_filename}')
-    b.write_output(concat.idx, f'{out_dir}/GWASpy/Phasing/{vcf_basename}/phased_merged/{out_index_name}')
+    b.write_output(concat.ofile, f'{out_dir}/GWASpy/{vcf_basename}/Phasing/phased_merged/{out_filename}')
+    b.write_output(concat.idx, f'{out_dir}/GWASpy/{vcf_basename}/Phasing/phased_merged/{out_index_name}')
 
 
 def run_concat(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
-               input_vcfs: str = None,
+               input_vcf: str = None,
                output_type: str = 'bcf',
                reference: str = 'GRCh38',
                software: str = None,
                out_dir: str = None):
 
-    concat_b = hb.Batch(backend=backend, name=f'concat-phased-chunks')
-
-    vcf_paths = pd.read_csv(input_vcfs, sep='\t', header=None)
+    print(f'\n3. CONCAT {input_vcf}\n')
+    vcf_filebase = get_vcf_filebase(input_vcf)
 
     # get the regions so we can map each file to its specific region
-    regions = pd.read_csv(f'{out_dir}/GWASpy/Phasing/regions.lines', sep='\t', names=['reg', 'ind'])
+    regions = pd.read_csv(f'{out_dir}/GWASpy/{vcf_filebase}/Phasing/regions.lines', sep='\t', names=['reg', 'ind'])
     regions_dict = pd.Series(regions.reg.values, index=regions.ind).to_dict()
 
-    for index, row in vcf_paths.iterrows():
-        vcf = row[0]
-        vcf_filebase = get_vcf_filebase(vcf)
+    concat_b = hb.Batch(backend=backend, name=f'concat-phased-chunks-{vcf_filebase}')
 
-        if software == 'shapeit':
-            phased_vcf_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_scatter/*.shapeit.bcf')
+    if software == 'shapeit':
+        phased_vcf_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/{vcf_filebase}/Phasing/phased_scatter/*.shapeit.bcf')
+    else:
+        phased_vcf_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/{vcf_filebase}/Phasing/phased_scatter/*.eagle.bcf')
+
+    for i in range(1, 24):
+        if reference == 'GRCh38':
+            if i == 23:
+                chrom = 'chrX'
+            else:
+                chrom = f'chr{i}'
+
+            out_chrom_name = chrom
         else:
-            phased_vcf_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_scatter/*.eagle.bcf')
+            chrom = str(i)
+            out_chrom_name = f'chr{chrom}'
 
-        for i in range(1, 24):
-            if reference == 'GRCh38':
-                if i == 23:
-                    chrom = 'chrX'
-                else:
-                    chrom = f'chr{i}'
+        chrom_phased_files_to_concat = []
 
-                out_chrom_name = chrom
-            else:
-                chrom = str(i)
-                out_chrom_name = f'chr{chrom}'
+        for file in phased_vcf_chunks:
+            f = file['path']
+            vcf_basename = get_vcf_filebase(f)
+            file_index = int(vcf_basename.split('.')[-3])
+            file_region = regions_dict[file_index]
+            map_chrom = file_region.split(':')[0]
+            if map_chrom == chrom:
+                chrom_phased_files_to_concat.append(f)
 
-            chrom_phased_files_to_concat = []
+        # naturally sort the list of files to merge
+        from gwaspy.utils.natural_sort import natural_keys
+        chrom_phased_files_to_concat.sort(key=natural_keys)
 
-            for file in phased_vcf_chunks:
-                f = file['path']
-                vcf_basename = get_vcf_filebase(f)
-                file_index = int(vcf_basename.split('.')[-3])
-                file_region = regions_dict[file_index]
-                map_chrom = file_region.split(':')[0]
-                if map_chrom == chrom:
-                    chrom_phased_files_to_concat.append(f)
+        # checkpoint to see if file already exists to avoid redoing things
+        chrom_out_filename = f'{vcf_filebase}.{out_chrom_name}.phased.{software}.bcf' if output_type == 'bcf' else \
+            f'{vcf_filebase}.{out_chrom_name}.phased.{software}.vcf.gz'
+        chrom_out_filname_path = f'{out_dir}/GWASpy/{vcf_filebase}/Phasing/phased_merged/{chrom_out_filename}'
 
-            # naturally sort the list of files to merge
-            from gwaspy.utils.natural_sort import natural_keys
-            chrom_phased_files_to_concat.sort(key=natural_keys)
-
-            # checkpoint to see if file already exists to avoid redoing things
-            chrom_out_filename = f'{vcf_filebase}.{out_chrom_name}.phased.{software}.bcf' if output_type == 'bcf' else \
-                f'{vcf_filebase}.{out_chrom_name}.phased.{software}.vcf.gz'
-            chrom_out_filname_path = f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_merged/{chrom_out_filename}'
-
-            if hl.hadoop_exists(chrom_out_filname_path):
-                continue
-            else:
-                concat_vcfs(b=concat_b, vcfs_to_merge=chrom_phased_files_to_concat, vcf_basename=vcf_filebase,
-                            output_type=output_type, software=software, chrom=out_chrom_name, out_dir=out_dir)
+        if hl.hadoop_exists(chrom_out_filname_path):
+            continue
+        else:
+            concat_vcfs(b=concat_b, vcfs_to_merge=chrom_phased_files_to_concat, vcf_basename=vcf_filebase,
+                        output_type=output_type, software=software, chrom=out_chrom_name, out_dir=out_dir)
 
     concat_b.run()

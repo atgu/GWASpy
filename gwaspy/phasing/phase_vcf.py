@@ -29,7 +29,7 @@ def eagle_phasing(b: hb.batch.Batch,
 
     map_file = '/opt/genetic_map_hg38_withX.txt.gz' if reference == 'GRCh38' else '/opt/genetic_map_hg19_withX.txt.gz'
 
-    phase = b.new_job(name=output_file_name)
+    phase = b.new_job(name=f'phase-{vcf_file}')
     phase.cpu(cpu)
     phase.memory(mem)
     phase.storage(f'{disk_size}Gi')
@@ -70,8 +70,6 @@ def eagle_phasing(b: hb.batch.Batch,
     b.write_output(phase.ofile, f'{out_dir}/{output_file_name}.bcf')
     b.write_output(phase.csi, f'{out_dir}/{output_file_name}.bcf.csi')
 
-    return phase
-
 
 def shapeit_phasing(b: hb.batch.Batch,
                     vcf_file: str = None,
@@ -103,7 +101,7 @@ def shapeit_phasing(b: hb.batch.Batch,
     map_file = f'/shapeit4/maps/b38/{chrom}.b38.gmap.gz' if reference == 'GRCh38'\
         else f'/shapeit4/maps/b37/{chrom}.b37.gmap.gz'
 
-    phase = b.new_job(name=output_file_name)
+    phase = b.new_job(name=f'phase-{vcf_file}')
     phase.cpu(cpu)
     phase.memory(mem)
     phase.storage(f'{disk_size}Gi')
@@ -146,7 +144,7 @@ def shapeit_phasing(b: hb.batch.Batch,
 
 
 def run_phase(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
-              input_vcfs: str = None,
+              input_vcf: str = None,
               vcf_ref_path: str = None,
               software: str = 'shapeit',
               reference: str = 'GRCh38',
@@ -155,44 +153,41 @@ def run_phase(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
               out_dir: str = None):
 
     # error handling
-    global ref_path
+    global ref_path, ref_chr, chrom
     if software.lower() not in ['eagle', 'shapeit']:
         raise SystemExit(f'Incorrect software {software} selected. Options are [eagle, shapeit]')
 
     if reference not in ['GRCh37', 'GRCh38']:
         raise SystemExit(f'Incorrect reference genome build {reference} selected. Options are [GRCh37, GRCh38]')
 
-    phasing = hb.Batch(backend=backend,
-                       name=f'haplotype-phasing-{software}')
+    vcf_filebase = get_vcf_filebase(input_vcf)
+    phasing_b = hb.Batch(backend=backend,
+                         name=f'phasing-{vcf_filebase}-{software}')
 
     if vcf_ref_path:
         if vcf_ref_path == 'hgdp_1kg':
-            print('RUNNING PHASING WITH HGDP + 1000 GENOMES REFERENCE PANEL\n')
+            print(f'\n2. PHASING {input_vcf} WITH HGDP + 1000 GENOMES REFERENCE PANEL\n')
             ref_path = 'gs://gcp-public-data--gnomad/resources/hgdp_1kg/phased_haplotypes/hgdp.tgp.gwaspy.merged.chrCNUMBER.merged.bcf'
         else:
-            print('RUNNING PHASING WITH USER-DEFINED REFERENCE PANEL\n')
+            print(f'\n2. PHASING {input_vcf} WITH USER-DEFINED REFERENCE PANEL\n')
             ref_path = vcf_ref_path
     else:
-        print('RUNNING PHASING WITHOUT A REFERENCE PANEL\n')
-
-    vcf_paths = pd.read_csv(input_vcfs, sep='\t', header=None)
+        print(f'\n2. PHASING {input_vcf} WITHOUT A REFERENCE PANEL\n')
 
     # get the regions so we can map each file to its specific region
-    regions = pd.read_csv(f'{out_dir}/GWASpy/Phasing/regions.lines', sep='\t', names=['reg', 'ind'])
+    regions = pd.read_csv(f'{out_dir}/GWASpy/{vcf_filebase}/Phasing/regions.lines', sep='\t', names=['reg', 'ind'])
     regions_dict = pd.Series(regions.reg.values, index=regions.ind).to_dict()
 
-    for index, row in vcf_paths.iterrows():
-        vcf = row[0]
-        vcf_filebase = get_vcf_filebase(vcf)
-        scatter_vcfs_paths = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/scatter_vcfs/*.bcf')
+    scatter_vcfs_paths = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/{vcf_filebase}/Phasing/scatter_vcfs/*.bcf')
 
-        vcfs = []
-        for i in scatter_vcfs_paths:
-            vcfs.append(i['path'])
+    vcfs = []
+    for i in scatter_vcfs_paths:
+        vcfs.append(i['path'])
 
-        phased_vcf_out_dir = f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_scatter'
+    phased_vcf_out_dir = f'{out_dir}/GWASpy/{vcf_filebase}/Phasing/phased_scatter'
 
-        for i in range(1, 24):
+    for i in range(1, 24):
+        if reference == 'GRCh38':
             if i == 23:
                 chrom = 'chrX'
                 ref_chr = 'X'
@@ -200,41 +195,46 @@ def run_phase(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
                 chrom = f'chr{i}'
                 ref_chr = i
 
-            ref_chrom_path = ref_path.replace('CNUMBER', str(ref_chr)) if vcf_ref_path else None
-            ref_vcf_chrom_file = phasing.read_input(ref_chrom_path) if vcf_ref_path else None
-            ref_vcf_chrom_file_size = bytes_to_gb(ref_chrom_path) if vcf_ref_path else None
+        else:
+            chrom = str(i)
+            ref_chr = i
 
-            for file in vcfs:
-                # get specific region for file using regions.line file
-                vcf_basename = get_vcf_filebase(file)
-                file_index = int(vcf_basename.split('.')[-1])
-                file_region = regions_dict[file_index]
-                map_chrom = file_region.split(':')[0]
+        ref_chrom_path = ref_path.replace('CNUMBER', str(ref_chr)) if vcf_ref_path else None
+        ref_vcf_chrom_file = phasing_b.read_input(ref_chrom_path) if vcf_ref_path else None
+        ref_vcf_chrom_file_size = bytes_to_gb(ref_chrom_path) if vcf_ref_path else None
 
-                if map_chrom == chrom:
-                    if software == 'eagle':
-                        # check if file exists to avoid re-doing things
-                        out_phased_filename = f'{vcf_basename}.phased.withref.eagle.bcf' if ref_vcf_chrom_file else \
-                            f'{vcf_basename}.phased.eagle.bcf'
+        for file in vcfs:
+            # get specific region for file using regions.line file
+            vcf_basename = get_vcf_filebase(file)
+            file_index = int(vcf_basename.split('.')[-1])
+            file_region = regions_dict[file_index]
+            map_chrom = file_region.split(':')[0]
 
-                        if hl.hadoop_exists(f'{phased_vcf_out_dir}/{out_phased_filename}'):
-                            continue
-                        else:
-                            eagle_phasing(b=phasing, vcf_file=file, ref_vcf_file=ref_vcf_chrom_file, reference=reference,
-                                          ref_size=ref_vcf_chrom_file_size, cpu=cpu, threads=threads,
-                                          out_dir=phased_vcf_out_dir)
+            if map_chrom == chrom:
+                if software == 'eagle':
+                    # check if file exists to avoid re-doing things
+                    out_phased_filename = f'{vcf_basename}.phased.withref.eagle.bcf' if ref_vcf_chrom_file else \
+                        f'{vcf_basename}.phased.eagle.bcf'
 
+                    if hl.hadoop_exists(f'{phased_vcf_out_dir}/{out_phased_filename}'):
+                        continue
                     else:
-                        out_phased_filename = f'{vcf_basename}.phased.withref.shapeit.bcf' if ref_vcf_chrom_file else \
-                            f'{vcf_basename}.phased.shapeit.bcf'
+                        eagle_phasing(b=phasing_b, vcf_file=file, ref_vcf_file=ref_vcf_chrom_file,
+                                      reference=reference, ref_size=ref_vcf_chrom_file_size, cpu=cpu, threads=threads,
+                                      out_dir=phased_vcf_out_dir)
 
-                        # check if file exists to avoid re-doing things
-                        if hl.hadoop_exists(f'{phased_vcf_out_dir}/{out_phased_filename}'):
-                            continue
-                        else:
-                            shapeit_phasing(b=phasing, vcf_file=file, ref_vcf_file=ref_vcf_chrom_file,
-                                            ref_size=ref_vcf_chrom_file_size, reference=reference, region=file_region,
-                                            map_chromosome=map_chrom, cpu=cpu, threads=threads, out_dir=phased_vcf_out_dir)
+                else:
+                    out_phased_filename = f'{vcf_basename}.phased.withref.shapeit.bcf' if ref_vcf_chrom_file else \
+                        f'{vcf_basename}.phased.shapeit.bcf'
 
-    phasing.run()
+                    # check if file exists to avoid re-doing things
+                    if hl.hadoop_exists(f'{phased_vcf_out_dir}/{out_phased_filename}'):
+                        continue
+                    else:
+                        shapeit_phasing(b=phasing_b, vcf_file=file, ref_vcf_file=ref_vcf_chrom_file,
+                                        ref_size=ref_vcf_chrom_file_size, reference=reference, region=file_region,
+                                        map_chromosome=map_chrom, cpu=cpu, threads=threads, out_dir=phased_vcf_out_dir)
+
+    phasing_b.run()
+
 

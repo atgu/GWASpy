@@ -12,6 +12,7 @@ from typing import Union
 def create_windows_bed(reference: str = 'GRCh38',
                        max_win_size_cm: float = 10.0,
                        overlap_size_cm: float = 2.0,
+                       vcf_filebase: str = None,
                        out_dir: str = None):
     print('creating BED file with overlapping windows to be used in splitting the input VCF')
     maps_path = 'https://storage.googleapis.com/broad-alkesgroup-public/Eagle/downloads/tables'
@@ -51,7 +52,7 @@ def create_windows_bed(reference: str = 'GRCh38',
 
     df = pd.concat([df_out[fai_chr] for fai_chr in chrom_lens.keys()])
 
-    df[['CHR', 'BEG', 'END']].to_csv(f'{out_dir}/GWASpy/Phasing/gwaspy.refscatter.bed', sep='\t', header=False,
+    df[['CHR', 'BEG', 'END']].to_csv(f'{out_dir}/GWASpy/{vcf_filebase}/Phasing/refscatter.bed', sep='\t', header=False,
                                      index=False)
 
 
@@ -82,7 +83,6 @@ def vcf_scatter(b: hb.batch.Batch,
 
     # work out if file is BCF or VCF
     vcf_basename = ntpath.basename(vcf_file)
-    print(vcf_file, vcf_basename)
     if '.vcf' in pathlib.Path(vcf_basename).suffixes:
         cmd = f'''
             set -euo pipefail
@@ -133,30 +133,33 @@ def vcf_scatter(b: hb.batch.Batch,
 
     scatter.command(f'mv vcfs {scatter.vcfs}')
     scatter.command(f'mv regions.lines {scatter.regions}')
-    b.write_output(scatter.vcfs, f'{out_dir}/GWASpy/Phasing/{vcf_filename_no_ext}/scatter_vcfs')
-    b.write_output(scatter.regions, f'{out_dir}/GWASpy/Phasing/regions.lines')
+    b.write_output(scatter.vcfs, f'{out_dir}/GWASpy/{vcf_filename_no_ext}/Phasing/scatter_vcfs')
+    b.write_output(scatter.regions, f'{out_dir}/GWASpy/{vcf_filename_no_ext}/Phasing/regions.lines')
 
 
 def run_scatter(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
-                input_vcfs: str = None,
+                input_vcf: str = None,
                 reference: str = 'GRCh38',
                 max_win_size_cm: float = 10.0,
                 overlap_size_cm: float = 2.0,
                 scatter_memory: int = 26,
                 out_dir: str = None):
 
-    create_windows_bed(reference=reference, max_win_size_cm=max_win_size_cm, out_dir=out_dir,
+    print(f'\n1. SCATTER {input_vcf}\n')
+    vcf_filebase = get_vcf_filebase(input_vcf)
+
+    create_windows_bed(reference=reference, max_win_size_cm=max_win_size_cm, out_dir=out_dir, vcf_filebase=vcf_filebase,
                        overlap_size_cm=overlap_size_cm)
 
-    scatter_b = hb.Batch(backend=backend, name='scatter-vcf')
+    scatter_b = hb.Batch(backend=backend, name=f'scatter-{vcf_filebase}')
 
-    vcf_paths = pd.read_csv(input_vcfs, sep='\t', header=None)
-
-    for index, row in vcf_paths.iterrows():
-        vcf = row[0]
-
-        vcf_scatter(b=scatter_b, vcf_file=vcf, intervals_bed=f'{out_dir}/GWASpy/Phasing/gwaspy.refscatter.bed',
-                    memory=scatter_memory, out_dir=out_dir)
+    vcf_scatter(
+        b=scatter_b,
+        vcf_file=input_vcf,
+        intervals_bed=f'{out_dir}/GWASpy/{vcf_filebase}/Phasing/refscatter.bed',
+        memory=scatter_memory,
+        out_dir=out_dir
+    )
 
     scatter_b.run()
 
