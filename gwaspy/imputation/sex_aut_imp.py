@@ -52,8 +52,8 @@ def aut_impute(b: hb.batch.Batch,
 
     impute.command(f'mv {out_file_name} {impute.ofile}')
     impute.command(f'mv {out_file_name}.csi {impute.idx}')
-    b.write_output(impute.ofile, f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{out_file_name}')
-    b.write_output(impute.idx, f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{out_file_name}.csi')
+    b.write_output(impute.ofile, f'{out_dir}/GWASpy/{file_dir}/Imputation/imputed_chunks/{out_file_name}')
+    b.write_output(impute.idx, f'{out_dir}/GWASpy/{file_dir}/Imputation/imputed_chunks/{out_file_name}.csi')
 
 
 def sex_impute(b: hb.batch.Batch,
@@ -120,8 +120,8 @@ def sex_impute(b: hb.batch.Batch,
 
         impute.command(f'mv {out_file_name} {impute.ofile}')
         impute.command(f'mv {out_file_name}.csi {impute.idx}')
-        b.write_output(impute.ofile, f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{out_file_name}')
-        b.write_output(impute.idx, f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{out_file_name}.csi')
+        b.write_output(impute.ofile, f'{out_dir}/GWASpy/{file_dir}/Imputation/imputed_chunks/{out_file_name}')
+        b.write_output(impute.idx, f'{out_dir}/GWASpy/{file_dir}/Imputation/imputed_chunks/{out_file_name}.csi')
 
     # B. PAR2 REGION ONLY
     elif start >= 155701383:
@@ -156,8 +156,8 @@ def sex_impute(b: hb.batch.Batch,
 
         impute.command(f'mv {out_file_name} {impute.ofile}')
         impute.command(f'mv {out_file_name}.csi {impute.idx}')
-        b.write_output(impute.ofile, f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{out_file_name}')
-        b.write_output(impute.idx, f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{out_file_name}.csi')
+        b.write_output(impute.ofile, f'{out_dir}/GWASpy/{file_dir}/Imputation/imputed_chunks/{out_file_name}')
+        b.write_output(impute.idx, f'{out_dir}/GWASpy/{file_dir}/Imputation/imputed_chunks/{out_file_name}.csi')
 
     # C. NON-PAR REGION ONLY
     elif (start >= 2781479) & (end <= 155701382):
@@ -234,8 +234,8 @@ def sex_impute(b: hb.batch.Batch,
 
         impute.command(f'mv {out_file_name} {impute.ofile}')
         impute.command(f'mv {out_file_name}.csi {impute.idx}')
-        b.write_output(impute.ofile, f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{out_file_name}')
-        b.write_output(impute.idx, f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{out_file_name}.csi')
+        b.write_output(impute.ofile, f'{out_dir}/GWASpy/{file_dir}/Imputation/imputed_chunks/{out_file_name}')
+        b.write_output(impute.idx, f'{out_dir}/GWASpy/{file_dir}/Imputation/imputed_chunks/{out_file_name}.csi')
 
     # D. MIXED REGIONS
     else:
@@ -351,12 +351,12 @@ def sex_impute(b: hb.batch.Batch,
 
         impute.command(f'mv {out_file_name} {impute.ofile}')
         impute.command(f'mv {out_file_name}.csi {impute.idx}')
-        b.write_output(impute.ofile, f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{out_file_name}')
-        b.write_output(impute.idx, f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{out_file_name}.csi')
+        b.write_output(impute.ofile, f'{out_dir}/GWASpy/{file_dir}/Imputation/imputed_chunks/{out_file_name}')
+        b.write_output(impute.idx, f'{out_dir}/GWASpy/{file_dir}/Imputation/imputed_chunks/{out_file_name}.csi')
 
 
 def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
-               input_vcfs: str = None,
+               input_vcf: str = None,
                females_file: str = None,
                n_samples: int = None,
                n_panel_samples: int = 4099,
@@ -366,13 +366,13 @@ def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
                out_dir: str = None):
 
     global phased_bcf
-    print(f'RUNNING IMPUTATION ON FILES PHASED WITH {phasing_software.upper()}')
-    impute_b = hb.Batch(backend=backend, name=f'impute-phased-chunks')
+    print(f'\n1. IMPUTATION ON {input_vcf} PHASED CHUNKS\n')
+    vcf_filebase = get_vcf_filebase(input_vcf)
 
-    vcf_paths = pd.read_csv(input_vcfs, sep='\t', header=None)
+    impute_b = hb.Batch(backend=backend, name=f'impute-phased-chunks-{vcf_filebase}')
 
     # use regions file to update the regions for imputation so that there's no overlaps like in phasing
-    regions = pd.read_csv(f'{out_dir}/GWASpy/Phasing/gwaspy.refscatter.bed', delim_whitespace=True,
+    regions = pd.read_csv(f'{out_dir}/GWASpy/{vcf_filebase}/Phasing/refscatter.bed', delim_whitespace=True,
                           names=['chrom', 'start', 'end'])
     chroms_dfs = []
 
@@ -402,73 +402,69 @@ def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
 
     regions_to_import = pd.concat(chroms_dfs, axis=0)
     regions_to_import = regions_to_import.sort_values('ind')
-    regions_to_import.to_csv(f'{out_dir}/GWASpy/Imputation/imputation.regions', sep='\t', header=False,
+    regions_to_import.to_csv(f'{out_dir}/GWASpy/{vcf_filebase}/Imputation/imputation.regions', sep='\t', header=False,
                              index=False)
 
     regions_dict = pd.Series(regions_to_import.reg.values, index=regions_to_import.ind).to_dict()
 
-    for index, row in vcf_paths.iterrows():
-        vcf = row[0]
-        vcf_filebase = get_vcf_filebase(vcf)
+    if phasing_software == 'shapeit':
+        phased_vcfs_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/{vcf_filebase}/Phasing/phased_scatter/*.shapeit.bcf')
+    else:
+        phased_vcfs_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/{vcf_filebase}/Phasing/phased_scatter/*.eagle.bcf')
 
-        if phasing_software == 'shapeit':
-            phased_vcfs_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_scatter/*.shapeit.bcf')
+    for i in range(1, 24):
+        if i == 23:
+            chrom = 'chrX'
         else:
-            phased_vcfs_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_scatter/*.eagle.bcf')
+            chrom = f'chr{i}'
 
-        for i in range(1, 24):
-            if i == 23:
-                chrom = 'chrX'
-            else:
-                chrom = f'chr{i}'
+        ref_bcf = f'gs://gcp-public-data--gnomad/resources/hgdp_1kg/phased_haplotypes/hgdp.tgp.gwaspy.merged.{chrom}.merged.bcf'
+        ref_size = bytes_to_gb(ref_bcf)
+        ref = impute_b.read_input_group(**{'bcf': ref_bcf,
+                                           'bcf.csi': f'{ref_bcf}.csi'})
 
-            ref_bcf = f'gs://hgdp-1kg/hgdp_tgp_phasing/vcf/hgdp.tgp.gwaspy.merged.{chrom}.merged.bcf'
-            ref_size = bytes_to_gb(ref_bcf)
-            ref = impute_b.read_input_group(**{'bcf': ref_bcf,
-                                               'bcf.csi': f'{ref_bcf}.csi'})
+        # output is not always bcf
+        phased_filename = f'{out_dir}/GWASpy/{vcf_filebase}/Phasing/phased_merged/{vcf_filebase}.{chrom}.phased.{phasing_software}'
+        if hl.hadoop_exists(f'{phased_filename}.bcf'):
+            phased_bcf = f'{phased_filename}.bcf'
+        elif hl.hadoop_exists(f'{phased_filename}.vcf.gz'):
+            phased_bcf = f'{phased_filename}.vcf.gz'
 
-            # output is not always bcf
-            phased_filename = f'{out_dir}/GWASpy/Phasing/{vcf_filebase}/phased_merged/{vcf_filebase}.{chrom}.phased.{phasing_software}'
-            if hl.hadoop_exists(f'{phased_filename}.bcf'):
-                phased_bcf = f'{phased_filename}.bcf'
-            elif hl.hadoop_exists(f'{phased_filename}.vcf.gz'):
-                phased_bcf = f'{phased_filename}.vcf.gz'
+        in_vcf = impute_b.read_input_group(**{'bcf': phased_bcf,
+                                              'bcf.csi': f'{phased_bcf}.csi'})
+        vcf_size = bytes_to_gb(input_vcf)
 
-            in_vcf = impute_b.read_input_group(**{'bcf': phased_bcf,
-                                                  'bcf.csi': f'{phased_bcf}.csi'})
-            vcf_size = bytes_to_gb(vcf)
+        disk_size = int(round(10.0 + 3.0 * vcf_size + ((1.0 + 2.0 * n_samples/n_panel_samples) * ref_size)))
+        job_memory = memory
+        job_cpu = 16 if job_memory == 'highmem' else 8
 
-            disk_size = int(round(10.0 + 3.0 * vcf_size + ((1.0 + 2.0 * n_samples/n_panel_samples) * ref_size)))
-            job_memory = memory
-            job_cpu = 16 if job_memory == 'highmem' else 8
+        for file in phased_vcfs_chunks:
+            f = file['path']
+            vcf_basename = get_vcf_filebase(f)
+            file_index = int(vcf_basename.split('.')[-3])
+            file_region = regions_dict[file_index]
+            map_chrom = file_region.split(':')[0]
 
-            for file in phased_vcfs_chunks:
-                f = file['path']
-                vcf_basename = get_vcf_filebase(f)
-                file_index = int(vcf_basename.split('.')[-3])
-                file_region = regions_dict[file_index]
-                map_chrom = file_region.split(':')[0]
+            imp_out_filename = f'{vcf_basename}.imputed.bcf'
+            # file_dir = vcf_basename.split('.')[0]
+            output_filepath_name = f'{out_dir}/GWASpy/{vcf_filebase}/Imputation/imputed_chunks/{imp_out_filename}'
 
-                imp_out_filename = f'{vcf_basename}.imputed.bcf'
-                file_dir = vcf_basename.split('.')[0]
-                output_filepath_name = f'{out_dir}/GWASpy/Imputation/{file_dir}/imputed_chunks/{imp_out_filename}'
+            if map_chrom == chrom:
+                # check if imputed file already exists
+                if hl.hadoop_exists(output_filepath_name):
+                    continue
 
-                if map_chrom == chrom:
-                    # check if imputed file already exists
-                    if hl.hadoop_exists(output_filepath_name):
-                        continue
+                else:
+                    if chrom == 'chrX':
+                        females_in = impute_b.read_input(females_file)
 
+                        sex_impute(b=impute_b, vcf=in_vcf, females_list=females_in, vcf_filename_no_ext=vcf_basename,
+                                   ref=ref, region=file_region, buffer=buffer_region,
+                                   storage=disk_size, memory=job_memory, cpu=job_cpu, out_dir=out_dir)
                     else:
-                        if chrom == 'chrX':
-                            females_in = impute_b.read_input(females_file)
-
-                            sex_impute(b=impute_b, vcf=in_vcf, females_list=females_in, vcf_filename_no_ext=vcf_basename,
-                                       ref=ref, region=file_region, buffer=buffer_region,
-                                       storage=disk_size, memory=job_memory, cpu=job_cpu, out_dir=out_dir)
-                        else:
-                            aut_impute(b=impute_b, vcf=in_vcf, vcf_filename_no_ext=vcf_basename, ref=ref,
-                                       region=file_region, chromosome=chrom, buffer=buffer_region, storage=disk_size,
-                                       memory=job_memory, cpu=job_cpu, out_dir=out_dir)
+                        aut_impute(b=impute_b, vcf=in_vcf, vcf_filename_no_ext=vcf_basename, ref=ref,
+                                   region=file_region, chromosome=chrom, buffer=buffer_region, storage=disk_size,
+                                   memory=job_memory, cpu=job_cpu, out_dir=out_dir)
 
     impute_b.run()
 
