@@ -4,9 +4,9 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 classifiers = [
-    'Development Status :: 1 - Planning',
+    'Development Status :: 4 - Beta',
     'Environment :: Console',
-    'Intended Audience :: Science/Research'
+    'Intended Audience :: Science/Research',
     'License :: OSI Approved :: MIT License',
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3.2',
@@ -22,12 +22,13 @@ classifiers = [
     'Operating System :: MacOS'
 ]
 
-setup(name='GWASpy',
+setup(name='gwaspy',
       version='0.1.0',
       author='Lindokuhle Nkambule',
-      author_email='lnkambul (at) broadinstitute.org',
-      url='https://github.com/atgu/GWASpy',
-      description='GWASpy: A Python package for performing GWAS QC, PCA, and genotype imputation.',
+      author_email='lnkambul@broadinstitute.org',
+      url='https://gwaspy.readthedocs.io/',
+      project_urls={"GitHub": "https://github.com/atgu/GWASpy"},
+      description='GWASpy: A Python package for performing GWAS QC, PCA, phasing, and genotype imputation.',
       long_description=long_description,
       long_description_content_type="text/markdown",
       license='MIT',
@@ -42,6 +43,6 @@ setup(name='GWASpy',
       },
       classifiers=classifiers,
       keywords='',
-      install_requires=['hail', 'matplotlib', 'numpy', 'pandas', 'pylatex'],
+      install_requires=['hail', 'matplotlib', 'numpy', 'pandas', 'pylatex', 'plotly'],
       zip_safe=False
       )
