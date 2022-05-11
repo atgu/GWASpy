@@ -43,8 +43,8 @@
 <li class="toctree-l1"><a class="reference internal" href="pca.html">Principal Component Analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phasing.html">Haplotype Phasing</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Genotype Imputation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#imputation">1. Imputation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#concat">2. Concat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#a-run-imputation-concat-in-a-single-command">A. Run imputation+concat in a single command</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#b-run-imputation-and-concat-in-separate-commands">B. Run imputation and concat in separate commands</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#arguments-and-options">Arguments and options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#output">Output</a></li>
 </ul>
@@ -82,12 +82,12 @@ allows you to accurately evaluate the evidence for association at genetic marker
 GWASpy has a module, <code class="code docutils literal notranslate"><span class="pre">imputation</span></code>, for running imputation using IMPUTE5. Because imputation is a computationally
 intensive task, we run it on multiple chunks in parallel, then merge the imputed chunks together at the end. This is why
 the module is divided into two parts: (1) <code class="code docutils literal notranslate"><span class="pre">impute</span></code>; (2) <code class="code docutils literal notranslate"><span class="pre">concat</span></code>. Below are examples of how to run imputation</p>
-<section id="imputation">
-<h2>1. Imputation<a class="headerlink" href="#imputation" title="Permalink to this headline"></a></h2>
+<section id="a-run-imputation-concat-in-a-single-command">
+<h2>A. Run imputation+concat in a single command<a class="headerlink" href="#a-run-imputation-concat-in-a-single-command" title="Permalink to this headline"></a></h2>
 <ol class="arabic">
 <li><p>Command line</p>
 <blockquote>
-<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>imputation --input-vcfs gs://path/to/vcf_files.txt --samples-file gs://path/to/female_samples.txt --out-dir gs://path/to/output/dir --billing-project project-name --bucket bucket-associated-with-project --run impute --n-samples integer_number_of_samples
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>imputation --input-vcf gs://path/to/file.vcf.bgz --samples-file gs://path/to/female_samples.txt --out-dir gs://path/to/output/dir --billing-project project-name --run impute --n-samples integer_number_of_samples
 </pre></div>
 </div>
 </div></blockquote>
@@ -95,17 +95,16 @@ the module is divided into two parts: (1) <code class="code docutils literal not
 <li><p>Python (inside a Python script)</p>
 <blockquote>
 <div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gwaspy.imputation</span> <span class="k">as</span> <span class="nn">impute</span>
-<span class="n">impute</span><span class="o">.</span><span class="n">imputation</span><span class="o">.</span><span class="n">genotype_imputation</span><span class="p">(</span><span class="n">input_vcfs</span> <span class="o">=</span> <span class="s1">&#39;gs://path/to/vcf_files.txt&#39;</span><span class="p">,</span>
+<span class="n">impute</span><span class="o">.</span><span class="n">imputation</span><span class="o">.</span><span class="n">genotype_imputation</span><span class="p">(</span><span class="n">input_vcfs</span> <span class="o">=</span> <span class="s1">&#39;gs://path/to/file.vcf.bgz&#39;</span><span class="p">,</span>
           <span class="n">females_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">gs</span><span class="p">:</span><span class="o">//</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">female_samples</span><span class="o">.</span><span class="n">txt</span><span class="p">,</span>
           <span class="n">n_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">integer_number_of_samples</span><span class="p">,</span>
           <span class="n">n_panel_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4099</span><span class="p">,</span>
           <span class="n">buffer_region</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">250</span><span class="p">,</span>
           <span class="n">local</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
           <span class="n">billing_project</span> <span class="o">=</span> <span class="s1">&#39;project-name&#39;</span><span class="p">,</span>
-          <span class="n">bucket</span> <span class="o">=</span> <span class="s1">&#39;bucket-associated-with-project&#39;</span><span class="p">,</span>
           <span class="n">memory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;highmem&#39;</span><span class="p">,</span>
           <span class="n">cpu</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
-          <span class="n">run</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;impute&#39;</span>
+          <span class="n">stages</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;impute,concat&#39;</span>
           <span class="n">output_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bcf&#39;</span><span class="p">,</span>
           <span class="n">out_dir</span> <span class="o">=</span> <span class="s1">&#39;gs://path/to/output/dir&#39;</span><span class="p">)</span>
 </pre></div>
@@ -114,37 +113,11 @@ the module is divided into two parts: (1) <code class="code docutils literal not
 </li>
 </ol>
 </section>
-<section id="concat">
-<h2>2. Concat<a class="headerlink" href="#concat" title="Permalink to this headline"></a></h2>
-<p>After running imputation, we have to merge the imputed chunks together into full chromosomes. Here are examples below
-#. Command line</p>
-<blockquote>
-<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>imputation --input-vcfs gs://path/to/vcf_files.txt --samples-file gs://path/to/female_samples.txt --out-dir gs://path/to/output/dir --billing-project project-name --bucket bucket-associated-with-project --run concat --n-samples integer_number_of_samples
-</pre></div>
-</div>
-</div></blockquote>
-<ol class="arabic">
-<li><p>Python (inside a Python script)</p>
-<blockquote>
-<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gwaspy.imputation</span> <span class="k">as</span> <span class="nn">impute</span>
-<span class="n">impute</span><span class="o">.</span><span class="n">imputation</span><span class="o">.</span><span class="n">genotype_imputation</span><span class="p">(</span><span class="n">input_vcfs</span> <span class="o">=</span> <span class="s1">&#39;gs://path/to/vcf_files.txt&#39;</span><span class="p">,</span>
-          <span class="n">females_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">gs</span><span class="p">:</span><span class="o">//</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">female_samples</span><span class="o">.</span><span class="n">txt</span><span class="p">,</span>
-          <span class="n">n_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">integer_number_of_samples</span><span class="p">,</span>
-          <span class="n">n_panel_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4099</span><span class="p">,</span>
-          <span class="n">buffer_region</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">250</span><span class="p">,</span>
-          <span class="n">local</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-          <span class="n">billing_project</span> <span class="o">=</span> <span class="s1">&#39;project-name&#39;</span><span class="p">,</span>
-          <span class="n">bucket</span> <span class="o">=</span> <span class="s1">&#39;bucket-associated-with-project&#39;</span><span class="p">,</span>
-          <span class="n">memory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;highmem&#39;</span><span class="p">,</span>
-          <span class="n">cpu</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
-          <span class="n">run</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;concat&#39;</span>
-          <span class="n">output_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bcf&#39;</span><span class="p">,</span>
-          <span class="n">out_dir</span> <span class="o">=</span> <span class="s1">&#39;gs://path/to/output/dir&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div></blockquote>
-</li>
-</ol>
+<section id="b-run-imputation-and-concat-in-separate-commands">
+<h2>B. Run imputation and concat in separate commands<a class="headerlink" href="#b-run-imputation-and-concat-in-separate-commands" title="Permalink to this headline"></a></h2>
+<p>If you want to run impute or concat as separate steps, you can set the <code class="code docutils literal notranslate"><span class="pre">--stages</span></code> (command-line)/<code class="code docutils literal notranslate"><span class="pre">stages</span></code> (Python script)
+argument as impute or concat. It’s important to note though that if you want to run things this way, the impute step should
+always be run before concat as GWASpy uses results from the <code class="code docutils literal notranslate"><span class="pre">impute</span></code> stage for <code class="code docutils literal notranslate"><span class="pre">concat</span></code></p>
 </section>
 <section id="arguments-and-options">
 <h2>Arguments and options<a class="headerlink" href="#arguments-and-options" title="Permalink to this headline"></a></h2>
@@ -159,8 +132,8 @@ the module is divided into two parts: (1) <code class="code docutils literal not
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--input-vcfs</span></code></p></td>
-<td><p>Path to where text file containing VCF(s) for target genotypes paths is</p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--input-vcf</span></code></p></td>
+<td><p>Path to where the VCF for target genotypes paths is</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--samples-file</span></code></p></td>
 <td><p>Text file with list of FEMALE samples, one sample ID each line, that are in the dataset. This is crucial for chromosome X imputation as the data is split by sex</p></td>
@@ -171,28 +144,25 @@ the module is divided into two parts: (1) <code class="code docutils literal not
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--billing-project</span></code></p></td>
 <td><p>Billing project to be used for the job(s)</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--bucket</span></code></p></td>
-<td><p>Bucket associated with the billing project</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--memory</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--memory</span></code></p></td>
 <td><p>Memory to use for imputation. Options: [<code class="code docutils literal notranslate"><span class="pre">lowmem</span></code>, <code class="code docutils literal notranslate"><span class="pre">standard</span></code>, <code class="code docutils literal notranslate"><span class="pre">highmem</span></code>]. Default is <code class="code docutils literal notranslate"><span class="pre">highmem</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--cpu-concat</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--cpu-concat</span></code></p></td>
 <td><p>CPU to use for the concatenation step. Default is 8</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--n-samples</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--n-samples</span></code></p></td>
 <td><p>Total number of samples in your dataset. We use this to estimate some of the job resources like storage.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--buffer-region</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--buffer-region</span></code></p></td>
 <td><p>Buffer region to be used during imputation. This helps prevent imputation quality from deteriorating near the edges of the region. Default is 250 KB</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--run</span></code></p></td>
-<td><p>Process to run. Options: [<code class="code docutils literal notranslate"><span class="pre">impute</span></code>, <code class="code docutils literal notranslate"><span class="pre">concat</span></code>]. Default is <code class="code docutils literal notranslate"><span class="pre">impute</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--stages</span></code></p></td>
+<td><p>Process to run. Default is <code class="code docutils literal notranslate"><span class="pre">impute,concat</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--out-type</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--out-type</span></code></p></td>
 <td><p>Output type. Options: [<code class="code docutils literal notranslate"><span class="pre">bcf</span></code>, <code class="code docutils literal notranslate"><span class="pre">vcf</span></code>]. Default is <code class="code docutils literal notranslate"><span class="pre">bcf</span></code> [HIGHLY RECOMMENDED SINCE BCFs ARE GENERALLY MORE EFFICIENT TO WORK WITH AND TAKE UP LESS SPACE]</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--out-dir</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--out-dir</span></code></p></td>
 <td><p>Path to where output files will be saved</p></td>
 </tr>
 </tbody>

@@ -68,7 +68,7 @@ a reference panel. If the user wants to use a reference panel, there are two opt
 
         phasing --input-vcf gs://path/to/file.vcf.bgz --out-dir gs://path/to/output/dir --reference GRCh38 --billing-project billing-project --vcf-ref hgdp_1kg
 
-**C2. Their own reference panel**
+**C2. Own reference panel**
 
 Say you have your reference panel files by chromosomes stored in gs://ref_panel/ALL.chr{1..22,X}.vcf,
 you would pass the path to :code:`--vcf-ref` as gs://ref_panel/ALL.chr\ **CNUMBER**\ .vcf,

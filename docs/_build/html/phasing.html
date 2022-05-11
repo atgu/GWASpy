@@ -143,7 +143,7 @@ available to you, then using a reference panel is unlikely to give much of a boo
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>phasing --input-vcf gs://path/to/file.vcf.bgz --out-dir gs://path/to/output/dir --reference GRCh38 --billing-project billing-project --vcf-ref hgdp_1kg
 </pre></div>
 </div>
-<p><strong>C2. Their own reference panel</strong></p>
+<p><strong>C2. Own reference panel</strong></p>
 <p>Say you have your reference panel files by chromosomes stored in gs://ref_panel/ALL.chr{1..22,X}.vcf,
 you would pass the path to <code class="code docutils literal notranslate"><span class="pre">--vcf-ref</span></code> as gs://ref_panel/ALL.chr<strong>CNUMBER</strong>.vcf,
 GWASpy uses <strong>CNUMBER</strong> as a placeholder for the chromosomes. Then you can run phasing as:</p>
