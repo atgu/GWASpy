@@ -20,4 +20,4 @@ On a recent Debian-like system, the following should suffice:
        python3.6 python3-pip \
        libopenblas-base liblapack3 \
        texlive-pictures texlive-science texlive-latex-extra latexmk
-   python3.6 -m pip install GWASpy
+   python3.6 -m pip install gwaspy

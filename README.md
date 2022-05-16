@@ -2,6 +2,7 @@
 
 <!-- badges: start -->
 ![install status](https://github.com/atgu/GWASpy/actions/workflows/install-ci.yml/badge.svg)
+![PyPI version](https://badge.fury.io/py/gwaspy.svg)
 
 Genome-wide association studies pypeline (GWASpy): A Python package for performing GWAS QC, PCA, haplotype phasing, and
 genotype imputation.
