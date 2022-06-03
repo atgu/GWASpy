@@ -337,7 +337,7 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
         from gwaspy.utils.export_file import export_qced_file
         export_qced_file(mt=mt_filtered, out_dir=output_directory, basename=basename, export_type=export_type)
 
-    if out_dir.startswith('gs://'):
+    if output_directory.startswith('gs://'):
         hl.hadoop_copy(f'file://{gwaspy_dir}/{basename}.preimp_qc.report.pdf',
                        f'{output_directory}GWASpy/Preimp_QC/{basename}.preimp_qc.report.pdf')
     else:
