@@ -75,11 +75,12 @@ def shapeit_phasing(b: hb.batch.Batch,
                     vcf_file: str = None,
                     ref_vcf_file: hb.ResourceFile = None,
                     ref_size: Union[float, int] = None,
+                    family_pedigree_file: hb.ResourceFile = None,
                     reference: str = 'GRCh38',
                     region: Union[str, int] = None,
                     map_chromosome: str = None,
                     cpu: int = 8,
-                    img: str = 'docker.io/lindonkambule/gwaspy:v1',
+                    img: str = 'docker.io/lindonkambule/gwaspy:v2',
                     threads: int = 7,
                     out_dir: str = None):
 
@@ -88,8 +89,15 @@ def shapeit_phasing(b: hb.batch.Batch,
     disk_size = round(5.0 + 3.0 * vcf_size) + round(5.0 + 3.0 * ref_size) if ref_vcf_file else round(5.0 + 3.0 * vcf_size)
 
     vcf_filename_no_ext = get_vcf_filebase(vcf_file)
-    output_file_name = f'{vcf_filename_no_ext}.phased.withref.shapeit.bcf'if ref_vcf_file else \
-        f'{vcf_filename_no_ext}.phased.shapeit.bcf'
+
+    # change output_file_name to factor in VCF phased using pedigree info
+    if ref_vcf_file:
+        output_file_name = f'{vcf_filename_no_ext}.phased.withref.shapeit.bcf'
+    elif family_pedigree_file:
+        output_file_name = f'{vcf_filename_no_ext}.phased.withpedigree.shapeit.bcf'
+    else:
+        output_file_name = f'{vcf_filename_no_ext}.phased.shapeit.bcf'
+
     vcf = b.read_input(vcf_file)
 
     chrom = map_chromosome if reference == 'GRCh38' else f'chr{map_chromosome}'
@@ -107,6 +115,9 @@ def shapeit_phasing(b: hb.batch.Batch,
     phase.storage(f'{disk_size}Gi')
     phase.image(img)
 
+    phase.command('echo INDEXING INPUT VCF FILE')
+    phase.command(f'bcftools index {vcf}')
+
     if ref_vcf_file:
         phase.command('echo INDEXING REFERENCE FILE')
         phase.command(f'bcftools index {ref_vcf_file}')
@@ -116,6 +127,19 @@ def shapeit_phasing(b: hb.batch.Batch,
             --map {map_file} \
             --region {region} \
             --reference {ref_vcf_file} \
+            --output {output_file_name} \
+            --thread {threads}
+        '''
+
+    elif family_pedigree_file:
+        phase.command('echo FOUND FAMILY PEDIGREE FILE. CREATING A HAPLOTYPE SCAFFOLD TO BE USED IN PHASING')
+        phase.command(f'scaffold --gen {vcf} --fam {family_pedigree_file} --reg {region} --out {vcf_filename_no_ext}.scaffold.bcf')
+        cmd = f'''
+        shapeit4.2 \
+            --input {vcf} \
+            --map {map_file} \
+            --region {region} \
+            --scaffold {vcf_filename_no_ext}.scaffold.bcf \
             --output {output_file_name} \
             --thread {threads}
         '''
@@ -130,8 +154,6 @@ def shapeit_phasing(b: hb.batch.Batch,
             --thread {threads}
         '''
 
-    phase.command('echo INDEXING INPUT FILE')
-    phase.command(f'bcftools index {vcf}')
     phase.command('echo RUNNING PHASING')
     phase.command(cmd)
     # index the output
@@ -146,6 +168,7 @@ def shapeit_phasing(b: hb.batch.Batch,
 def run_phase(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
               input_vcf: str = None,
               vcf_ref_path: str = None,
+              family_pedigree: str = None,
               software: str = 'shapeit',
               reference: str = 'GRCh38',
               cpu: int = 8,
@@ -171,6 +194,8 @@ def run_phase(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
         else:
             print(f'\n2. PHASING {input_vcf} WITH USER-DEFINED REFERENCE PANEL\n')
             ref_path = vcf_ref_path
+    elif family_pedigree:
+        print(f'\n2. PHASING {input_vcf} USING FAMILY PEDIGREE INFORMATION FROM FILE {family_pedigree}\n')
     else:
         print(f'\n2. PHASING {input_vcf} WITHOUT A REFERENCE PANEL\n')
 
@@ -185,6 +210,8 @@ def run_phase(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
         vcfs.append(i['path'])
 
     phased_vcf_out_dir = f'{out_dir}/GWASpy/{vcf_filebase}/Phasing/phased_scatter'
+
+    family_pedigree_file = phasing_b.read_input(family_pedigree) if family_pedigree else None
 
     for i in range(1, 24):
         if reference == 'GRCh38':
@@ -232,8 +259,9 @@ def run_phase(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
                         continue
                     else:
                         shapeit_phasing(b=phasing_b, vcf_file=file, ref_vcf_file=ref_vcf_chrom_file,
-                                        ref_size=ref_vcf_chrom_file_size, reference=reference, region=file_region,
-                                        map_chromosome=map_chrom, cpu=cpu, threads=threads, out_dir=phased_vcf_out_dir)
+                                        ref_size=ref_vcf_chrom_file_size, family_pedigree_file=family_pedigree_file,
+                                        reference=reference, region=file_region, map_chromosome=map_chrom, cpu=cpu,
+                                        threads=threads, out_dir=phased_vcf_out_dir)
 
     phasing_b.run()
 

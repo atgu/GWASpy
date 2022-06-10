@@ -6,6 +6,7 @@ import argparse
 
 def haplotype_phasing(input_vcf: str = None,
                       vcf_ref: str = None,
+                      family_pedigree: str = None,
                       local: bool = False,
                       billing_project: str = None,
                       software: str = 'shapeit',
@@ -48,8 +49,8 @@ def haplotype_phasing(input_vcf: str = None,
     # Phase scatterd chunks
     if 'phase' in steps:
         from gwaspy.phasing.phase_vcf import run_phase
-        run_phase(backend=backend, input_vcf=input_vcf, vcf_ref_path=vcf_ref, software=software, reference=reference,
-                  cpu=cpu, threads=threads, out_dir=out_dir)
+        run_phase(backend=backend, input_vcf=input_vcf, vcf_ref_path=vcf_ref, family_pedigree=family_pedigree,
+                  software=software, reference=reference, cpu=cpu, threads=threads, out_dir=out_dir)
 
     # Concatenate phased chunks
     if 'concat' in steps:
@@ -62,6 +63,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input-vcf', type=str, required=True)
     parser.add_argument('--vcf-ref', type=str, default=None)
+    parser.add_argument('--family-pedigree', type=str, default=None)
     parser.add_argument('--local', action='store_true')
     parser.add_argument('--billing-project', required=True)
     parser.add_argument('--software', type=str, default='shapeit', choices=['eagle', 'shapeit'])
@@ -77,11 +79,11 @@ def main():
 
     args = parser.parse_args()
 
-    haplotype_phasing(input_vcf=args.input_vcf, vcf_ref=args.vcf_ref, local=args.local,
-                      billing_project=args.billing_project, software=args.software, reference=args.reference,
-                      max_win_size_cm=args.max_win_size_cm, overlap_size_cm=args.overlap_size_cm,
-                      scatter_memory=args.scatter_mem, cpu=args.cpu, threads=args.threads, stages=args.stages,
-                      output_type=args.out_type, out_dir=args.out_dir)
+    haplotype_phasing(input_vcf=args.input_vcf, vcf_ref=args.vcf_ref, family_pedigree=args.family_pedigree,
+                      local=args.local, billing_project=args.billing_project, software=args.software,
+                      reference=args.reference, max_win_size_cm=args.max_win_size_cm,
+                      overlap_size_cm=args.overlap_size_cm, scatter_memory=args.scatter_mem, cpu=args.cpu,
+                      threads=args.threads, stages=args.stages, output_type=args.out_type, out_dir=args.out_dir)
 
 
 if __name__ == '__main__':
