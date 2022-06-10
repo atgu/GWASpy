@@ -25,6 +25,7 @@ RUN apt-get update && apt-get install -y software-properties-common && \
         make \
         python3 \
         python3-pip \
+        r-mathlib \
         sudo \
         unzip \
         wget \
@@ -41,12 +42,12 @@ RUN cd /opt && \
     ./configure --enable-libcurl --enable-s3 --enable-gcs && \
     make && make install && make clean
 
-COPY makefile /opt
+COPY makefile_shapeit4 /opt
 
 # SHAPEIT4
 RUN git clone https://github.com/odelaneau/shapeit4.git && \
     cd shapeit4 && \
-    mv makefile makefile.old && cp /opt/makefile . && \
+    mv makefile makefile.old && cp /opt/makefile_shapeit4 . && mv makefile_shapeit4 makefile && \
     make && \
     cd /shapeit4/maps && mkdir b37 b38 && gunzip *.gz && \
     tar -xf genetic_maps.b37.tar -C b37/ && \
@@ -76,5 +77,14 @@ COPY  impute5_v1.1.5.zip /opt
 RUN cd /opt && \
     unzip impute5_v1.1.5.zip && cd impute5_v1.1.5 && \
     mv *_static /usr/local/bin/ && cd /opt && rm -rf impute5_v1.1.5*
+
+# makeScaffold for building haplotype scaffolds for phasing
+RUN pip3 install Cython --install-option="--no-cython-compile"
+
+RUN git clone https://github.com/sinanshi/makeScaffold.git && \
+    cd makeScaffold && rm makefile && \
+    cmake . && \
+    make && \
+    mv src/scaffold /usr/local/bin/
 
 
