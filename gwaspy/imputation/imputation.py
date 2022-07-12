@@ -12,6 +12,7 @@ def genotype_imputation(input_vcf: str = None,
                         buffer_region: int = 250,
                         phasing_software: str = None,
                         local: bool = False,
+                        exclude_chrx: bool = False,
                         billing_project: str = None,
                         memory: str = 'highmem',
                         cpu: int = 16,
@@ -51,14 +52,14 @@ def genotype_imputation(input_vcf: str = None,
     if 'impute' in steps:
         from gwaspy.imputation.sex_aut_imp import run_impute
         run_impute(backend=backend, input_vcf=input_vcf, females_file=females_file, n_samples=n_samples,
-                   n_panel_samples=n_panel_samples, phasing_software=phasing_software, memory=memory,
-                   buffer_region=buffer_region, out_dir=out_dir)
+                   n_panel_samples=n_panel_samples, phasing_software=phasing_software, exclude_chrx=exclude_chrx,
+                   memory=memory, buffer_region=buffer_region, out_dir=out_dir)
 
     # Concatenate imputed chunks
     if 'concat' in steps:
         from gwaspy.imputation.concat_vcfs import run_concat
-        run_concat(backend=backend, input_vcf=input_vcf, output_type=output_type, cpu=cpu, memory=memory,
-                   out_dir=out_dir)
+        run_concat(backend=backend, input_vcf=input_vcf, output_type=output_type, exclude_chrx=exclude_chrx, cpu=cpu,
+                   memory=memory, out_dir=out_dir)
 
 
 def main():
@@ -66,6 +67,7 @@ def main():
     parser.add_argument('--input-vcf', type=str, required=True)
     parser.add_argument('--samples-file', type=str, required=True)
     parser.add_argument('--local', action='store_true')
+    parser.add_argument('--exclude-chrx', action='store_true')
     parser.add_argument('--billing-project', required=True)
     parser.add_argument('--phasing-software', type=str, default='shapeit', choices=['eagle', 'shapeit'])
     parser.add_argument('--memory', type=str, default='highmem', choices=['lowmem', 'standard', 'highmem'])
@@ -80,8 +82,8 @@ def main():
 
     genotype_imputation(input_vcf=args.input_vcf, females_file=args.samples_file, n_samples=args.n_samples,
                         buffer_region=args.buffer_region, phasing_software=args.phasing_software, local=args.local,
-                        billing_project=args.billing_project, memory=args.memory, cpu=args.cpu_concat,
-                        stages=args.stages, output_type=args.out_type, out_dir=args.out_dir)
+                        exclude_chrx=args.exclude_chrx, billing_project=args.billing_project, memory=args.memory,
+                        cpu=args.cpu_concat, stages=args.stages, output_type=args.out_type, out_dir=args.out_dir)
 
 
 if __name__ == '__main__':

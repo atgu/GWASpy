@@ -69,6 +69,7 @@ def concat_vcfs(b: hb.batch.Batch,
 def run_concat(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
                input_vcf: str = None,
                output_type: str = 'vcf',
+               exclude_chrx: bool = False,
                cpu: int = 16,
                memory: str = 'standard',
                out_dir: str = None):
@@ -83,7 +84,9 @@ def run_concat(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
 
     imputed_vcfs_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/{vcf_filebase}/Imputation/imputed_chunks/*.bcf')
 
-    for i in range(1, 24):
+    max_chrom = 23 if exclude_chrx else 24 # 1-22 if autosomes only, else 1-23
+
+    for i in range(1, max_chrom):
         if i == 23:
             chrom = 'chrX'
         else:

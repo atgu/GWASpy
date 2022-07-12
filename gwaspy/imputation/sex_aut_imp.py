@@ -361,6 +361,7 @@ def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
                n_samples: int = None,
                n_panel_samples: int = 4099,
                phasing_software: str = None,
+               exclude_chrx: bool = False,
                memory: str = 'highmem',
                buffer_region: int = 250,
                out_dir: str = None):
@@ -412,7 +413,9 @@ def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
     else:
         phased_vcfs_chunks = hl.utils.hadoop_ls(f'{out_dir}/GWASpy/{vcf_filebase}/Phasing/phased_scatter/*.eagle.bcf')
 
-    for i in range(1, 24):
+    max_chrom = 23 if exclude_chrx else 24 # 1-22 if autosomes only, else 1-23
+
+    for i in range(1, max_chrom):
         if i == 23:
             chrom = 'chrX'
         else:
