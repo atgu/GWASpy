@@ -23,7 +23,7 @@ classifiers = [
 ]
 
 setup(name='gwaspy',
-      version='0.1.1',
+      version='0.1.2',
       author='Lindokuhle Nkambule',
       author_email='lnkambul@broadinstitute.org',
       url='https://gwaspy.readthedocs.io/',
