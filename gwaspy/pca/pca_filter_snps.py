@@ -47,60 +47,41 @@ def relatedness_check(
         in_mt: hl.MatrixTable = None,
         method: str = 'pc_relate',
         outdir: str = None,
-        kin_estimate: float = 0.98):
-
-    global mt, samples_to_remove
-
-    in_mt = hl.variant_qc(in_mt)
-    in_mt = hl.sample_qc(in_mt)
-
-    # _localize=False means don't put this in Python, keep it as a Hail expr
-    call_rate_dict = in_mt.aggregate_cols(hl.dict(hl.agg.collect((in_mt.s, in_mt.sample_qc.call_rate))), _localize=False)
+        kin_estimate: float = 0.1):
 
     if method == 'pc_relate':
         print("\nUsing PC-Relate for relatedness checks")
-        relatedness_ht = hl.pc_relate(in_mt.GT, 0.01, k=10, min_kinship=0.1, statistics='kin')
-        samples_to_remove_ht = relatedness_ht.filter(relatedness_ht.kin > kin_estimate)
+        relatedness_ht = hl.pc_relate(in_mt.GT, 0.01, k=10, min_kinship=kin_estimate, statistics='kin')
 
-        # get call rates for both samples so we remove the one with lower call rate between the two
-        samples_to_remove = samples_to_remove_ht.annotate(cr_s1=call_rate_dict[samples_to_remove_ht.i.s],
-                                                          cr_s2=call_rate_dict[samples_to_remove_ht.j.s])
-
-        samples_list = samples_to_remove.annotate(sample_to_remove=hl.cond(
-            samples_to_remove.cr_s1 <= samples_to_remove.cr_s2, samples_to_remove.i, samples_to_remove.j))
+        print('getting related samples to be removed using maximal independent set')
+        samples_to_remove = hl.maximal_independent_set(relatedness_ht.i, relatedness_ht.j, False)
+        samples = samples_to_remove.node.s.collect()
 
     elif method == 'ibd':
-        print("\nUsing PLINK-style identity by descent for relatedness checks")
+        print("\nUsing PLINK-style IBD for relatedness checks")
+        in_mt = hl.variant_qc(in_mt)
         in_mt = in_mt.annotate_rows(maf=hl.min(in_mt.variant_qc.AF))
-        relatedness_ht = hl.identity_by_descent(in_mt, maf=in_mt['maf'])  # this returns a Hail Table with the sample pairs
-        samples_to_remove_ht = relatedness_ht.filter(relatedness_ht.ibd.PI_HAT > kin_estimate)
+        relatedness_ht = hl.identity_by_descent(in_mt, maf=in_mt['maf'], min=kin_estimate)
 
-        # get call rates for both samples so we remove the one with lower call rate between the two
-        samples_to_remove = samples_to_remove_ht.annotate(cr_s1=call_rate_dict[samples_to_remove_ht.i],
-                                                          cr_s2=call_rate_dict[samples_to_remove_ht.j])
-
-        samples_list = samples_to_remove.annotate(sample_to_remove=hl.cond(
-            samples_to_remove.cr_s1 <= samples_to_remove.cr_s2, samples_to_remove.i, samples_to_remove.j))
+        print('getting related samples to be removed using maximal independent set')
+        samples_to_remove = hl.maximal_independent_set(relatedness_ht.i, relatedness_ht.j, False)
+        samples = samples_to_remove.node.collect()
 
     else:
         print("\nUsing KING for relatedness checks")
         if kin_estimate > 0.5:
-            raise Exception("\nThe maximum kinship coefficient is for KING 0.5")
+            raise Exception("\nThe maximum kinship coefficient in KING is 0.5")
         relatedness_mt = hl.king(in_mt.GT)
-        filtered_relatedness_mt = relatedness_mt.filter_entries((relatedness_mt.s_1 != relatedness_mt.s) &
-                                                                (relatedness_mt.phi >= kin_estimate), keep=True)
-        samples_to_remove_ht = filtered_relatedness_mt.entries()
-        samples_to_remove = samples_to_remove_ht.annotate(cr_s1=call_rate_dict[samples_to_remove_ht.s_1],
-                                                          cr_s2=call_rate_dict[samples_to_remove_ht.s])
+        relatedness_ht = relatedness_mt.filter_entries((relatedness_mt.s_1 != relatedness_mt.s) &
+                                                       (relatedness_mt.phi >= kin_estimate)).entries()
 
-        samples_list = samples_to_remove.annotate(sample_to_remove=hl.cond(
-            samples_to_remove.cr_s1 <= samples_to_remove.cr_s2, samples_to_remove.s_1, samples_to_remove.s))
-
-    samples = samples_list.sample_to_remove.collect()
+        print('getting related samples to be removed using maximal independent set')
+        samples_to_remove = hl.maximal_independent_set(relatedness_ht.s_1, relatedness_ht.s, False)
+        samples = samples_to_remove.node.collect()
 
     if len(samples) > 0:
         in_mt = in_mt.filter_cols(hl.literal(samples).contains(in_mt['s']), keep=False)
-        print("\nNumber of samples that fail relatedness checks: {}".format(len(samples)))
+        print(f"\nNumber of samples that fail relatedness checks: {len(samples)}")
         with open(outdir + 'relatedness_removed_samples.tsv', 'w') as f:
             for sample in samples:
                 f.write(sample + "\n")
