@@ -12,7 +12,7 @@ def pca(
         data_dirname: str = None, data_basename: str = None, input_type: str = None,
         maf: float = 0.05, hwe: float = 1e-3, call_rate: float = 0.98,
         ld_cor: float = 0.2, ld_window: int = 250000, n_pcs: int = 20, relatedness_method: str = 'pc_relate',
-        relatedness_thresh: float = 0.98, prob_threshold: float = 0.8, out_dir: str = None):
+        relatedness_thresh: float = 0.1, prob_threshold: float = 0.8, out_dir: str = None):
 
     if not out_dir:
         raise Exception('\nOutput directory where files will be saved is not specified')
@@ -68,7 +68,7 @@ def main():
     parser.add_argument('--npcs', type=int, default=20, help='Number of PCs to use')
     parser.add_argument('--relatedness-method', type=str, default='pc_relate',
                         choices=['pc_relate', 'ibd', 'king'], help='Method to use for the inference of relatedness')
-    parser.add_argument('--relatedness-thresh', type=float, default=0.98,
+    parser.add_argument('--relatedness-thresh', type=float, default=0.1,
                         help='Threshold value to use in relatedness checks')
     parser.add_argument('--prob', type=float, default=0.8,
                         help='Minimum probability of belonging to a given population for the population to be set')

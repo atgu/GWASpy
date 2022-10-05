@@ -163,7 +163,7 @@ def run_pca_project(
         ld_cor: float = 0.2,
         ld_window: int = 250000,
         relatedness_method: str = 'pc_relate',
-        relatedness_thresh: float = 0.98,
+        relatedness_thresh: float = 0.1,
         prob_threshold: float = 0.8):
     """
     Project samples into predefined PCA space

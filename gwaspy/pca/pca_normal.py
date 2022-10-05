@@ -72,7 +72,7 @@ def run_pca_normal(
         ld_window: int = 250000,
         n_pcs: int = 20,
         relatedness_method: str = 'pc_relate',
-        relatedness_thresh: float = 0.98,
+        relatedness_thresh: float = 0.1,
         out_dir: str = None):
 
     print('\nReading mt')
