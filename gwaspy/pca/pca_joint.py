@@ -86,11 +86,20 @@ def plot_pca_joint(joint_scores: pd.DataFrame = None, x_pc: str = None, y_pc: st
     # concatenate the two dfs together
     concatenated = pd.concat([ref, data], axis=0)
 
+    # https://matplotlib.org/stable/tutorials/colors/colors.html
+    color_map = {}
+    colors = ['#000000', '#8C000F', '#00FFFF', '#0343DF', '#653700', '#008000', '#ED0DD9', '#4B0082', '#008080',
+              '#FF0000', '#FFD700', '#DDA0DD', '#C0C0C0']
+
+    # get a list of unique population labels in the data
+    pops = concatenated['pop'].unique().tolist()
+    # update the dictionary with unique colors for each population
+    for i in range(len(pops)):
+        color_map[pops[i]] = colors[i]
+
     fig = px.scatter(concatenated, x=x_pc, y=y_pc, color='pop',
                      hover_data=['s', x_pc, y_pc, 'pop', 'Project'],
-                     color_discrete_map={'AFR': "#984EA3", 'EAS': "#4DAF4A", 'EUR': "#377EB8", 'CSA': "#FF7F00",
-                                         'AMR': "#E41A1C", 'MID': "#A65628", 'OCE': "#999999",
-                                         'oth': "#F0E442"}).update_traces(marker_size=4)
+                     color_discrete_map=color_map).update_traces(marker_size=4)
 
     return fig
 
@@ -163,9 +172,8 @@ def run_pca_joint(
     pcs_df, clf = assign_population_pcs(pop_pc_pd=scores_with_pop_label_df, num_pcs=npcs, min_prob=prob_threshold)
 
     data_pops = pcs_df.loc[pcs_df['SuperPop'].isnull()]
-    data_pops['pop'].value_counts()
-    cols = ['s', 'pop'] + [f'prob_{i}' for i in ["AFR", "AMR", "CSA", "EAS", "EUR", "MID", "OCE"]] + [f'PC{i}' for i in
-                                                                                                      range(1, npcs+1)]
+    pops = data_pops['pop'].unique().tolist()
+    cols = ['s', 'pop'] + [f'prob_{i}' for i in pops] + [f'PC{i}' for i in range(1, npcs+1)]
     data_pops_df = data_pops[cols]
 
     data_pops_df.to_csv(f'{out_dir}GWASpy/PCA/{data_basename}/pca_joint/pca_sup_pops_{prob_threshold}_probs.joint.pca.txt',
