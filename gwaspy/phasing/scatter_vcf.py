@@ -131,10 +131,10 @@ def vcf_scatter(b: hb.batch.Batch,
 
     scatter.command(cmd)
 
-    scatter.command(f'mv vcfs {scatter.vcfs}')
-    scatter.command(f'mv regions.lines {scatter.regions}')
-    b.write_output(scatter.vcfs, f'{out_dir}/GWASpy/{vcf_filename_no_ext}/Phasing/scatter_vcfs')
-    b.write_output(scatter.regions, f'{out_dir}/GWASpy/{vcf_filename_no_ext}/Phasing/regions.lines')
+    scatter.command(f'mv vcfs {scatter.gwaspyvcfs}')
+    scatter.command(f'mv regions.lines {scatter.gwaspyregions}')
+    b.write_output(scatter.gwaspyvcfs, f'{out_dir}/GWASpy/{vcf_filename_no_ext}/Phasing/scatter_vcfs')
+    b.write_output(scatter.gwaspyregions, f'{out_dir}/GWASpy/{vcf_filename_no_ext}/Phasing/regions.lines')
 
 
 def run_scatter(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
