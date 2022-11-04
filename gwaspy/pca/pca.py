@@ -11,7 +11,8 @@ def pca(
         reference: str = 'GRCh38', pca_type: str = None,
         data_dirname: str = None, data_basename: str = None, input_type: str = None,
         maf: float = 0.05, hwe: float = 1e-3, call_rate: float = 0.98,
-        ld_cor: float = 0.2, ld_window: int = 250000, n_pcs: int = 20, relatedness_method: str = 'pc_relate',
+        ld_cor: float = 0.2, ld_window: int = 250000, n_pcs: int = 20, run_relatedness_check: bool = True,
+        relatedness_method: str = 'pc_relate',
         relatedness_thresh: float = 0.1, prob_threshold: float = 0.8, out_dir: str = None):
 
     if not out_dir:
@@ -23,7 +24,9 @@ def pca(
         from gwaspy.pca.pca_project import run_pca_project
         run_pca_project(ref_dirname=ref_dirname, ref_basename=ref_basename, ref_info=ref_info,
                         data_dirname=data_dirname, data_basename=data_basename, out_dir=out_dir, input_type=input_type,
-                        reference=reference, npcs=n_pcs, maf=maf, hwe=hwe, call_rate=call_rate, ld_cor=ld_cor, ld_window=ld_window,
+                        reference=reference, npcs=n_pcs, maf=maf, hwe=hwe, call_rate=call_rate,
+                        relatedness_method=relatedness_method, run_relatedness_check=run_relatedness_check,
+                        ld_cor=ld_cor, ld_window=ld_window,
                         prob_threshold=prob_threshold)
 
     elif pca_type == 'joint':
@@ -66,6 +69,7 @@ def main():
     parser.add_argument('--ld-window', type=int, default=250000,
                         help='Window size in base pairs (inclusive upper bound)')
     parser.add_argument('--npcs', type=int, default=20, help='Number of PCs to use')
+    parser.add_argument('--no-relatedness', action='store_false')
     parser.add_argument('--relatedness-method', type=str, default='pc_relate',
                         choices=['pc_relate', 'ibd', 'king'], help='Method to use for the inference of relatedness')
     parser.add_argument('--relatedness-thresh', type=float, default=0.1,
@@ -84,8 +88,9 @@ def main():
     pca(ref_dirname=args.ref_dirname, ref_basename=args.ref_basename, ref_info=args.ref_info, reference=args.reference,
         pca_type=args.pca_type, input_type=args.input_type, data_dirname=args.data_dirname,
         data_basename=args.data_basename, maf=args.maf, hwe=args.hwe, call_rate=args.geno, ld_cor=args.ld_cor,
-        ld_window=args.ld_window, n_pcs=args.npcs, relatedness_method=args.relatedness_method,
-        relatedness_thresh=args.relatedness_thresh, prob_threshold=args.prob, out_dir=args.out_dir)
+        ld_window=args.ld_window, n_pcs=args.npcs, run_relatedness_check=args.no_relatedness,
+        relatedness_method=args.relatedness_method, relatedness_thresh=args.relatedness_thresh,
+        prob_threshold=args.prob, out_dir=args.out_dir)
 
     print('\nDone running PCA')
 

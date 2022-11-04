@@ -173,6 +173,7 @@ def run_pca_project(
         call_rate: float = 0.98,
         ld_cor: float = 0.2,
         ld_window: int = 250000,
+        run_relatedness_check: bool = True,
         relatedness_method: str = 'pc_relate',
         relatedness_thresh: float = 0.1,
         prob_threshold: float = 0.8):
@@ -192,6 +193,7 @@ def run_pca_project(
     :param call_rate: variant call rate filter threshold
     :param ld_cor: reference build
     :param ld_window: window size
+    :param run_relatedness_check: whether or not to run relatedness checks
     :param relatedness_method: method to use for relatedness filtering
     :param relatedness_thresh: threshold to use for filtering out related individuals
     :param prob_threshold: a list of probability thresholds to use for classifying samples
@@ -213,7 +215,10 @@ def run_pca_project(
     print('\nFiltering data mt')
     mt = pca_filter_mt(in_mt=mt, maf=maf, hwe=hwe, call_rate=call_rate, ld_cor=ld_cor, ld_window=ld_window)
 
-    mt = relatedness_check(in_mt=mt, method=relatedness_method, outdir=out_dir, kin_estimate=relatedness_thresh)
+    if run_relatedness_check:
+        mt = relatedness_check(in_mt=mt, method=relatedness_method, outdir=out_dir, kin_estimate=relatedness_thresh)
+    else:
+        print('Skipping relatedness checks')
 
     # Intersect data with reference
     intersect_ref(ref_dirname=ref_dirname, ref_basename=ref_basename, data_mt=mt, data_basename=data_basename,
