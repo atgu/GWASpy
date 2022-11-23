@@ -67,7 +67,7 @@ def relatedness_check(
         relatedness_ht = hl.identity_by_descent(in_mt, maf=in_mt['maf'], min=kin_estimate)
         
         print('exporting relatedness statistics to a tsv file')
-        relatedness_ht.export(f'{outdir}relatedness_checks_pc_relate.tsv.bgz')
+        relatedness_ht.export(f'{outdir}relatedness_checks_pc_ibd.tsv.bgz')
 
         print('getting related samples to be removed using maximal independent set')
         samples_to_remove = hl.maximal_independent_set(relatedness_ht.i, relatedness_ht.j, False)
@@ -82,7 +82,7 @@ def relatedness_check(
                                                        (relatedness_mt.phi >= kin_estimate)).entries()
         
         print('exporting relatedness statistics to a tsv file')
-        relatedness_ht.export(f'{outdir}relatedness_checks_pc_relate.tsv.bgz')
+        relatedness_ht.export(f'{outdir}relatedness_checks_king.tsv.bgz')
 
         print('getting related samples to be removed using maximal independent set')
         samples_to_remove = hl.maximal_independent_set(relatedness_ht.s_1, relatedness_ht.s, False)
