@@ -1,6 +1,7 @@
 __author__ = 'Lindo Nkambule'
 
 import hail as hl
+import pandas as pd
 
 
 def pca_filter_mt(
@@ -91,9 +92,10 @@ def relatedness_check(
     if len(samples) > 0:
         in_mt = in_mt.filter_cols(hl.literal(samples).contains(in_mt['s']), keep=False)
         print(f"\nNumber of samples that fail relatedness checks: {len(samples)}")
-        with open(outdir + 'relatedness_removed_samples.tsv', 'w') as f:
-            for sample in samples:
-                f.write(sample + "\n")
+        
+        df = pd.DataFrame(samples, columns=['Sample'])
+        ht = hl.Table.from_pandas(df)
+        ht.export(f'{outdir}relatedness_removed_samples.tsv')
 
     else:
         print("\nNo samples failed the relatedness check")
