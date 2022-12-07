@@ -55,7 +55,9 @@ def relatedness_check(
         relatedness_ht = hl.pc_relate(in_mt.GT, 0.01, k=10, min_kinship=kin_estimate, statistics='kin')
         
         print('exporting relatedness statistics to a tsv file')
-        relatedness_ht.export(f'{outdir}relatedness_checks_pc_relate.tsv.bgz')
+        # Hail will export samples as {"s": "sample0001"} by default. selecting will make sure samples are export as "sample0001" instead.
+        ht_export = relatedness_ht.select(i=relatedness_ht.i, j=relatedness_ht.j, kin=relatedness_ht.kin)
+        ht_export.export(f'{outdir}relatedness_checks_pc_relate.tsv.bgz')
 
         print('getting related samples to be removed using maximal independent set')
         samples_to_remove = hl.maximal_independent_set(relatedness_ht.i, relatedness_ht.j, False)
