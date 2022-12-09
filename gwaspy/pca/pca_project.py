@@ -244,8 +244,9 @@ def run_pca_project(
     from gwaspy.pca.assign_pop_labels import assign_population_pcs
     pcs_df, clf = assign_population_pcs(pop_pc_pd=data_ref, num_pcs=npcs, min_prob=prob_threshold)
 
+    pops = pcs_df['SuperPop'].unique().tolist() # get reference population labels
+    pops = [item for item in pops if  not(pd.isnull(item))] # remove NaN values (only reference samples will have the SuperPop label)
     data_pops = pcs_df.loc[pcs_df['SuperPop'].isnull()]
-    pops = data_pops['pop'].unique().tolist()
     cols = ['s', 'pop'] + [f'prob_{i}' for i in pops] + [f'PC{i}' for i in range(1, npcs+1)]
     data_pops_df = data_pops[cols]
 

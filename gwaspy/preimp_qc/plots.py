@@ -66,6 +66,7 @@ def qqplot(pvals, title: str = None, figsize: tuple = (10, 10)):
     ).persist()
 
     p_val_pd = ht.to_pandas()
+    p_val_pd = p_val_pd.dropna()
     p_val_pd['observed_p'].values[p_val_pd['observed_p'] > 10] = 10
     mini = min(p_val_pd['expected_p'].max(), p_val_pd['observed_p'].max())
     maxi = max(p_val_pd['expected_p'].max(), p_val_pd['observed_p'].max())
