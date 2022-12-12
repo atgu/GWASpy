@@ -95,10 +95,10 @@ def run_ref_pca(
 def plot_pca_ref(data_scores, ref_scores, x_pc, y_pc):
     pcs = pd.read_table(data_scores, header=0, sep='\t')
     pcs['Project'] = "Input Dataset"
+    pcs['pop'] = "input dataset"  # use this for plots instead of pop label
     pcs = pcs[['s', 'pop', 'Project', x_pc, y_pc]]
 
-    ref_update = ref_scores
-    ref_update.rename(columns={'SuperPop': 'pop'}, inplace=True)
+    ref_update = ref_scores.rename(columns={'SuperPop': 'pop'})
     ref_update = ref_update[['s', 'pop', 'Project', x_pc, y_pc]]
 
     # concatenate the two dfs together
@@ -106,7 +106,7 @@ def plot_pca_ref(data_scores, ref_scores, x_pc, y_pc):
 
     # https://matplotlib.org/stable/tutorials/colors/colors.html
     color_map = {}
-    colors = ['#000000', '#8C000F', '#00FFFF', '#0343DF', '#653700', '#008000', '#ED0DD9', '#4B0082', '#008080',
+    colors = ['#8C000F', '#00FFFF', '#0343DF', '#653700', '#008000', '#ED0DD9', '#4B0082', '#008080',
               '#FF0000', '#FFD700', '#DDA0DD', '#C0C0C0']
 
     # get a list of unique population labels in the data
@@ -114,6 +114,8 @@ def plot_pca_ref(data_scores, ref_scores, x_pc, y_pc):
     # update the dictionary with unique colors for each population
     for i in range(len(pops)):
         color_map[pops[i]] = colors[i]
+
+    color_map.update({'input dataset': '#000000'})  # use black for input dataset
 
     fig = px.scatter(concatenated, x=x_pc, y=y_pc, color='pop',
                      hover_data=['s', x_pc, y_pc, 'pop', 'Project'],
