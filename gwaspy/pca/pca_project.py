@@ -218,7 +218,9 @@ def run_pca_project(
     mt = pca_filter_mt(in_mt=mt, maf=maf, hwe=hwe, call_rate=call_rate, ld_cor=ld_cor, ld_window=ld_window)
 
     if run_relatedness_check:
-        mt, _ = relatedness_check(in_mt=mt, method=relatedness_method, outdir=out_dir, kin_estimate=relatedness_thresh)
+        related_out_dir = f'{out_dir}GWASpy/PCA/{data_basename}/pca_project/'
+        mt, _ = relatedness_check(in_mt=mt, method=relatedness_method, outdir=related_out_dir,
+                                  kin_estimate=relatedness_thresh)
     else:
         print('Skipping relatedness checks')
 
