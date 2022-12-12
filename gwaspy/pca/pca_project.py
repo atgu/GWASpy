@@ -76,17 +76,11 @@ def intersect_ref(
 
 def run_ref_pca(
         mt: hl.MatrixTable = None,
-        npcs: int = 20,
-        data_basename: str = None,
-        ref_basename: str = None,
-        out_dir: str = None):
+        npcs: int = 20):
     """
     Run PCA on a dataset
     :param mt: dataset to run PCA on
     :param npcs: number of principal components to be used in PCA
-    :param data_basename: input data basename so outputs can be saved in correct dir
-    :param ref_basename: reference data basename for reference scores and loadings filenames
-    :param out_dir: directory and filename prefix for where to put PCA output
     :return:
     """
     pca_evals, pca_scores, pca_loadings = hl.hwe_normalized_pca(mt.GT, k=npcs, compute_loadings=True)
@@ -94,48 +88,16 @@ def run_ref_pca(
     pca_loadings = pca_loadings.annotate(pca_af=pca_mt.rows()[pca_loadings.key].pca_af)
 
     pca_scores = pca_scores.transmute(**{f'PC{i}': pca_scores.scores[i - 1] for i in range(1, npcs+1)})
-    # pca_scores.export(f'{out_dir}GWASpy/PCA/{data_basename}/pca_project/{ref_basename}.project.pca.scores.txt.bgz')  # individual-level PCs
-
-    # pca_loadings.write(f'{out_dir}GWASpy/PCA/{data_basename}/pca_project/{ref_basename}_loadings.ht', overwrite=True)  # PCA loadings
 
     return pca_scores, pca_loadings
 
 
-def merge_data_with_ref(
-        ref_scores: str = None,
-        ref_info: str = None,
-        data_scores: str = None) -> pd.DataFrame:
-    """
-    Merge data with ref
-    :param ref_scores: path to reference score
-    :param ref_info: path to information about samples in the ref scores
-    :param data_scores: path to input data scores
-    :return: a pandas Dataframe of data merged with reference
-    """
-
-    print('\nMerging data with ref')
-    ref = pd.read_table(ref_scores, header=0, sep='\t', compression='gzip')
-    data = pd.read_table(data_scores, header=0, sep='\t')
-    ref_info = pd.read_table(ref_info, header=0, sep='\t')
-
-    ref_merge = pd.merge(left=ref, right=ref_info, left_on='s', right_on='Sample', how='inner')
-
-    data_ref = pd.concat([ref_merge, data], sort=False)
-    print('\nDone merging data with ref')
-
-    return data_ref
-
-
-def plot_pca_ref(data_scores, ref_scores, ref_info, x_pc, y_pc):
+def plot_pca_ref(data_scores, ref_scores, x_pc, y_pc):
     pcs = pd.read_table(data_scores, header=0, sep='\t')
     pcs['Project'] = "Input Dataset"
     pcs = pcs[['s', 'pop', 'Project', x_pc, y_pc]]
 
-    ref = pd.read_table(ref_scores, header=0, sep='\t', compression='gzip')
-    ref_info = pd.read_table(ref_info, header=0, sep='\t')
-
-    ref_info.rename(columns={'Sample': 's'}, inplace=True)
-    ref_update = pd.merge(ref, ref_info, how='left', on=['s'])
+    ref_update = ref_scores
     ref_update.rename(columns={'SuperPop': 'pop'}, inplace=True)
     ref_update = ref_update[['s', 'pop', 'Project', x_pc, y_pc]]
 
@@ -231,8 +193,7 @@ def run_pca_project(
     ref_in_data = hl.read_matrix_table(f'{out_dir}GWASpy/PCA/{data_basename}/pca_project/{ref_basename}_intersect_{data_basename}.mt')
 
     print('\nComputing reference PCs')
-    ref_scores, pca_loadings = run_ref_pca(mt=ref_in_data, npcs=npcs, out_dir=out_dir, data_basename=data_basename,
-                                           ref_basename=ref_basename)
+    ref_scores, pca_loadings = run_ref_pca(mt=ref_in_data, npcs=npcs)
     ref_scores = ref_scores.key_by('s')  # make sure we key by s so we can annotate
 
     # annotate ref info with SuperPop and Project information
@@ -243,13 +204,11 @@ def run_pca_project(
     ref_df = ref_annotated.to_pandas()
 
     # project data
-    # pca_loadings = hl.read_table(f'{out_dir}GWASpy/PCA/{data_basename}/pca_project/{ref_basename}_loadings.ht')
     project_mt = hl.read_matrix_table(f'{out_dir}GWASpy/PCA/{data_basename}/pca_project/{data_basename}_intersect_{ref_basename}.mt')
 
     data_scores = pc_project(mt=project_mt, loadings_ht=pca_loadings)
     data_scores = data_scores.transmute(**{f'PC{i}': data_scores.scores[i - 1] for i in range(1, npcs+1)})
     data_df = data_scores.to_pandas()
-    # ht_projections.export(f'{out_dir}GWASpy/PCA/{data_basename}/pca_project/{data_basename}.project.pca.scores.tsv')
 
     # merge data scores with ref scores
     data_ref = pd.concat([ref_df, data_df], sort=False)
@@ -260,10 +219,6 @@ def run_pca_project(
     df_to_export.loc[df_to_export['SuperPop'].isnull(), 'Projected'] = 'Yes - input'
     df_to_export.to_csv(f'{out_dir}GWASpy/PCA/{data_basename}/pca_project/input_and_reference_scores.tsv',
                         sep='\t', index=False)
-
-    # ref_scores = f'{out_dir}GWASpy/PCA/{data_basename}/pca_project/{ref_basename}.project.pca.scores.txt.bgz'
-    # data_scores = f'{out_dir}GWASpy/PCA/{data_basename}/pca_project/{data_basename}.project.pca.scores.tsv'
-    # data_ref = merge_data_with_ref(ref_scores=ref_scores, ref_info=ref_info, data_scores=data_scores)
 
     from gwaspy.pca.assign_pop_labels import assign_population_pcs
     pcs_df, clf = assign_population_pcs(pop_pc_pd=data_ref, num_pcs=npcs, min_prob=prob_threshold)
@@ -279,6 +234,7 @@ def run_pca_project(
 
     print("\nGenerating PCA plots")
     data_scores_prob = f'{out_dir}GWASpy/PCA/{data_basename}/pca_project/pca_sup_pops_{prob_threshold}_probs.project.pca.txt'
+    ref_scores = df_to_export[df_to_export['Projected'] == 'No - reference']
 
     figs_dict = {}
     # plotting more than 10 PCA plots in HTML generates wobbly, large files
@@ -287,7 +243,6 @@ def run_pca_project(
         ypc = f'PC{i + 1}'
         figs_dict["fig{}{}".format(xpc, ypc)] = plot_pca_ref(data_scores=data_scores_prob,
                                                              ref_scores=ref_scores,
-                                                             ref_info=ref_info,
                                                              x_pc=xpc, y_pc=ypc)
     with open('/tmp/pca.project.plots.html', 'a') as f:
         for figname, figure in figs_dict.items():
