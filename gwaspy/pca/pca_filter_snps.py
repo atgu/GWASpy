@@ -56,7 +56,9 @@ def relatedness_check(
         relatedness_ht = hl.pc_relate(in_mt.GT, 0.01, k=10, statistics='kin')
         
         print('exporting relatedness statistics to a tsv file')
-        # Hail will export samples as {"s": "sample0001"} by default. Export as "sample0001" instead.
+        df_export = relatedness_ht.to_pandas()
+        df_export.to_csv(f'{outdir}relatedness_checks_pc_relate.tsv.gz', sep='\t', index=False, compression='gzip')
+
         ht_export = relatedness_ht.select(i=relatedness_ht.i, j=relatedness_ht.j, kin=relatedness_ht.kin)
         ht_export.export(f'{outdir}relatedness_checks_pc_relate.tsv.bgz')
 
