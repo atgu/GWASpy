@@ -56,7 +56,8 @@ def relatedness_check(
         relatedness_ht = hl.pc_relate(in_mt.GT, 0.01, k=10, statistics='kin')
         
         print('exporting relatedness statistics to a tsv file')
-        ht_export = relatedness_ht.select(i=relatedness_ht.i.s, j=relatedness_ht.j.s, kin=relatedness_ht.kin)
+        ht_export = relatedness_ht.key_by()
+        ht_export = ht_export.select(ht_export.kin, i=ht_export.i.s, j=ht_export.j.s)
         ht_export.export(f'{outdir}relatedness_checks_pc_relate.tsv.bgz')
 
         print('getting related samples to be removed using maximal independent set')
