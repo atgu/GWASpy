@@ -252,6 +252,13 @@ def run_pca_project(
     # merge data scores with ref scores
     data_ref = pd.concat([ref_df, data_df], sort=False)
 
+    # export merged data and ref PC scores
+    df_to_export = data_ref.copy()
+    df_to_export.loc[~df_to_export['SuperPop'].isnull(), 'Projected'] = 'No - reference'
+    df_to_export.loc[df_to_export['SuperPop'].isnull(), 'Projected'] = 'Yes - input'
+    df_to_export.to_csv(f'{out_dir}GWASpy/PCA/{data_basename}/pca_project/input_and_reference_scores.tsv',
+                        sep='\t', index=False)
+
     # ref_scores = f'{out_dir}GWASpy/PCA/{data_basename}/pca_project/{ref_basename}.project.pca.scores.txt.bgz'
     # data_scores = f'{out_dir}GWASpy/PCA/{data_basename}/pca_project/{data_basename}.project.pca.scores.tsv'
     # data_ref = merge_data_with_ref(ref_scores=ref_scores, ref_info=ref_info, data_scores=data_scores)
