@@ -155,7 +155,7 @@ def run_pca_normal(
     loadings = loadings.annotate(pca_af=pca_mt.rows()[loadings.key].pca_af)
 
     if len(fail_samples) > 0:
-        print(f'\nProjecting {fail_samples} related samples on PCs pre-computed using unrelated samples')
+        print(f'\nProjecting {len(fail_samples)} related samples on PCs pre-computed using unrelated samples')
         related_mt = mt.filter_cols(hl.literal(fail_samples).contains(mt['s']), keep=True)
         related_scores = pc_project(mt=related_mt, loadings_ht=loadings)
         related_scores = related_scores.transmute(**{f'PC{i}': related_scores.scores[i - 1] for i in range(1, n_pcs+1)})
