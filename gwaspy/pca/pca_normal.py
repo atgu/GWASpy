@@ -7,6 +7,44 @@ from matplotlib.backends.backend_pdf import PdfPages
 from gwaspy.pca.pca_filter_snps import pca_filter_mt, relatedness_check
 
 
+def pc_project(
+        mt: hl.MatrixTable = None,
+        loadings_ht: hl.Table = None,
+        loading_location: str = 'loadings',
+        af_location: str = 'pca_af') -> hl.Table:
+    """
+    Projects samples in `mt` on pre-computed PCs.
+
+    :param mt: MT containing the samples to project
+    :param loadings_ht: HT containing the PCA loadings and allele frequencies used for the PCA
+    :param loading_location: Location of expression for loadings in `loadings_ht`
+    :param af_location: Location of expression for allele frequency in `loadings_ht`
+    :return: Table with scores calculated from loadings in column `scores`
+    """
+
+    n_variants = loadings_ht.count()
+
+    mt = mt.annotate_rows(
+        pca_loadings=loadings_ht[mt.row_key][loading_location],
+        pca_af=loadings_ht[mt.row_key][af_location],
+    )
+
+    mt = mt.filter_rows(
+        hl.is_defined(mt.pca_loadings)
+        & hl.is_defined(mt.pca_af)
+        & (mt.pca_af > 0)
+        & (mt.pca_af < 1)
+    )
+
+    gt_norm = (mt.GT.n_alt_alleles() - 2 * mt.pca_af) / hl.sqrt(
+        n_variants * 2 * mt.pca_af * (1 - mt.pca_af)
+    )
+
+    mt = mt.annotate_cols(scores=hl.agg.array_sum(mt.pca_loadings * gt_norm))
+
+    return mt.cols().select('scores')
+
+
 def plot_pca(
         in_df: pd.DataFrame,
         x_pc: str,
@@ -91,17 +129,41 @@ def run_pca_normal(
     print('\nFiltering mt')
     mt = pca_filter_mt(in_mt=mt, maf=maf, hwe=hwe, call_rate=call_rate, ld_cor=ld_cor, ld_window=ld_window)
 
-    mt = relatedness_check(in_mt=mt, method=relatedness_method, outdir=out_dir, kin_estimate=relatedness_thresh)
+    mt, fail_samples = relatedness_check(in_mt=mt, method=relatedness_method, outdir=out_dir,
+                                         kin_estimate=relatedness_thresh)
 
     pca_snps = mt.count_rows()
     if pca_snps > 1000000:
         import warnings
         warnings.warn(f'Too many SNPs to be used in PCA: {pca_snps}. This will make PCA run longer')
 
-    print('\nRunning PCA')
-    eigenvalues, pcs, _ = hl.hwe_normalized_pca(mt.GT, k=n_pcs)
+    print('\nRunning PCA on unrelated samples')
 
-    pcs_ht = pcs.transmute(**{f'PC{i}': pcs.scores[i - 1] for i in range(1, n_pcs+1)})
+    # filter_cols will not work if fail_samples list is empty
+    if len(fail_samples) > 0:
+        unrelated_mt = mt.filter_cols(hl.literal(fail_samples).contains(mt['s']), keep=False)
+    else:
+        unrelated_mt = mt
+
+    # run PCA on unrelated samples
+    eigenvalues, pcs, loadings = hl.hwe_normalized_pca(unrelated_mt.GT, k=n_pcs)
+    unrelated_scores = pcs.transmute(**{f'PC{i}': pcs.scores[i - 1] for i in range(1, n_pcs+1)})
+    unrelated_scores = unrelated_scores.annotate(Projected='No - unrelated')
+    # add AF annotation
+    pca_mt = unrelated_mt.annotate_rows(pca_af=hl.agg.mean(unrelated_mt.GT.n_alt_alleles()) / 2)
+    loadings = loadings.annotate(pca_af=pca_mt.rows()[loadings.key].pca_af)
+
+    if len(fail_samples) > 0:
+        print(f'\nProjecting {fail_samples} related samples on PCs pre-computed using unrelated samples')
+        related_mt = mt.filter_cols(hl.literal(fail_samples).contains(mt['s']), keep=True)
+        related_scores = pc_project(mt=related_mt, loadings_ht=loadings)
+        related_scores = related_scores.transmute(**{f'PC{i}': related_scores.scores[i - 1] for i in range(1, n_pcs+1)})
+        related_scores = related_scores.annotate(Projected='Yes - related')
+
+        # merge the related scores with unrelateds
+        pcs_ht = unrelated_scores.union(related_scores)
+    else:
+        pcs_ht = unrelated_scores
 
     # add phenotype and sex to the output, using information from the mt
     # first check if is_case and os_female fields exist in the mt
