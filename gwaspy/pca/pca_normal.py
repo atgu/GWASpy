@@ -147,7 +147,7 @@ def run_pca_normal(
         unrelated_mt = mt
 
     # run PCA on unrelated samples
-    eigenvalues, pcs, loadings = hl.hwe_normalized_pca(unrelated_mt.GT, k=n_pcs)
+    eigenvalues, pcs, loadings = hl.hwe_normalized_pca(unrelated_mt.GT, k=n_pcs, compute_loadings=True)
     unrelated_scores = pcs.transmute(**{f'PC{i}': pcs.scores[i - 1] for i in range(1, n_pcs+1)})
     unrelated_scores = unrelated_scores.annotate(Projected='No - unrelated')
     # add AF annotation
