@@ -129,6 +129,7 @@ def run_pca_normal(
     print('\nFiltering mt')
     mt = pca_filter_mt(in_mt=mt, maf=maf, hwe=hwe, call_rate=call_rate, ld_cor=ld_cor, ld_window=ld_window)
 
+    out_dir = f'{out_dir}GWASpy/PCA/{basename}/pca_normal/'
     mt, fail_samples = relatedness_check(in_mt=mt, method=relatedness_method, outdir=out_dir,
                                          kin_estimate=relatedness_thresh)
 
@@ -181,7 +182,7 @@ def run_pca_normal(
     pcs_ht = pcs_ht.annotate(is_female=annotations_ht[pcs_ht.s].is_female)
 
     print('\nSaving PC scores file')
-    out_scores_file = f'{out_dir}GWASpy/PCA/pca_normal/{basename}.pca.normal.scores.tsv'
+    out_scores_file = f'{out_dir}{basename}.pca.normal.scores.tsv'
     pcs_ht.export(out_scores_file)
 
     print('\nGenerating PCA plots')
@@ -199,10 +200,10 @@ def run_pca_normal(
 
             figs_dict["fig{}{}".format(col, i)] = plot_pca(pcs_scores, xpc, ypc, col)
 
-    pdf = PdfPages('/tmp/pca.no.ref.plots.pdf')
+    pdf = PdfPages('/tmp/pca.normal.plots.pdf')
     for figname, figure in figs_dict.items():
         pdf.savefig(figure)
     pdf.close()
-    hl.hadoop_copy('file:///tmp/pca.no.ref.plots.pdf',
-                   f'{out_dir}GWASpy/PCA/pca_normal/{basename}.pca.no.ref.plots.pdf')
+    hl.hadoop_copy('file:///tmp/pca.normal.plots.pdf',
+                   f'{out_dir}{basename}.pca.normal.plots.pdf')
 
