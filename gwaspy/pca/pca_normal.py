@@ -109,6 +109,7 @@ def run_pca_normal(
         ld_cor: float = 0.2,
         ld_window: int = 250000,
         n_pcs: int = 20,
+        run_relatedness_check: bool = True,
         relatedness_method: str = 'pc_relate',
         relatedness_thresh: float = 0.1,
         out_dir: str = None):
@@ -129,9 +130,23 @@ def run_pca_normal(
     print('\nFiltering mt')
     mt = pca_filter_mt(in_mt=mt, maf=maf, hwe=hwe, call_rate=call_rate, ld_cor=ld_cor, ld_window=ld_window)
 
-    out_dir = f'{out_dir}GWASpy/PCA/{basename}/pca_normal/'
-    mt, fail_samples = relatedness_check(in_mt=mt, method=relatedness_method, outdir=out_dir,
-                                         kin_estimate=relatedness_thresh)
+    if run_relatedness_check:
+        out_dir = f'{out_dir}GWASpy/PCA/{basename}/pca_normal/'
+        mt, fail_samples = relatedness_check(in_mt=mt, method=relatedness_method, outdir=out_dir,
+                                             kin_estimate=relatedness_thresh)
+    else:
+        print('Skipping relatedness checks')
+        out_dir = f'{out_dir}GWASpy/PCA/{basename}/pca_normal/'
+        out_filename = f'{out_dir}samples_failing_relatedness_checks.tsv'
+        if not hl.hadoop_exists(out_filename):
+            print('''Did not find any previously created file with samples failing relatedness checks. All samples will
+            be treated as unrelateds''')
+            fail_samples = []
+        else:
+            print(f'Related samples from file {out_filename} will be used')
+            related = pd.read_csv(out_filename)
+            fail_samples = related['Sample'].to_list()
+            print(f'''Found {len(fail_samples)} samples that failed relatedness checks and will be projected''')
 
     pca_snps = mt.count_rows()
     if pca_snps > 1000000:
