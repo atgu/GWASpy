@@ -44,7 +44,7 @@ def pca(
         run_pca_normal(dirname=data_dirname, basename=data_basename, input_type=input_type, out_dir=out_dir,
                        reference=reference, maf=maf, hwe=hwe, call_rate=call_rate, ld_cor=ld_cor, ld_window=ld_window,
                        n_pcs=n_pcs, run_relatedness_check=run_relatedness_check, relatedness_method=relatedness_method,
-                       relatedness_thresh=relatedness_thresh)
+                       relatedness_thresh=relatedness_thresh, include_kinself=include_kinself)
 
 
 def main():

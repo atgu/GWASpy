@@ -110,6 +110,7 @@ def run_pca_normal(
         ld_window: int = 250000,
         n_pcs: int = 20,
         run_relatedness_check: bool = True,
+        include_kinself: bool = False,
         relatedness_method: str = 'pc_relate',
         relatedness_thresh: float = 0.1,
         out_dir: str = None):
@@ -133,7 +134,7 @@ def run_pca_normal(
     if run_relatedness_check:
         out_dir = f'{out_dir}GWASpy/PCA/{basename}/pca_normal/'
         mt, fail_samples = relatedness_check(in_mt=mt, method=relatedness_method, outdir=out_dir,
-                                             kin_estimate=relatedness_thresh)
+                                             kin_estimate=relatedness_thresh, include_kinself=include_kinself)
     else:
         print('Skipping relatedness checks')
         out_dir = f'{out_dir}GWASpy/PCA/{basename}/pca_normal/'
