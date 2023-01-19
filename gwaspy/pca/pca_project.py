@@ -140,6 +140,7 @@ def run_pca_project(
         ld_cor: float = 0.2,
         ld_window: int = 250000,
         run_relatedness_check: bool = True,
+        include_kinself: bool = False,
         relatedness_method: str = 'pc_relate',
         relatedness_thresh: float = 0.1,
         prob_threshold: float = 0.8):
@@ -160,6 +161,7 @@ def run_pca_project(
     :param ld_cor: reference build
     :param ld_window: window size
     :param run_relatedness_check: whether or not to run relatedness checks
+    :param include_kinself: whether or not to include self kinship
     :param relatedness_method: method to use for relatedness filtering
     :param relatedness_thresh: threshold to use for filtering out related individuals
     :param prob_threshold: a list of probability thresholds to use for classifying samples
@@ -184,7 +186,7 @@ def run_pca_project(
     if run_relatedness_check:
         related_out_dir = f'{out_dir}GWASpy/PCA/{data_basename}/pca_project/'
         mt, _ = relatedness_check(in_mt=mt, method=relatedness_method, outdir=related_out_dir,
-                                  kin_estimate=relatedness_thresh)
+                                  kin_estimate=relatedness_thresh, include_kinself=include_kinself)
     else:
         print('Skipping relatedness checks')
 

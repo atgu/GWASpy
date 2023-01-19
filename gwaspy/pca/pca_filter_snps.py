@@ -48,12 +48,15 @@ def relatedness_check(
         in_mt: hl.MatrixTable = None,
         method: str = 'pc_relate',
         outdir: str = None,
-        kin_estimate: float = 0.1):
+        kin_estimate: float = 0.1,
+        include_kinself: bool = False):
 
     if method == 'pc_relate':
         print("\nUsing PC-Relate for relatedness checks")
         # compute kinship statistic for every sample-pair
-        relatedness_ht = hl.pc_relate(in_mt.GT, 0.01, k=10, statistics='kin')
+        if include_kinself:
+            print("\nkinself will be included in exported tsv file")
+        relatedness_ht = hl.pc_relate(in_mt.GT, 0.01, k=10, statistics='kin', include_self_kinship=include_kinself)
         
         print('exporting relatedness statistics to a tsv file')
         ht_export = relatedness_ht.key_by()
