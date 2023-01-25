@@ -65,6 +65,13 @@ def relatedness_check(
 
         print('getting related samples to be removed using maximal independent set')
         # only run maximal independent set step on sample-pairs with kinship above specified threshold
+
+        # when include_kinself is True, not removing kinself will result in all samples failing relatedness because for
+        # every kin between a sample with itself, the kin estimate will be ~0.5 in most cases (excluding inbreeding)
+        if include_kinself:
+            relatedness_ht = relatedness_ht.filter(relatedness_ht.i == relatedness_ht.j, keep=False)
+        else:
+            relatedness_ht = relatedness_ht
         pairs = relatedness_ht.filter(relatedness_ht['kin'] > kin_estimate)
         samples_to_remove = hl.maximal_independent_set(pairs.i, pairs.j, False)
         samples = samples_to_remove.node.s.collect()
