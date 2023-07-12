@@ -159,7 +159,7 @@ def run_pca_joint(
     print("\nFiltering data mt")
     data_mt = pca_filter_mt(in_mt=mt, maf=maf, hwe=hwe, call_rate=call_rate, ld_cor=ld_cor, ld_window=ld_window)
 
-    data_mt = relatedness_check(in_mt=data_mt, method=relatedness_method, outdir=out_dir,
+    data_mt, _ = relatedness_check(in_mt=data_mt, method=relatedness_method, outdir=out_dir,
                                 kin_estimate=relatedness_thresh)
 
     joint_pca(ref_dirname=ref_dirname, ref_basename=ref_basename, in_mt=data_mt, data_basename=data_basename, npcs=npcs,
