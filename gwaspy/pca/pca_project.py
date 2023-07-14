@@ -4,6 +4,7 @@ import hail as hl
 import pandas as pd
 from gwaspy.pca.pca_filter_snps import pca_filter_mt, relatedness_check
 import plotly.express as px
+from distinctipy import distinctipy
 
 
 def pc_project(
@@ -104,16 +105,18 @@ def plot_pca_ref(data_scores, ref_scores, x_pc, y_pc):
     # concatenate the two dfs together
     concatenated = pd.concat([ref_update, pcs], axis=0)
 
-    # https://matplotlib.org/stable/tutorials/colors/colors.html
-    color_map = {}
-    colors = ['#8C000F', '#00FFFF', '#0343DF', '#653700', '#008000', '#ED0DD9', '#4B0082', '#008080',
-              '#FF0000', '#FFD700', '#DDA0DD', '#C0C0C0']
-
     # get a list of unique population labels in the data
     pops = concatenated['pop'].unique().tolist()
+    n_pops = len(pops)
+    colors = distinctipy.get_colors(n_pops,
+                                    exclude_colors=[(0, 0, 0),
+                                                    (1, 1, 1)]) # generate N distinct colours, excluding black+white
+
+    # https://matplotlib.org/stable/tutorials/colors/colors.html
+    color_map = {}
     # update the dictionary with unique colors for each population
-    for i in range(len(pops)):
-        color_map[pops[i]] = colors[i]
+    for i in range(n_pops):
+        color_map[pops[i]] = f'rgb{colors[i]}'
 
     color_map.update({'input dataset': '#000000'})  # use black for input dataset
 
