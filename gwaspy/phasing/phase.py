@@ -56,6 +56,7 @@ def main():
     parser.add_argument('--pedigree', type=str, default=None)
     parser.add_argument('--local', action='store_true')
     parser.add_argument('--billing-project', required=True)
+    parser.add_argument('--data-type', type=str, default='array', choices=['array', 'wgs'])
     parser.add_argument('--software', type=str, default='shapeit', choices=['beagle', 'shapeit'])
     parser.add_argument('--output-filename', type=str, required=True)
     parser.add_argument('--out-dir', type=str, required=True)
@@ -72,6 +73,7 @@ def main():
               input_vcf=args.input_vcf,
               vcf_ref=args.vcf_ref,
               fam_file=args.pedigree,
+              data_type=args.data_type,
               software=args.software,
               output_filename=args.output_filename,
               out_dir=args.out_dir)
