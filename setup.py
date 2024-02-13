@@ -38,7 +38,8 @@ setup(name='gwaspy',
               'preimp_qc = gwaspy.preimp_qc.preimp_qc:main',
               'pca = gwaspy.pca.pca:main',
               'imputation = gwaspy.imputation.imputation:main',
-              'phasing = gwaspy.phasing.phasing:main'
+              'phasing = gwaspy.phasing.phase:main'
+              # 'phasing = gwaspy.phasing.phasing:main'
           ]
       },
       classifiers=classifiers,
