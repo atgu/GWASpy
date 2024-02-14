@@ -282,7 +282,7 @@ def shapeit_phasing(
                 b=batch,
                 vcf=chrom_vcf,
                 region=f'chr{i}',
-                storage=round(vcf_size*1.5 + ref_size + 2)
+                storage=round(vcf_size*1.5 + 2)
             ).annotated_vcf
 
         if data_type == 'array':
