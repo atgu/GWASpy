@@ -63,8 +63,8 @@ def shapeit_phasing(
 
         # phase common variants
         j.command(f"""
-                    phase_common_static --input {vcf['bcf']} \
-                    {f'--reference {ref_vf}' if ref_vf else ''} \
+                    phase_common_static --input {vcf['vcf']} \
+                    {f"--reference {ref_vf['vcf']}" if ref_vf else ''} \
                     --map /root/gwaspy/resources/maps/b38/{chrom}.b38.gmap.gz \
                     --output {j.phased_common_chunk['bcf']} \
                     --thread {ncpu-1} \
