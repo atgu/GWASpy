@@ -45,7 +45,7 @@ def annotate_vcf(
     )
 
     j.command(f"""
-                bcftools +fill-tags {vcf['vcf']} -Ou -- -t AN,AC -o {j.annotated_vcf['vcf']}
+                bcftools +fill-tags {vcf['vcf']} -Ou -o {j.annotated_vcf['vcf']} -- -t AN,AC
                 bcftools index {j.annotated_vcf['vcf']} --output {j.annotated_vcf['index']} --threads {ncpu}
                 """)
 
