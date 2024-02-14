@@ -229,6 +229,9 @@ def shapeit_phasing(
             chrom_vcf = batch.read_input_group(**{'vcf': input_path,
                                                   'index': input_idx})
 
+        if not hfs.exists(input_idx):
+            raise SystemExit('GWASpy requires the input file to be indexed (.tbi or .csi). Found none, exiting')
+
         vcf_size = round(size(vcf_path))
 
         if reference_path:
