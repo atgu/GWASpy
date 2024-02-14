@@ -68,7 +68,7 @@ def shapeit_phasing(
                     --map /root/gwaspy/resources/maps/b38/{chrom}.b38.gmap.gz \
                     --output {j.phased_common_chunk['bcf']} \
                     --thread {ncpu-1} \
-                    --log {j.phased_common_chunk['chunk.log']} \
+                    --log {j.phased_common_chunk['log']} \
                     --filter-maf {maf} \
                     {f'--pedigree {pedigree}' if pedigree else ''} \
                     --region {region}
