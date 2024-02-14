@@ -159,7 +159,7 @@ def shapeit_phasing(
 
         j.command(f"""
                     phase_rare_static \
-                    --input {vcf['bcf']} --input-region {input_region} \
+                    --input {vcf['vcf']} --input-region {input_region} \
                     --scaffold {scaffold_vcf['bcf']} --scaffold-region {scaffold_region} \
                     --map /root/gwaspy/resources/maps/b38/{chrom}.b38.gmap.gz \
                     {f'--pedigree {pedigree}' if pedigree else ''} \
