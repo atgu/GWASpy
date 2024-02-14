@@ -20,12 +20,45 @@ def size(file: str):
     return size_gigs
 
 
+def annotate_vcf(
+        b: hb.batch.Batch = None,
+        vcf: hb.ResourceGroup = None,
+        region: str = None,
+        ncpu: int = 8,
+        memory: str = 'standard',
+        storage: int = None,
+        img: str = 'docker.io/lindonkambule/gwaspy_phase_impute:latest',
+) -> Job:
+    j = b.new_job(name=f'Add AC, AN tags to input: {region}')
+
+    j.image(img)
+    j.cpu(ncpu)
+    j.memory(memory)
+    j.regions(['us-central1'])
+    j.storage(f'{storage}Gi')
+
+    j.declare_resource_group(
+        annotated_vcf={
+            'vcf': '{root}.bcf',
+            'index': '{root}.bcf.csi'
+        }
+    )
+
+    j.command(f"""
+                bcftools +fill-tags {vcf['vcf']} -Ou -- -t AN,AC --output {j.annotated_vcf['vcf']}
+                bcftools index {j.annotated_vcf['vcf']} --output {j.annotated_vcf['index']} --threads {ncpu}
+                """)
+
+    return j
+
+
 def shapeit_phasing(
         batch: hb.Batch = None,
         input_path: str = None,
         reference_path: Optional[str] = None,
         fam_file: Optional[hb.ResourceFile] = None,
         data_type: str = 'array',
+        fill_tags: bool = False,
         output_filename: str = None,
         output_path: str = None):
 
@@ -243,6 +276,14 @@ def shapeit_phasing(
         else:
             ref_vcf = None
             ref_size = 0
+
+        if fill_tags:
+            chrom_vcf = annotate_vcf(
+                b=batch,
+                vcf=chrom_vcf,
+                region=f'chr{i}',
+                storage=round(vcf_size*1.5 + ref_size + 2)
+            ).annotated_vcf
 
         if data_type == 'array':
             phase_common(

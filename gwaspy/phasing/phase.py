@@ -12,6 +12,7 @@ def run_phase(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
               fam_file: str = None,
               data_type: str = 'array',
               software: str = 'shapeit',
+              fill_tags: bool = False,
               output_filename: str = None,
               out_dir: str = None):
 
@@ -44,6 +45,7 @@ def run_phase(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
             reference_path=ref_path,
             fam_file=pedigree,
             data_type=data_type,
+            fill_tags=fill_tags,
             output_filename=output_filename,
             output_path=out_dir)
     # else: To add BEAGLE
@@ -57,6 +59,7 @@ def main():
     parser.add_argument('--local', action='store_true')
     parser.add_argument('--billing-project', required=True)
     parser.add_argument('--data-type', type=str, default='array', choices=['array', 'wgs'])
+    parser.add_argument('--fill-tags', action='store_true')
     parser.add_argument('--software', type=str, default='shapeit', choices=['beagle', 'shapeit'])
     parser.add_argument('--output-filename', type=str, required=True)
     parser.add_argument('--out-dir', type=str, required=True)
@@ -75,5 +78,6 @@ def main():
               fam_file=args.pedigree,
               data_type=args.data_type,
               software=args.software,
+              fill_tags=args.fill_tags,
               output_filename=args.output_filename,
               out_dir=args.out_dir)
