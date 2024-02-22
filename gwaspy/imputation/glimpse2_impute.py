@@ -87,7 +87,7 @@ def glimpse_phase_impute(
         j.command(f"""bcftools view -G -Ou -o {j.ref_sites['bcf']} {ref_bcf['bcf']} """)
         j.command(f"""bcftools index {j.ref_sites['bcf']} --output {j.ref_sites['bcf.csi']} --threads {ncpu}""")
 
-        j.command(f'''bcftools query -f'%CHROM\t%POS\t%REF,%ALT\n' {j.ref_sites['bcf']} | bgzip -c > {j.ref_sites['tsv.gz']}''')
+        j.command(f"""bcftools query -f'%CHROM\t%POS\t%REF,%ALT\n' {j.ref_sites['bcf']} | bgzip -c > {j.ref_sites['tsv.gz']}""")
         j.command(f"""tabix -s1 -b2 -e2 {j.ref_sites['tsv.gz']}""")
 
         return j
@@ -95,7 +95,7 @@ def glimpse_phase_impute(
     # Step 3) Computing genotype likelihoods (GLs) for a single sample at specific positions
     def compute_gls(
             b: hb.batch.Batch,
-            sample_bam: hb.ResourceGroup = None,
+            sample_bam_path: str = None,
             ref_sites: hb.ResourceGroup = None,
             ref_genome_fasta: hb.ResourceGroup = None,
             sample_id: str = None,
@@ -106,6 +106,10 @@ def glimpse_phase_impute(
             img: str = 'docker.io/lindonkambule/gwaspy_phase_impute:latest'
     ) -> Job:
         j = b.new_job(name=f'compute GLs:{sample_id}-{chrom}')
+
+        bam_idx = f'{sample_bam_path}.bai' if hfs.exists(f'{sample_bam_path}.bai') else f'{sample_bam_path}.crai'
+        sample_bam = b.read_input_group(**{'bam': sample_bam_path,
+                                           'idx': bam_idx})
 
         j.image(img)
         j.cpu(ncpu)
@@ -121,7 +125,7 @@ def glimpse_phase_impute(
         )
 
         # compute GLs
-        j.command(f'''bcftools mpileup -f {ref_genome_fasta['fasta']} -I -E -a 'FORMAT/DP' -T {ref_sites['bcf']} -r {chrom} {sample_bam['bam']} -Ou | bcftools call -Aim -C alleles -T {ref_sites['tsv.gz']} -Ou -o {j.gl_vcf['bcf']}''')
+        j.command(f"""bcftools mpileup -f {ref_genome_fasta['fasta']} -I -E -a 'FORMAT/DP' -T {ref_sites['bcf']} -r {chrom} {sample_bam['bam']} -Ou | bcftools call -Aim -C alleles -T {ref_sites['tsv.gz']} -Ou -o {j.gl_vcf['bcf']}""")
 
         j.command(f"""bcftools index {j.gl_vcf['bcf']} --output {j.gl_vcf['bcf.csi']} --threads {ncpu}""")
 
@@ -308,7 +312,7 @@ def glimpse_phase_impute(
         bams_gls = [
             compute_gls(
                 b=batch,
-                sample_bam=bam_list[s][1],
+                sample_bam_path=bam_list[s][1],
                 sample_id=bam_list[s][0],
                 ref_sites=ref_panel_sites,
                 ref_genome_fasta=ref_genome,
