@@ -87,7 +87,7 @@ def glimpse_phase_impute(
         j.command(f"""bcftools view -G -Ou -o {j.ref_sites['bcf']} {ref_bcf['bcf']} """)
         j.command(f"""bcftools index {j.ref_sites['bcf']} --output {j.ref_sites['bcf.csi']} --threads {ncpu}""")
 
-        j.command(f"""bcftools query -f'%CHROM\t%POS\t%REF,%ALT\n' {j.ref_sites['bcf']} | bgzip -c > {j.ref_sites['tsv.gz']}""")
+        j.command(f'''bcftools query -f'%CHROM\t%POS\t%REF,%ALT\n' {j.ref_sites['bcf']} | bgzip -c > {j.ref_sites['tsv.gz']}''')
         j.command(f"""tabix -s1 -b2 -e2 {j.ref_sites['tsv.gz']}""")
 
         return j
@@ -121,7 +121,7 @@ def glimpse_phase_impute(
         )
 
         # compute GLs
-        j.command(f"""bcftools mpileup -f {ref_genome_fasta['fasta']} -I -E -a 'FORMAT/DP' -T {ref_sites['bcf']} -r {chrom} {sample_bam['bam']} -Ou | bcftools call -Aim -C alleles -T {ref_sites['tsv.gz']} -Ou -o {j.gl_vcf['bcf']}""")
+        j.command(f'''bcftools mpileup -f {ref_genome_fasta['fasta']} -I -E -a 'FORMAT/DP' -T {ref_sites['bcf']} -r {chrom} {sample_bam['bam']} -Ou | bcftools call -Aim -C alleles -T {ref_sites['tsv.gz']} -Ou -o {j.gl_vcf['bcf']}''')
 
         j.command(f"""bcftools index {j.gl_vcf['bcf']} --output {j.gl_vcf['bcf.csi']} --threads {ncpu}""")
 
