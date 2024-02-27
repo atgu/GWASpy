@@ -1,7 +1,5 @@
 __author__ = 'Lindo Nkambule'
 
-import argparse
-import hail as hl
 import hailtop.batch as hb
 import hailtop.fs as hfs
 import pandas as pd
@@ -64,13 +62,6 @@ def impute5_imputation(
                     --r {region} \
                     --out-gp-field \
                     --o {j.imputed_chunk['chunk.bcf']} \
-                    --threads {ncpu}
-                    """
-                  )
-
-        j.command(f"""
-                    bcftools index {j.imputed_chunk['chunk.bcf']} \
-                    --output {j.imputed_chunk['chunk.bcf.csi']} \
                     --threads {ncpu}
                     """
                   )
