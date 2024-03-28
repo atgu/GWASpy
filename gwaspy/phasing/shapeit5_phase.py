@@ -4,7 +4,7 @@ import hailtop.batch as hb
 import hailtop.fs as hfs
 import pandas as pd
 from hailtop.batch.job import Job
-from typing import List, Union, Optional
+from typing import List, Optional
 
 
 def size(file: str):
@@ -56,6 +56,7 @@ def shapeit_phasing(
         batch: hb.Batch = None,
         input_path: str = None,
         reference_path: Optional[str] = None,
+        genome_build: str = 'GRCh38',
         fam_file: Optional[hb.ResourceFile] = None,
         data_type: str = 'array',
         fill_tags: bool = False,
@@ -66,6 +67,7 @@ def shapeit_phasing(
             b: hb.batch.Batch = None,
             vcf: hb.ResourceGroup = None,
             ref_vf: Optional[hb.ResourceGroup] = None,
+            reference: str = 'GRCh38',
             maf: float = 0.001,
             region: str = None,
             pedigree: Optional[hb.ResourceFile] = None,
@@ -94,11 +96,14 @@ def shapeit_phasing(
         j.regions(['us-central1'])
         j.storage(f'{storage}Gi')
 
+        map_file = f'/root/gwaspy/resources/maps/b38/{chrom}.b38.gmap.gz' if reference == 'GRCh38' else \
+            f'/root/gwaspy/resources/maps/b37/chr{chrom}.b37.gmap.gz'
+
         # phase common variants
         j.command(f"""
                     phase_common_static --input {vcf['vcf']} \
                     {f"--reference {ref_vf['vcf']}" if ref_vf else ''} \
-                    --map /root/gwaspy/resources/maps/b38/{chrom}.b38.gmap.gz \
+                    --map {map_file} \
                     --output {j.phased_common_chunk['bcf']} \
                     --thread {ncpu-1} \
                     --log {j.phased_common_chunk['log']} \
@@ -166,6 +171,7 @@ def shapeit_phasing(
             scaffold_vcf: hb.ResourceGroup = None,
             scaffold_region: str = None,
             input_region: str = None,
+            reference: str = 'GRCh38',
             pedigree: Optional[hb.ResourceFile] = None,
             ncpu: int = 4,
             memory: str = 'standard',
@@ -190,11 +196,14 @@ def shapeit_phasing(
         j.regions(['us-central1'])
         j.storage(f'{storage}Gi')
 
+        map_file = f'/root/gwaspy/resources/maps/b38/{chrom}.b38.gmap.gz' if reference == 'GRCh38' else \
+            f'/root/gwaspy/resources/maps/b37/chr{chrom}.b37.gmap.gz'
+
         j.command(f"""
                     phase_rare_static \
                     --input {vcf['vcf']} --input-region {input_region} \
                     --scaffold {scaffold_vcf['bcf']} --scaffold-region {scaffold_region} \
-                    --map /root/gwaspy/resources/maps/b38/{chrom}.b38.gmap.gz \
+                    --map {map_file} \
                     {f'--pedigree {pedigree}' if pedigree else ''} \
                     --output {j.phased_rare_chunk['chunk.bcf']} \
                     --thread {ncpu-1} \
@@ -277,11 +286,12 @@ def shapeit_phasing(
             ref_vcf = None
             ref_size = 0
 
+        chromosome = f'chr{i}' if genome_build == 'GRCh38' else f'{i}'
         if fill_tags:
             chrom_vcf = annotate_vcf(
                 b=batch,
                 vcf=chrom_vcf,
-                region=f'chr{i}',
+                region=chromosome,
                 storage=round(vcf_size*1.5 + 2)
             ).annotated_vcf
 
@@ -292,7 +302,7 @@ def shapeit_phasing(
                 ref_vf=ref_vcf,
                 maf=0.0,
                 pedigree=fam_file,
-                region=f'chr{i}',
+                region=chromosome,
                 storage=round(vcf_size*1.5 + ref_size + 2),
                 output_vcf_name=output_filename,
                 out_dir=f'{output_path}/shapeit5'
@@ -309,6 +319,7 @@ def shapeit_phasing(
                     b=batch,
                     vcf=chrom_vcf,
                     ref_vf=ref_vcf,
+                    reference=genome_build,
                     pedigree=fam_file,
                     region=common_regions[i],
                     storage=round(vcf_size*1.5 + ref_size + 2)
@@ -342,6 +353,7 @@ def shapeit_phasing(
                     scaffold_vcf=common_phased_ligated_scaffold,
                     scaffold_region=rare_regions[i][0],  # irg (3rd col in chunks)
                     input_region=rare_regions[i][1],  # org (4th col in chunks)
+                    reference=genome_build,
                     pedigree=fam_file,
                     storage=round(vcf_size*1.5*1.5)  # we have two input files (unphased VCF+scaffold) and one output
                 ).phased_rare_chunk
