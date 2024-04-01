@@ -300,6 +300,7 @@ def shapeit_phasing(
                 b=batch,
                 vcf=chrom_vcf,
                 ref_vf=ref_vcf,
+                reference=genome_build,
                 maf=0.0,
                 pedigree=fam_file,
                 region=chromosome,
