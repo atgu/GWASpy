@@ -173,6 +173,8 @@ class fhet_sex(BaseFilter):
 
         df_xy = pd.DataFrame(exprs_xy)
         df_xx = pd.DataFrame(exprs_xx)
+        print(df_xy.head())
+        print(df_xx.head())
 
         fig = fstat_plot(df_female=df_xy, df_male=df_xx, f_stat_y=self._fstat_y, f_stat_x=self._fstat_x,
                          figsize=self._figsize)
