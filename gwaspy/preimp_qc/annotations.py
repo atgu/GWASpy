@@ -165,16 +165,18 @@ class fhet_sex(BaseFilter):
                 filters=hl.agg.filter(mt.pre_geno.filters == False, impute_sex_aggregator(mt.GT, mt.aaf).f_stat)
             )})
 
+        print(mt.cols().show())
         mt_xy: hl.MatrixTable = mt.filter_cols(mt.is_female == True)
         mt_xx: hl.MatrixTable = mt.filter_cols(mt.is_female == False)
+        print(mt_xy.cols().show())
 
         exprs_xy = mt_xy.fstat_sex.collect()
         exprs_xx = mt_xx.fstat_sex.collect()
 
         df_xy = pd.DataFrame(exprs_xy)
         df_xx = pd.DataFrame(exprs_xx)
-        print(df_xy.head())
-        print(df_xx.head())
+        # print(df_xy.head())
+        # print(df_xx.head())
 
         fig = fstat_plot(df_female=df_xy, df_male=df_xx, f_stat_y=self._fstat_y, f_stat_x=self._fstat_x,
                          figsize=self._figsize)
