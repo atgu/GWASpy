@@ -46,8 +46,8 @@ def pc_project(
 
 
 def intersect_ref(
-        ref_dirname: str = 'gs://hgdp-1kg/hgdp_tgp/datasets_for_others/lindo/ds_without_outliers/',
-        ref_basename: str = 'unrelated',
+        ref_dirname: str = 'gs://gcp-public-data--gnomad/release/3.1/secondary_analyses/hgdp_1kg_v2/pca_results/',
+        ref_basename: str = 'unrelateds_without_outliers',
         data_mt: hl.MatrixTable = None,
         data_basename: str = None, out_dir: str = None):
     """
