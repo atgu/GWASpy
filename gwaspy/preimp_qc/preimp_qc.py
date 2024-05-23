@@ -64,7 +64,7 @@ def summary_stats(mt: hl.MatrixTable) -> Tuple[hl.MatrixTable, Dict[str, Any]]:
 def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None, pre_geno_thresh: Union[int, float] = 0.95,
               mind_thresh: Union[int, float] = 0.98, fhet_aut: Union[int, float] = 0.2, fstat_x: Union[int, float] = 0.5,
               fstat_y: Union[int, float] = 0.5, geno_thresh: Union[int, float] = 0.98,
-              cr_diff_thresh: Union[int, float] = 0.02, maf_thresh: Union[int, float] = 0.01,
+              cr_diff_thresh: Union[int, float] = 0.02, maf_thresh: Union[int, float] = 0.01, withpna: int = 0,
               hwe_th_con_thresh: Union[int, float] = 1e-6, hwe_th_cas_thresh: Union[int, float] = 1e-10,
               hwe_th_all_thresh: Union[int, float] = 1e-06, annotations_file: str = None, report: bool = True,
               export_type: str = 'hail', out_dir: str = None, reference: str = 'GRCh38'):
@@ -142,7 +142,14 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
         )})
 
     mt = geno(pre_row_filter='pre_geno', pre_col_filter='id_pass', geno_thresh=geno_thresh, data_type=data_type).filter(mt)
-    mt = invariant(pre_col_filter='id_pass').filter(mt)
+
+    if withpna == 0:
+        mt = invariant(pre_col_filter='id_pass').filter(mt)
+        row_filters = ['monomorphic_var']
+        filters = ['monomorphic_var']
+    else:
+        row_filters = []
+        filters = []
 
     # for HWE, markers in: (1) autosomes - include males+females; (2) chrX - include ONLY females; (3) exclude chrY
     mt = mt.annotate_entries(
@@ -167,25 +174,23 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
         if data_type == 'Case-only':
             print("\n" + data_type)
             mt = hwe_cas(pre_col_filter='id_pass', pre_row_filter='geno', hwe_th_ca=1e-6).filter(mt)
-            row_filters = ['pre_geno', 'geno', 'cr_diff', 'monomorphic_var', 'hwe_cas']
-            filters = ['pre_geno', 'mind', 'fstat', 'sex_violations', 'sex_warnings', 'geno', 'cr_diff',
-                       'monomorphic_var', 'hwe_cas']
+            row_filters += ['pre_geno', 'geno', 'cr_diff', 'hwe_cas']
+            filters += ['pre_geno', 'mind', 'fstat', 'sex_violations', 'sex_warnings', 'geno', 'cr_diff', 'hwe_cas']
             remove_fields = ['cr', 'diff', 'hwe_cas_aut', 'hwe_cas_sex']
         # (b) Control-Only
         elif data_type == 'Control-only':
             print("\n" + data_type)
             mt = hwe_con(pre_col_filter='id_pass', pre_row_filter='geno', hwe_th_co=1e-6).filter(mt)
-            row_filters = ['pre_geno', 'geno', 'cr_diff', 'monomorphic_var', 'hwe_con']
-            filters = ['pre_geno', 'mind', 'fstat', 'sex_violations', 'sex_warnings', 'geno', 'cr_diff',
-                       'monomorphic_var', 'hwe_con']
+            row_filters += ['pre_geno', 'geno', 'cr_diff', 'hwe_con']
+            filters += ['pre_geno', 'mind', 'fstat', 'sex_violations', 'sex_warnings', 'geno', 'cr_diff', 'hwe_con']
             remove_fields = ['cr', 'diff', 'hwe_con_aut', 'hwe_con_sex']
         elif data_type == 'Case-Control':
             print("\n" + data_type)
             mt = hwe_cas(pre_col_filter='id_pass', pre_row_filter='geno', hwe_th_ca=hwe_th_cas_thresh).filter(mt)
             mt = hwe_con(pre_col_filter='id_pass', pre_row_filter='geno', hwe_th_co=hwe_th_con_thresh).filter(mt)
-            row_filters = ['pre_geno', 'geno', 'cr_diff', 'monomorphic_var', 'hwe_con', 'hwe_cas']
-            filters = ['pre_geno', 'mind', 'fstat', 'sex_violations', 'sex_warnings', 'geno', 'cr_diff',
-                       'monomorphic_var', 'hwe_con', 'hwe_cas']
+            row_filters += ['pre_geno', 'geno', 'cr_diff', 'hwe_con', 'hwe_cas']
+            filters += ['pre_geno', 'mind', 'fstat', 'sex_violations', 'sex_warnings', 'geno', 'cr_diff', 'hwe_con',
+                        'hwe_cas']
             remove_fields = ['cr', 'diff', 'hwe_cas_aut', 'hwe_cas_sex', 'hwe_con_aut', 'hwe_con_sex']
         else:
             # trio data
@@ -193,9 +198,8 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
     else:
         print('Running HWE filters on whole dataset without spliting by phenotype status')
         mt = hwe_all(pre_col_filter='id_pass', pre_row_filter='geno', hwe_th_all=1e-08).filter(mt)
-        row_filters = ['pre_geno', 'geno', 'monomorphic_var', 'hwe_all']
-        filters = ['pre_geno', 'mind', 'fstat', 'sex_violations', 'sex_warnings', 'geno',
-                   'monomorphic_var', 'hwe_all']
+        row_filters += ['pre_geno', 'geno', 'hwe_all']
+        filters += ['pre_geno', 'mind', 'fstat', 'sex_violations', 'sex_warnings', 'geno', 'hwe_all']
         remove_fields = ['hwe_all_aut', 'hwe_all_sex']
 
     results = {}
@@ -387,7 +391,8 @@ def main():
               mind_thresh=arg.mind, fhet_aut=arg.fhet_aut, fstat_x=arg.fstat_x, fstat_y=arg.fstat_y,
               geno_thresh=arg.geno, cr_diff_thresh=arg.midi, maf_thresh=arg.maf, hwe_th_con_thresh=arg.hwe_th_con,
               hwe_th_cas_thresh=arg.hwe_th_cas, hwe_th_all_thresh=arg.hwe_th_all, annotations_file=arg.annotations,
-              report=arg.report, export_type=arg.export_type, out_dir=arg.out_dir, reference=arg.reference)
+              report=arg.report, export_type=arg.export_type, out_dir=arg.out_dir, reference=arg.reference,
+              withpna=arg.withpna)
 
 
 if __name__ == '__main__':
