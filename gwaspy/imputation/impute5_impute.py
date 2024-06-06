@@ -32,6 +32,7 @@ def impute5_imputation(
             vcf: hb.ResourceGroup = None,
             reference_vcf: hb.ResourceGroup = None,
             region: str = None,
+            buffer_region: str = None,
             ncpu: int = 8,
             memory: str = 'highmem',
             storage: int = None,
@@ -60,6 +61,7 @@ def impute5_imputation(
                     --m /root/gwaspy/resources/maps/b38/{chrom}.b38.gmap.gz \
                     --g {vcf['vcf']} \
                     --r {region} \
+                    --buffer-region {buffer_region} \
                     --out-gp-field \
                     --o {j.imputed_chunk['chunk.bcf']} \
                     --threads {ncpu}
@@ -142,7 +144,9 @@ def impute5_imputation(
             f'https://raw.githubusercontent.com/odelaneau/shapeit5/main/resources/chunks/b38/4cM/chunks_chr{i}.txt',
             sep='\t', header=None,
             names=['index', 'chrom', 'irg', 'org', 'col5', 'col6', 'col7', 'col8'])
-        imp_chunks_no_buffer = imputation_chunks['org'].tolist()  # 4th column (with no buffer between chunks)
+        imputation_chunks = imputation_chunks[['irg', 'org']]
+        imp_chunks = list(imputation_chunks.itertuples(index=False, name=None))
+        # imp_chunks_no_buffer = imputation_chunks['org'].tolist()  # 4th column (with no buffer between chunks)
 
         # Impute genotypes
         imputed_chunks = [
@@ -150,9 +154,11 @@ def impute5_imputation(
                 b=batch,
                 vcf=chrom_vcf,
                 reference_vcf=ref_vcf,
+                region=imp_chunks[i][1],
+                buffer_region=imp_chunks[i][0],
                 storage=round(vcf_size + ref_size + 5)
             ).imputed_chunk
-            for i in range(len(imp_chunks_no_buffer))
+            for i in range(len(imp_chunks))
         ]
 
         # Concatenate imputed chunks
