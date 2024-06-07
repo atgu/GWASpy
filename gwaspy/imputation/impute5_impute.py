@@ -62,7 +62,6 @@ def impute5_imputation(
                     --g {vcf['vcf']} \
                     --r {region} \
                     --buffer-region {buffer_region} \
-                    --out-gp-field \
                     --o {j.imputed_chunk['chunk.bcf']} \
                     --threads {ncpu}
                     """
