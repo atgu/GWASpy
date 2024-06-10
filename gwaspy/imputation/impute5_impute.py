@@ -25,6 +25,8 @@ def impute5_imputation(
         input_path: str = None,
         reference_path: str = None,
         output_filename: str = None,
+        n_samples: int = None,
+        n_panel_samples: int = 4091,
         output_path: str = None):
 
     def imputation(
@@ -161,13 +163,14 @@ def impute5_imputation(
         ]
 
         # Concatenate imputed chunks
+        disk_size = int(round(10.0 + 3.0 * vcf_size + ((1.0 + 2.0 * n_samples/n_panel_samples) * ref_size)))
         concatenate_imputed_chunks(
             b=batch,
             chunks_list=imputed_chunks,
             output_vcf_name=output_filename,
             chrom=f'chr{i}',
             out_dir=output_path,
-            storage=round(vcf_size + ref_size + 10)
+            storage=disk_size
         )
 
     batch.run()
