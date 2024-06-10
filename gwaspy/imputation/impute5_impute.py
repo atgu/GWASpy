@@ -15,6 +15,7 @@ def size(file: str):
     :return: file size in GiB
     """
     file_info = hfs.stat(file)   # returns a named tuple
+    print(file_info)
     size_gigs = file_info.size_bytes / (1024 * 1024 * 1024)
 
     return size_gigs
