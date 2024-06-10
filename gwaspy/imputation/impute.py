@@ -12,6 +12,8 @@ def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
                vcf_ref: str = None,
                software: str = 'impute5',
                output_filename: str = None,
+               n_samples: int = None,
+               n_panel_samples: int = 4091,
                out_dir: str = None
                ):
 
@@ -35,6 +37,8 @@ def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
             input_path=input_file,
             reference_path=ref_path,
             output_filename=output_filename,
+            n_samples=n_samples,
+            n_panel_samples=n_panel_samples,
             output_path=out_dir
         )
     elif software == 'glimpse2':
@@ -54,6 +58,8 @@ def main():
     parser.add_argument('--vcf-ref', type=str, default='hgdp1kgp')
     parser.add_argument('--local', action='store_true')
     parser.add_argument('--billing-project', required=True)
+    parser.add_argument('--n-samples', type=int, required=True)
+    parser.add_argument('--n-ref-samples', type=int, default=4091)
     parser.add_argument('--software', type=str, default='impute5', choices=['beagle5', 'glimpse2', 'impute5'])
     parser.add_argument('--output-filename', type=str, required=True)
     parser.add_argument('--out-dir', type=str, required=True)
@@ -71,6 +77,8 @@ def main():
                vcf_ref=args.vcf_ref,
                software=args.software,
                output_filename=args.output_filename,
+               n_samples=args.n_samples,
+               n_panel_samples=args.n_ref_samples,
                out_dir=args.out_dir)
 
     backend.close()

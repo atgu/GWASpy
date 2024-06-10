@@ -25,6 +25,8 @@ def impute5_imputation(
         input_path: str = None,
         reference_path: str = None,
         output_filename: str = None,
+        n_samples: int = None,
+        n_panel_samples: int = 4091,
         output_path: str = None):
 
     def imputation(
@@ -32,6 +34,7 @@ def impute5_imputation(
             vcf: hb.ResourceGroup = None,
             reference_vcf: hb.ResourceGroup = None,
             region: str = None,
+            buffer_region: str = None,
             ncpu: int = 8,
             memory: str = 'highmem',
             storage: int = None,
@@ -60,7 +63,7 @@ def impute5_imputation(
                     --m /root/gwaspy/resources/maps/b38/{chrom}.b38.gmap.gz \
                     --g {vcf['vcf']} \
                     --r {region} \
-                    --out-gp-field \
+                    --buffer-region {buffer_region} \
                     --o {j.imputed_chunk['chunk.bcf']} \
                     --threads {ncpu}
                     """
@@ -142,7 +145,9 @@ def impute5_imputation(
             f'https://raw.githubusercontent.com/odelaneau/shapeit5/main/resources/chunks/b38/4cM/chunks_chr{i}.txt',
             sep='\t', header=None,
             names=['index', 'chrom', 'irg', 'org', 'col5', 'col6', 'col7', 'col8'])
-        imp_chunks_no_buffer = imputation_chunks['org'].tolist()  # 4th column (with no buffer between chunks)
+        imputation_chunks = imputation_chunks[['irg', 'org']]
+        imp_chunks = list(imputation_chunks.itertuples(index=False, name=None))
+        # imp_chunks_no_buffer = imputation_chunks['org'].tolist()  # 4th column (with no buffer between chunks)
 
         # Impute genotypes
         imputed_chunks = [
@@ -150,19 +155,22 @@ def impute5_imputation(
                 b=batch,
                 vcf=chrom_vcf,
                 reference_vcf=ref_vcf,
+                region=imp_chunks[i][1],
+                buffer_region=imp_chunks[i][0],
                 storage=round(vcf_size + ref_size + 5)
             ).imputed_chunk
-            for i in range(len(imp_chunks_no_buffer))
+            for i in range(len(imp_chunks))
         ]
 
         # Concatenate imputed chunks
+        disk_size = int(round(20.0 + 3.0 * vcf_size + ((1.0 + 2.0 * n_samples/n_panel_samples) * ref_size)))
         concatenate_imputed_chunks(
             b=batch,
             chunks_list=imputed_chunks,
             output_vcf_name=output_filename,
             chrom=f'chr{i}',
             out_dir=output_path,
-            storage=round(vcf_size + ref_size + 10)
+            storage=disk_size
         )
 
     batch.run()
