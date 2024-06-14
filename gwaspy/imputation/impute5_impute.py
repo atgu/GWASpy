@@ -163,7 +163,7 @@ def impute5_imputation(
         ]
 
         # Concatenate imputed chunks
-        disk_size = int(round(20.0 + 3.0 * vcf_size + ((1.0 + 2.0 * n_samples/n_panel_samples) * ref_size)))
+        disk_size = int(round(130.0 + 3.0 * vcf_size + ((1.0 + 2.0 * n_samples/n_panel_samples) * ref_size)))
         concatenate_imputed_chunks(
             b=batch,
             chunks_list=imputed_chunks,
