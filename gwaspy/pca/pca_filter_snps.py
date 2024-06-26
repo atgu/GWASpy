@@ -46,7 +46,7 @@ def pca_filter_mt(
 
 def relatedness_check(
         in_mt: hl.MatrixTable = None,
-        method: str = 'pc_relate',
+        method: str = 'king',
         outdir: str = None,
         kin_estimate: float = 0.1,
         include_kinself: bool = False):

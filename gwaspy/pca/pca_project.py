@@ -144,7 +144,7 @@ def run_pca_project(
         ld_window: int = 250000,
         run_relatedness_check: bool = True,
         include_kinself: bool = False,
-        relatedness_method: str = 'pc_relate',
+        relatedness_method: str = 'king',
         relatedness_thresh: float = 0.1,
         prob_threshold: float = 0.8):
     """
