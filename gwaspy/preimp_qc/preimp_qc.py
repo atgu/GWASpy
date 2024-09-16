@@ -118,7 +118,7 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
         else:
             chrommt = 'M'
     else:
-        chromx, chromy= 'X', 'Y'
+        chromx, chromy = 'X', 'Y'
         if ('chrMT') in chroms:
             chrommt = 'MT'
         else:
