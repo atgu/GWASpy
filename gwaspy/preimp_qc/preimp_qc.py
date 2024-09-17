@@ -111,10 +111,18 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
         data_type = 'no-pheno'
 
     chroms = mt.aggregate_rows(hl.agg.collect_as_set(mt.locus.contig))
-    if ('chrX' or 'chrY' or 'chrMT') in chroms:
-        chromx, chromy, chrommt = 'chrX', 'chrY', 'chrMT'
+        if ('chrX' or 'chrY' or 'chrMT' or 'chrM') in chroms:
+        chromx, chromy = 'chrX', 'chrY'
+        if ('chrMT') in chroms:
+            chrommt = 'MT'
+        else:
+            chrommt = 'M'
     else:
-        chromx, chromy, chrommt = 'X', 'Y', 'MT'
+        chromx, chromy = 'X', 'Y'
+        if ('chrMT') in chroms:
+            chrommt = 'MT'
+        else:
+            chrommt = 'M'
 
     # we need to compute call rate for chr1-23 and chrY separately since females have no chrY
     mt = mt.annotate_entries(
