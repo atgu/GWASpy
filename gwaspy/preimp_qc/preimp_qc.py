@@ -111,7 +111,7 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
         data_type = 'no-pheno'
 
     chroms = mt.aggregate_rows(hl.agg.collect_as_set(mt.locus.contig))
-        if ('chrX' or 'chrY' or 'chrMT' or 'chrM') in chroms:
+    if ('chrX' or 'chrY' or 'chrMT' or 'chrM') in chroms:
         chromx, chromy = 'chrX', 'chrY'
         if ('chrMT') in chroms:
             chrommt = 'MT'
