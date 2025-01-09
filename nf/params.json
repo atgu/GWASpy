@@ -1,0 +1,12 @@
+{
+    "input": "gs://path/to/my/input_chrCNUMBER",
+    "output_filename": "my_output_filename_prefix",
+    "output_path": "gs://path/to/my/input_chrCNUMBER",
+    "impute": true,
+    "ref": "gs://gcp-public-data--gnomad/resources/hgdp_1kg/phased_haplotypes_v2/hgdp1kgp_chrCNUMBER.filtered.SNV_INDEL.phased.shapeit5",
+    "ref_format": "vcf",
+    "data_type": "array",
+    "maf": 0.001,
+    "common_chunks": "gs://path/to/chunks/b38/20cM/chunks_chrCNUMBER.txt",
+    "rare_chunks": "gs://path/to/chunks/b38/4cM/chunks_chrCNUMBER.txt"
+}
