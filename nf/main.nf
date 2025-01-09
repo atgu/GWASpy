@@ -9,7 +9,7 @@ include { CONCATENATE_CHUNKS as CONCATENATE_IMPUTED_CHUNKS } from './modules/pha
 
 process CONVERT_REF {
     cpus 8
-    memory { 4.GB * ta    container 'docker.io/lindonkambule/shapeit5_2023-05-05_d6ce1e2:v5.1.1'
+    memory { 4.GB * ta    container 'docker.io/lindonkambule/gwaspy_phase_impute:latest'
 sk.attempt }
     tag "convert reference to XCF: chr${chrom}"
 
@@ -37,22 +37,7 @@ def getChromosome = { str ->
     }
 }
 
-// path to input files (NO FILE EXTENSION)
-params.input = "gs://hgdp-1kg/gwaspy_nextflow_testing/hgdp1kgp_20_samples_renamed_chrCNUMBER"
-params.output_filename = "hgdp1kgp_20_samples_renamed"
-params.output_path = "gs://hgdp-1kg/gwaspy_nextflow_testing"
-params.impute = true
-// path to reference files (NO FILE EXTENSION)
-// params.ref = "gs://gcp-public-data--gnomad/resources/hgdp_1kg/phased_haplotypes_v2/hgdp1kgp_chrCNUMBER.filtered.SNV_INDEL.phased.shapeit5"
-// use the following reference for XCF format (faster imputation)
-params.ref = "gs://hgdp-1kg/phasing/shapeit5/filtered_phased_SNVs_INDELs_XCF/hgdp1kgp_chrCNUMBER.filtered.SNV_INDEL.phased.shapeit5_xcf"
-params.ref_format = "xcf" // vcf or xcf
-params.data_type = "seq" // array or seq
-params.maf = 0.001 // MAF filter for WGS/WES phasing
-params.common_chunks = "gs://hgdp-1kg/phasing/chunks/b38/20cM/chunks_chrCNUMBER.txt"
-params.rare_chunks = "gs://hgdp-1kg/phasing/chunks/b38/4cM/chunks_chrCNUMBER.txt"
-
-// ./nextflow run main.nf -c nextflow.config -profile gbatch --input gs://my-bucket/directory/file_chrCNUMBER
+// ./nextflow run main.nf -c nextflow.config -profile gbatch -params-file params.json
 
 
 workflow {
@@ -87,7 +72,7 @@ workflow {
             .set { ref_files }
     }
 
-    ref_files.view()
+    // ref_files.view()
     // 1.3: map file split by chromosome
     Channel
         .fromFilePairs("gs://hgdp-1kg/phasing/maps/b38/chr*.b38.gmap.gz", size: 1)

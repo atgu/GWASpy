@@ -6,7 +6,7 @@ nextflow.enable.dsl=2
 process IMPUTE5 {
     cpus 8
     memory { 16.GB * task.attempt }
-    container 'lindonkambule/impute5:v1.2.0'
+    container 'docker.io/lindonkambule/gwaspy_phase_impute:latest'
     tag "impute: ${irg}"
     publishDir "${out_directory}", overwrite: true, mode:'copy', pattern: '*.bcf*'
 

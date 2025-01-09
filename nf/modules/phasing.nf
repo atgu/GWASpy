@@ -6,7 +6,7 @@ nextflow.enable.dsl=2
 process PHASE_ARRAY {
     cpus 8
     memory { 32.GB * task.attempt }
-    container 'lindonkambule/shapeit5_2023-05-05_d6ce1e2:v5.1.1'
+    container 'docker.io/lindonkambule/gwaspy_phase_impute:latest'
     tag "phase_array: chr${chrom}"
     publishDir "${out_directory}", overwrite: true, mode:'copy', pattern: '*.{bcf,bcf.csi,log}'
 
@@ -35,7 +35,7 @@ process PHASE_ARRAY {
 process PHASE_COMMON {
     cpus 8
     memory { 16.GB * task.attempt }
-    container 'lindonkambule/shapeit5_2023-05-05_d6ce1e2:v5.1.1'
+    container 'docker.io/lindonkambule/gwaspy_phase_impute:latest'
     tag "phase_common: ${region}"
     publishDir "${out_directory}", overwrite: true, mode:'copy', pattern: '*.log'
 
@@ -65,7 +65,7 @@ process PHASE_COMMON {
 process LIGATE_COMMON {
     cpus 4
     memory { 4.GB * task.attempt }
-    container 'lindonkambule/shapeit5_2023-05-05_d6ce1e2:v5.1.1'
+    container 'docker.io/lindonkambule/gwaspy_phase_impute:latest'
     tag "ligate_common: chr${chrom}"
     publishDir "${out_directory}", overwrite: true, mode:'copy', pattern: '*shapeit5_common.bcf*'
 
@@ -94,7 +94,7 @@ process LIGATE_COMMON {
 process PHASE_RARE {
     cpus 4
     memory { 16.GB * task.attempt }
-    container 'lindonkambule/shapeit5_2023-05-05_d6ce1e2:v5.1.1'
+    container 'docker.io/lindonkambule/gwaspy_phase_impute:latest'
     tag "phase_rare: ${srg}"
     publishDir "${out_directory}", overwrite: true, mode:'copy', pattern: '*.log'
 
@@ -126,7 +126,7 @@ process PHASE_RARE {
 process CONCATENATE_CHUNKS {
     cpus 4
     memory { 8.GB * task.attempt }
-    container 'lindonkambule/shapeit5_2023-05-05_d6ce1e2:v5.1.1'
+    container 'docker.io/lindonkambule/gwaspy_phase_impute:latest'
     tag "concatenate_chunks: chr${chrom}"
     publishDir "${out_directory}", overwrite: true, mode:'copy', pattern: '*.bcf*'
 
