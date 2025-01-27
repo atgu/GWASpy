@@ -103,6 +103,8 @@ def manhattan_plot(pvals, significance_threshold: float = -np.log10(5E-08), titl
     data['position'] = data['position'].astype(int)
     data['chromosome'] = data['chromosome'].str.replace('chr', '')
     data['chromosome'].replace({"X": 23, "Y": 24, "MT": 25, "M":25}, inplace=True)
+    chroms = [f'{i}' for i in range(1, 26)]
+    data = data[data['chromosome'].isin(chroms)] # removes ALT contigs
     data['chromosome'] = data['chromosome'].astype(int)
     data.dropna(subset=['p'], inplace=True)  # drop NAs as log10(val) won't work
 
