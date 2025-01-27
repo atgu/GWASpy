@@ -81,7 +81,7 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
 
     output_directory = out_dir if out_dir else dirname
 
-    hl.init(default_reference=reference)
+    hl.default_reference(new_default_reference=reference)
 
     # read input
     mt = read_infile(input_type=input_type, dirname=dirname, basename=basename, annotations=annotations_file)
