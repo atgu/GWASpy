@@ -45,6 +45,7 @@ setup(name='gwaspy',
       },
       classifiers=classifiers,
       keywords='',
+      setup_requires=["numpy"],
       install_requires=['hail', 'matplotlib', 'numpy', 'pandas', 'pylatex', 'plotly', 'distinctipy'],
       zip_safe=False
       )
