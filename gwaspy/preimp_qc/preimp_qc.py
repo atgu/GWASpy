@@ -1,14 +1,18 @@
 __author__ = 'Lindo Nkambule'
 
-from gwaspy.preimp_qc.annotations import *
-from typing import Tuple, Any, Dict, Union
-from gwaspy.utils.read_file import read_infile
+
 import argparse
-from gwaspy.preimp_qc.report import MyDocument
+import hail as hl
+import os
 import shutil
 import warnings
-import os
-import hail as hl
+
+from gwaspy.preimp_qc.annotations import *
+from gwaspy.preimp_qc.report import MyDocument
+from gwaspy.utils.read_file import read_infile
+from gwaspy.utils.reference_liftover import liftover_to_grch38
+from typing import Tuple, Any, Dict, Union
+
 
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
 
@@ -67,7 +71,7 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
               cr_diff_thresh: Union[int, float] = 0.02, maf_thresh: Union[int, float] = 0.01, withpna: int = 0,
               hwe_th_con_thresh: Union[int, float] = 1e-6, hwe_th_cas_thresh: Union[int, float] = 1e-10,
               hwe_th_all_thresh: Union[int, float] = 1e-06, annotations_file: str = None, report: bool = True,
-              export_type: str = 'hail', out_dir: str = None, reference: str = 'GRCh38'):
+              liftover: bool = False, export_type: str = 'hail', out_dir: str = None, reference: str = 'GRCh38'):
     print('\nRunning QC')
 
     global mt, row_filters, filters, data_type, lambda_gc_pos, lambda_gc_pre, n_sig_var_pre, n_sig_var_pos, man_table_results, remove_fields
@@ -84,7 +88,10 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
     hl.default_reference(new_default_reference=reference)
 
     # read input
-    mt = read_infile(input_type=input_type, dirname=dirname, basename=basename, annotations=annotations_file)
+    if liftover:
+        mt = liftover_to_grch38(input_type=input_type, dirname=dirname, basename=basename, annotations=annotations_file)
+    else:
+        mt = read_infile(input_type=input_type, dirname=dirname, basename=basename, annotations=annotations_file)
 
     if 'is_case' in mt.col:
         gwas_pre, n_sig_var_pre = manhattan(qqtitle='Pre-QC QQ Plot', mantitle='Pre-QC Manhattan Plot').filter(mt)
@@ -373,6 +380,7 @@ def main():
     parser.add_argument('--annotations', type=str)
     parser.add_argument('--reference', type=str, default='GRCh38')
     parser.add_argument('--report', action='store_false')
+    parser.add_argument('--liftover', action='store_true')
     # parser.add_argument('--qc_round', type=str, required=True)
 
     # required for QC
@@ -399,8 +407,8 @@ def main():
               mind_thresh=arg.mind, fhet_aut=arg.fhet_aut, fstat_x=arg.fstat_x, fstat_y=arg.fstat_y,
               geno_thresh=arg.geno, cr_diff_thresh=arg.midi, maf_thresh=arg.maf, hwe_th_con_thresh=arg.hwe_th_con,
               hwe_th_cas_thresh=arg.hwe_th_cas, hwe_th_all_thresh=arg.hwe_th_all, annotations_file=arg.annotations,
-              report=arg.report, export_type=arg.export_type, out_dir=arg.out_dir, reference=arg.reference,
-              withpna=arg.withpna)
+              report=arg.report, liftover=arg.liftover, export_type=arg.export_type, out_dir=arg.out_dir,
+              reference=arg.reference, withpna=arg.withpna)
 
 
 if __name__ == '__main__':

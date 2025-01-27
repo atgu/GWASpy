@@ -1,15 +1,21 @@
 import hail as hl
 from gwaspy.utils.read_file import read_infile
+from gwaspy.utils.sample_annotations import add_sample_annotations
 
 
 def liftover_to_grch38(
         input_type: str = None,
         dirname: str = None,
-        basename: str = None):
+        basename: str = None,
+        **kwargs):
 
     lifted_over = f'{dirname}{basename}.liftover.grch38.mt'
     print('\nLifting over to GRCh38')
     mt = read_infile(input_type=input_type, dirname=dirname, basename=basename)
+
+    annotations = kwargs.get('annotations')
+    if annotations:
+        mt = add_sample_annotations(mt, annotations)
 
     rg37 = hl.get_reference('GRCh37')
     rg38 = hl.get_reference('GRCh38')
