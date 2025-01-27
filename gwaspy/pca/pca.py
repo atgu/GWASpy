@@ -18,6 +18,8 @@ def pca(
     if not out_dir:
         raise Exception('\nOutput directory where files will be saved is not specified')
 
+    hl.default_reference(new_default_reference=reference)
+
     if pca_type == 'project':
         print('\nRunning PCA using projection method')
 
@@ -84,8 +86,6 @@ def main():
 
     if not args.prob:
         print(f'No prob value specified, {args.prob} will be used')
-
-    hl.default_reference(new_default_reference=args.reference)
 
     pca(ref_dirname=args.ref_dirname, ref_basename=args.ref_basename, ref_info=args.ref_info, reference=args.reference,
         pca_type=args.pca_type, input_type=args.input_type, data_dirname=args.data_dirname,
