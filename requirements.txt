@@ -1,5 +1,4 @@
 hail
-distinctipy
 matplotlib>=3.3.3
 plotly>=5.7.0
 pandas>=0.25.3

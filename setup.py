@@ -4,9 +4,6 @@ from setuptools import setup, find_packages
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-with open('requirements.txt') as f:
-    required = f.read().splitlines()
-
 classifiers = [
     'Development Status :: 4 - Beta',
     'Environment :: Console',
@@ -49,6 +46,7 @@ setup(name='gwaspy',
       },
       classifiers=classifiers,
       keywords='',
-      install_requires=required,
+      # install_requires=required,
+      install_requires=['hail', 'matplotlib', 'numpy', 'pandas', 'pylatex', 'plotly', 'distinctipy'],
       zip_safe=False
       )
