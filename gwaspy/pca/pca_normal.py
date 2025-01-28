@@ -185,41 +185,50 @@ def run_pca_normal(
     # add phenotype and sex to the output, using information from the mt
     # first check if is_case and os_female fields exist in the mt
     all_column_field_names = list(mt.col)
-    # sex status is a MUST but not phenotype status
-    if 'is_case' in all_column_field_names:
-        ann_cols = ['is_case', 'is_female']
-    else:
-        ann_cols = ['is_female']
-
-    annotations_ht = mt.cols().select(*ann_cols)
-
-    if 'is_case' in all_column_field_names:
-        pcs_ht = pcs_ht.annotate(is_case=annotations_ht[pcs_ht.s].is_case)
-    pcs_ht = pcs_ht.annotate(is_female=annotations_ht[pcs_ht.s].is_female)
-
-    print('\nSaving PC scores file')
+    color_cols = ['is_case', 'is_female']
+    ann_cols = list(set(all_column_field_names) & set(color_cols))
     out_scores_file = f'{out_dir}{basename}.pca.normal.scores.tsv'
-    pcs_ht.export(out_scores_file)
 
-    print('\nGenerating PCA plots')
-    pcs_scores = pd.read_table(out_scores_file, header=0, sep='\t')
+    if len(ann_cols) > 0:
+        print("Found sample annotations! Plotting PCs")
+        annotations_ht = mt.cols().select(*ann_cols)
 
-    if 'is_case' in all_column_field_names:
-        pcs_scores[['is_case']] = pcs_scores[['is_case']].replace([True, False, None], ['case', 'control', 'unknown'])
-    pcs_scores[['is_female']] = pcs_scores[['is_female']].replace([True, False, None], ['female', 'male', 'unknown'])
+        if 'is_case' in ann_cols:
+            pcs_ht = pcs_ht.annotate(is_case=annotations_ht[pcs_ht.s].is_case)
 
-    figs_dict = {}
-    for col in ann_cols:
-        for i in range(1, n_pcs, 2):
-            xpc = f'PC{i}'
-            ypc = f'PC{i + 1}'
+        if 'is_female' in ann_cols:
+            pcs_ht = pcs_ht.annotate(is_female=annotations_ht[pcs_ht.s].is_female)
 
-            figs_dict["fig{}{}".format(col, i)] = plot_pca(pcs_scores, xpc, ypc, col)
+        print('\nSaving PC scores file')
+        pcs_ht.export(out_scores_file)
 
-    pdf = PdfPages('/tmp/pca.normal.plots.pdf')
-    for figname, figure in figs_dict.items():
-        pdf.savefig(figure)
-    pdf.close()
-    hl.hadoop_copy('file:///tmp/pca.normal.plots.pdf',
-                   f'{out_dir}{basename}.pca.normal.plots.pdf')
+        print('\nGenerating PCA plots')
+        pcs_scores = pd.read_table(out_scores_file, header=0, sep='\t')
+
+        if 'is_case' in ann_cols:
+            pcs_scores[['is_case']] = pcs_scores[['is_case']].replace([True, False, None], ['case', 'control', 'unknown'])
+
+        if 'is_female' in ann_cols:
+            pcs_scores[['is_female']] = pcs_scores[['is_female']].replace([True, False, None], ['female', 'male', 'unknown'])
+
+        figs_dict = {}
+        for col in ann_cols:
+            for i in range(1, n_pcs, 2):
+                xpc = f'PC{i}'
+                ypc = f'PC{i + 1}'
+
+                figs_dict["fig{}{}".format(col, i)] = plot_pca(pcs_scores, xpc, ypc, col)
+
+        pdf = PdfPages('/tmp/pca.normal.plots.pdf')
+        for figname, figure in figs_dict.items():
+            pdf.savefig(figure)
+        pdf.close()
+        hl.hadoop_copy('file:///tmp/pca.normal.plots.pdf',
+                       f'{out_dir}{basename}.pca.normal.plots.pdf')
+
+
+    else:
+        print("No sample annotations found. Potting PCs will be skipped")
+        print('\nSaving PC scores file')
+        pcs_ht.export(out_scores_file)
 
