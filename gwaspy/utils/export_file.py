@@ -13,4 +13,4 @@ def export_qced_file(mt: hl.MatrixTable, out_dir: str, basename: str, export_typ
                         varid=mt.rsid)
 
     else:
-        hl.export_vcf(mt, '{}GWASpy/Preimp_QC/{}.vcf.bgz'.format(out_dir, outname))
+        hl.export_vcf(mt, '{}GWASpy/Preimp_QC/{}.vcf.bgz'.format(out_dir, outname), tabix=True)
