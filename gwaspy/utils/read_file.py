@@ -1,4 +1,5 @@
 import hail as hl
+import hailtop.fs as hfs
 from gwaspy.utils.sample_annotations import add_sample_annotations
 
 
@@ -14,7 +15,14 @@ def read_plink(dirname: str, basename: str) -> hl.MatrixTable:
 
 def read_vcf(dirname: str, basename: str) -> hl.MatrixTable:
     hl._set_flags(no_whole_stage_codegen='1')
-    vcf_file = '{}{}.vcf.gz'.format(dirname, basename)
+
+    if hfs.exists(f"{dirname}{basename}.vcf.bgz"):
+        vcf_file = f"{dirname}{basename}.vcf.bgz"
+    elif hfs.exists(f"{dirname}{basename}.vcf.gz"):
+        vcf_file = f"{dirname}{basename}.vcf.gz"
+    else:
+        vcf_file = f"{dirname}{basename}.vcf"
+
     hl.import_vcf(vcf_file, force_bgz=True, block_size=16).write('{}GWASpy.preimpQC.mt'.format(dirname), overwrite=True)
     in_mt = hl.read_matrix_table('{}GWASpy.preimpQC.mt'.format(dirname))
 
