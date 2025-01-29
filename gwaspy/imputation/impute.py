@@ -8,7 +8,7 @@ from typing import Union
 
 
 def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
-               input_file: str = None,
+               input_vcf: str = None,
                vcf_ref: str = None,
                software: str = 'impute5',
                output_filename: str = None,
@@ -34,7 +34,7 @@ def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
         print(f'\nIMPUTING GENOTYPES USING IMPUTE5\n')
         impute5_imputation(
             batch=b,
-            input_path=input_file,
+            input_path=input_vcf,
             reference_path=ref_path,
             output_filename=output_filename,
             n_samples=n_samples,
@@ -44,7 +44,7 @@ def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
     elif software == 'glimpse2':
         glimpse_phase_impute(
             batch=b,
-            bam_files=input_file,
+            bam_files=input_vcf,
             reference_path=ref_path,
             output_filename=output_filename,
             output_path=out_dir
@@ -54,7 +54,7 @@ def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input-file', type=str, required=True)
+    parser.add_argument('--input-vcf', type=str, required=True)
     parser.add_argument('--vcf-ref', type=str, default='hgdp1kgp')
     parser.add_argument('--local', action='store_true')
     parser.add_argument('--billing-project', required=True)
@@ -73,7 +73,7 @@ def main():
                                     remote_tmpdir=f'{args.out_dir}/tmp/')
 
     run_impute(backend=backend,
-               input_file=args.input_file,
+               input_vcf=args.input_vcf,
                vcf_ref=args.vcf_ref,
                software=args.software,
                output_filename=args.output_filename,
