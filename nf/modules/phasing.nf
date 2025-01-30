@@ -5,7 +5,7 @@ nextflow.enable.dsl=2
 
 process PHASE_ARRAY {
     cpus 8
-    memory { 32.GB * task.attempt }
+    memory { 8.GB * task.attempt }
     container 'docker.io/lindonkambule/gwaspy_phase_impute:latest'
     tag "phase_array: chr${chrom}"
     publishDir "${out_directory}", overwrite: true, mode:'copy', pattern: '*.{bcf,bcf.csi,log}'
@@ -16,25 +16,40 @@ process PHASE_ARRAY {
         val(out_directory)
 
     output:
-        tuple val(chrom), path("${output_filename}_chr${chrom}_b0_v2.b38.sorted.phased.bcf"), path("${output_filename}_chr${chrom}_b0_v2.b38.sorted.phased.bcf.csi"), path("${output_filename}_chr${chrom}_b0_v2.b38.sorted.phased.log")
+        tuple val(chrom), path("${output_filename}_chr${chrom}.shapeit5.phased.bcf"), path("${output_filename}_chr${chrom}.shapeit5.phased.bcf.csi"), path("${output_filename}_chr${chrom}.shapeit5.phased.log")
 
     script:
-    """
-    phase_common_static \
-        --input ${input} \
-        --reference ${ref} \
-        --map ${map_file} \
-        --output ${output_filename}_chr${chrom}_b0_v2.b38.sorted.phased.bcf \
-        --thread ${task.cpus} \
-        --log ${output_filename}_chr${chrom}_b0_v2.b38.sorted.phased.log \
-        --region chr${chrom}
-    """
+    if (params.fill_tags)
+        """
+        bcftools +fill-tags ${input} -Ob -o annotated.bcf -- -t AN,AC
+        bcftools index annotated.bcf
+
+        phase_common_static \
+            --input annotated.bcf \
+            --reference ${ref} \
+            --map ${map_file} \
+            --output ${output_filename}_chr${chrom}.shapeit5.phased.bcf \
+            --thread ${task.cpus} \
+            --log ${output_filename}_chr${chrom}.shapeit5.phased.log \
+            --region chr${chrom}
+        """
+    else
+        """
+        phase_common_static \
+            --input ${input} \
+            --reference ${ref} \
+            --map ${map_file} \
+            --output ${output_filename}_chr${chrom}.shapeit5.phased.bcf \
+            --thread ${task.cpus} \
+            --log ${output_filename}_chr${chrom}.shapeit5.phased.log \
+            --region chr${chrom}
+        """
 }
 
 
 process PHASE_COMMON {
     cpus 8
-    memory { 16.GB * task.attempt }
+    memory { 8.GB * task.attempt }
     container 'docker.io/lindonkambule/gwaspy_phase_impute:latest'
     tag "phase_common: ${region}"
     publishDir "${out_directory}", overwrite: true, mode:'copy', pattern: '*.log'
@@ -48,17 +63,33 @@ process PHASE_COMMON {
         tuple val(chrom), val(chk), path("${chk}phased_common.chr${chrom}.bcf"), path("${chk}phased_common.chr${chrom}.bcf.csi"), path("${chk}phased_common.chr${chrom}.log")
 
     script:
-    """
-    phase_common_static \
-        --input ${input} \
-        --reference ${ref} \
-        --map ${map_file} \
-        --output ${chk}phased_common.chr${chrom}.bcf \
-        --thread ${task.cpus} \
-        --log ${chk}phased_common.chr${chrom}.log \
-        --filter-maf ${maf} \
-        --region ${region}
-    """
+    if (params.fill_tags)
+        """
+        bcftools +fill-tags ${input} -Ob -o annotated.bcf -- -t AN,AC
+        bcftools index annotated.bcf
+
+        phase_common_static \
+            --input annotated.bcf \
+            --reference ${ref} \
+            --map ${map_file} \
+            --output ${chk}phased_common.chr${chrom}.bcf \
+            --thread ${task.cpus} \
+            --log ${chk}phased_common.chr${chrom}.log \
+            --filter-maf ${maf} \
+            --region ${region}
+        """
+    else
+        """
+        phase_common_static \
+            --input ${input} \
+            --reference ${ref} \
+            --map ${map_file} \
+            --output ${chk}phased_common.chr${chrom}.bcf \
+            --thread ${task.cpus} \
+            --log ${chk}phased_common.chr${chrom}.log \
+            --filter-maf ${maf} \
+            --region ${region}
+        """
 }
 
 
@@ -93,7 +124,7 @@ process LIGATE_COMMON {
 
 process PHASE_RARE {
     cpus 4
-    memory { 16.GB * task.attempt }
+    memory { 8.GB * task.attempt }
     container 'docker.io/lindonkambule/gwaspy_phase_impute:latest'
     tag "phase_rare: ${srg}"
     publishDir "${out_directory}", overwrite: true, mode:'copy', pattern: '*.log'
