@@ -1,12 +1,15 @@
 {
-    "input": "gs://path/to/my/input_chrCNUMBER",
+    "input_vcf": "gs://my-gcs/bucket/my_input_file.vcf",
     "output_filename": "my_output_filename_prefix",
-    "output_path": "gs://path/to/my/input_chrCNUMBER",
+    "out_dir": "gs://my-gcs/bucket/nf_phase_impute",
     "impute": true,
-    "ref": "gs://gcp-public-data--gnomad/resources/hgdp_1kg/phased_haplotypes_v2/hgdp1kgp_chrCNUMBER.filtered.SNV_INDEL.phased.shapeit5",
+    "fill_tags": false,
+    "input_split_by_chrom": false,
+    "vcf_ref": "gs://gcp-public-data--gnomad/resources/hgdp_1kg/phased_haplotypes_v2/hgdp1kgp_chrCNUMBER.filtered.SNV_INDEL.phased.shapeit5",
     "ref_format": "vcf",
     "data_type": "array",
     "maf": 0.001,
-    "common_chunks": "gs://path/to/chunks/b38/20cM/chunks_chrCNUMBER.txt",
-    "rare_chunks": "gs://path/to/chunks/b38/4cM/chunks_chrCNUMBER.txt"
+    "common_chunks": "gs://my-gcs/bucket/chunks/b38/20cM/chunks_chrCNUMBER.txt",
+    "rare_chunks": "gs://my-gcs/bucket/chunks/b38/4cM/chunks_chrCNUMBER.txt",
+    "genetic_maps": "gs://my-gcs/bucket/resources/maps/chrCNUMBER.b38.gmap.gz"
 }
