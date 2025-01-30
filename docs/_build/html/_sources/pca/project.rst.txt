@@ -8,16 +8,17 @@ A random forest classifier model, adopted from gnomAD, is then used to assign po
 
 Below is a code on how you can run projection PCA via the command-line or inside a Python script Use
 
-#. Command line
-
-    .. code-block:: sh
-
-        pca --data-dirname data/ --data-basename 1kg_annotated --out-dir data/ --input-type hail --reference grch37 --pca-type project
-
 #. Python (inside a Python script)
 
     .. code-block:: python
 
         import gwaspy.pca as pca
-        pca.pca.pca(data_dirname="data/", data_basename="1kg_annotated",  out_dir="data/",
-                    input_type="hail", reference="GRCh37", pca_type="project")
+        pca.pca.pca(data_dirname="gs://my-gcs/bucket/test_data/", data_basename="my_data_basename",
+                    out_dir="gs://my-gcs/bucket/test_data/", input_type="my_input_type", reference="GRCh37",
+                    pca_type="project")
+
+#. Command line
+
+    .. code-block:: sh
+
+        pca --data-dirname gs://my-gcs/bucket/test_data/ --data-basename my_data_basename --out-dir gs://my-gcs/bucket/test_data/--input-type my_input_type --reference grch37 --pca-type project

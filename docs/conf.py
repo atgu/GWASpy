@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'GWASpy'
-copyright = '2021, Martin Lab, Broad Institute'
+copyright = '2024, Martin Lab, Broad Institute'
 author = 'Lindokuhle Nkambule'
 
 # The full version, including alpha/beta/rc tags

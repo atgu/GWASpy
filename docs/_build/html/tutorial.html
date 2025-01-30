@@ -1,0 +1,280 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tutorial &mdash; GWASpy 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=eea1f72d" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Genotype Imputation" href="imputation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GWASpy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qb.html">Hail Query and Batch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preimp_qc.html">Pre-Imputation QC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pca.html">Principal Component Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phasing.html">Haplotype Phasing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="imputation.html">Genotype Imputation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#datasets">1. Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#start-a-dataproc-cluster-with-gwaspy-installed">2. Start a dataproc cluster with GWASpy installed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pre-imputation-qc">3. Pre-imputation QC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pca">4. PCA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#phasing-and-imputation">5. Phasing and Imputation</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GWASpy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Tutorial</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/tutorial.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="tutorial">
+<span id="sec-tutorial"></span><h1>Tutorial<a class="headerlink" href="#tutorial" title="Link to this heading"></a></h1>
+<p>This is a short tutorial on how to use the different modules of GWASpy.</p>
+<section id="datasets">
+<h2>1. Datasets<a class="headerlink" href="#datasets" title="Link to this heading"></a></h2>
+<p>We will be using simulated test data (on GRCh37) from RICOPILI. Below is how it can be downloaded and copied to a Google bucket</p>
+<blockquote>
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>wget<span class="w"> </span>https://personal.broadinstitute.org/sawasthi/share_links/UzoZK7Yfd7nTzIxHamCh1rSOiIOSdj_gwas-qcerrors.py/sim_sim1a_eur_sa_merge.miss.<span class="o">{</span>bed,bim,fam<span class="o">}</span><span class="w"> </span>.
+gsutil<span class="w"> </span>cp<span class="w"> </span>sim_sim1a_eur_sa_merge.miss.<span class="o">{</span>bed,bim,fam<span class="o">}</span><span class="w"> </span>gs://my-gcs/bucket/test_data
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+<section id="start-a-dataproc-cluster-with-gwaspy-installed">
+<h2>2. Start a dataproc cluster with GWASpy installed<a class="headerlink" href="#start-a-dataproc-cluster-with-gwaspy-installed" title="Link to this heading"></a></h2>
+<p>The code below will start a cluster with GWASpy automatically installed. This fetches the GWASpy version on PyPI. You
+can also install the GitHub version by replacing <code class="code docutils literal notranslate"><span class="pre">gwaspy</span></code> with <code class="code docutils literal notranslate"><span class="pre">git+https://github.com/atgu/GWASpy.git</span></code></p>
+<blockquote>
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>hailctl<span class="w"> </span>dataproc<span class="w"> </span>start<span class="w"> </span>gwaspy-tut<span class="w"> </span>--region<span class="o">=</span>us-central1<span class="w"> </span>--packages<span class="w"> </span>gwaspy<span class="w"> </span>--max-age<span class="w"> </span>4h
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+<section id="pre-imputation-qc">
+<h2>3. Pre-imputation QC<a class="headerlink" href="#pre-imputation-qc" title="Link to this heading"></a></h2>
+<p>Next, we will QC the data using the default arguments in <code class="code docutils literal notranslate"><span class="pre">preimp_qc</span></code>. Since the reference panel we will be using
+for phasing and imputation is on GRCh38, we also add a <code class="code docutils literal notranslate"><span class="pre">liftover</span></code> argument to liftover our input data to GRCh38. We
+also set <code class="code docutils literal notranslate"><span class="pre">export_type</span></code> to <code class="code docutils literal notranslate"><span class="pre">vcf</span></code> because we will use the QC’ed file as input to phasing and imputation.</p>
+<ul>
+<li><p>First create a python script on your local machine as below</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gwaspy.preimp_qc</span> <span class="k">as</span> <span class="nn">qc</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">preimp_qc</span><span class="o">.</span><span class="n">preimp_qc</span><span class="p">(</span><span class="n">dirname</span><span class="o">=</span><span class="s2">&quot;gs://my-gcs/bucket/test_data/&quot;</span><span class="p">,</span> <span class="n">basename</span><span class="o">=</span><span class="s2">&quot;sim_sim1a_eur_sa_merge.miss&quot;</span><span class="p">,</span>
+                       <span class="n">input_type</span><span class="o">=</span><span class="s2">&quot;plink&quot;</span><span class="p">,</span> <span class="n">reference</span><span class="o">=</span><span class="s2">&quot;GRCh37&quot;</span><span class="p">,</span> <span class="n">liftover</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">export_type</span><span class="o">=</span><span class="s2">&quot;vcf&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Then run the following command to submit the script to the Dataproc cluster named <cite>gwaspy-tut</cite></p>
+<blockquote>
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>hailctl<span class="w"> </span>dataproc<span class="w"> </span>submit<span class="w"> </span>gwaspy-tut<span class="w"> </span>qc_script.py
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="pca">
+<h2>4. PCA<a class="headerlink" href="#pca" title="Link to this heading"></a></h2>
+<p>Using the QC’ed data from step 3 above, we will now run PCA.</p>
+<ul>
+<li><p>First create a python script on your local machine as below</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gwaspy.pca</span> <span class="k">as</span> <span class="nn">pca</span>
+<span class="n">pca</span><span class="o">.</span><span class="n">pca</span><span class="o">.</span><span class="n">pca</span><span class="p">(</span><span class="n">data_dirname</span><span class="o">=</span><span class="s2">&quot;gs://my-gcs/bucket/test_data/GWASpy/Preimp_QC&quot;</span><span class="p">,</span>
+            <span class="n">data_basename</span><span class="o">=</span><span class="s2">&quot;sim_sim1a_eur_sa_merge.miss_qced&quot;</span><span class="p">,</span> <span class="n">out_dir</span><span class="o">=</span><span class="s2">&quot;gs://my-gcs/bucket/test_data/&quot;</span><span class="p">,</span>
+            <span class="n">input_type</span><span class="o">=</span><span class="s2">&quot;vcf&quot;</span><span class="p">,</span> <span class="n">reference</span><span class="o">=</span><span class="s2">&quot;GRCh38&quot;</span><span class="p">,</span> <span class="n">pca_type</span><span class="o">=</span><span class="s2">&quot;normal&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Then run the following command to submit the script to the Dataproc cluster named <cite>gwaspy-tut</cite></p>
+<blockquote>
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>hailctl<span class="w"> </span>dataproc<span class="w"> </span>submit<span class="w"> </span>gwaspy-tut<span class="w"> </span>pca_script.py
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ul>
+<p>If you have real data, you can use (1) <code class="code docutils literal notranslate"><span class="pre">pca_type=&quot;project&quot;</span></code> which will train a Random Forest model on the HGDP+1kGP reference and
+use the trained model to classify samples in your data; or (2) <code class="code docutils literal notranslate"><span class="pre">pca_type=&quot;joint&quot;</span></code> which will first find an intersection (variants) between
+the HGDP+1kGP reference and your input, use the intersected HGDP+1kGP to train a RF model, then classify your input data. If
+your data has a lot of variants (+million), <code class="code docutils literal notranslate"><span class="pre">pca_type=&quot;project&quot;</span></code> usually gives plausible results. Otherwise you can try <code class="code docutils literal notranslate"><span class="pre">pca_type=&quot;joint&quot;</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you are a Broad user with Hail Batch access, you have to have python and GWASpy installed locally to be able to run
+phasing and imputation. For non-Broad users, we provide a nextflow implementation and the only thing you are required
+to do is have nextflow locally (nextflow executable file) and necessary permissions <a class="reference external" href="qb.html">as mentioned</a></p>
+</div>
+</section>
+<section id="phasing-and-imputation">
+<h2>5. Phasing and Imputation<a class="headerlink" href="#phasing-and-imputation" title="Link to this heading"></a></h2>
+<p><strong>5.1 Hail Batch</strong></p>
+<p>5.1.1. Phasing (should be ~$2 and takes ~40 minutes)</p>
+<p>The example below is for running phasing, without a reference panel. If you want to use the HGDP+1kGP reference panel or
+your own, simply add the <code class="code docutils literal notranslate"><span class="pre">--vcf-ref</span></code> argument <a class="reference external" href="phasing.html">as explained here</a></p>
+<blockquote>
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>phasing<span class="w"> </span>--input-vcf<span class="w"> </span>gs://my-gcs/bucket/test_data/GWASpy/Preimp_QC/sim_sim1a_eur_sa_merge.miss_qced.vcf.bgz<span class="w"> </span><span class="se">\</span>
+--output-filename<span class="w"> </span>sim_sim1a_eur_sa_merge.miss_qced.phased<span class="w"> </span>--out-dir<span class="w"> </span>gs://my-gcs/bucket/test_data/GWASpy/phasing<span class="w"> </span><span class="se">\</span>
+--fill-tags<span class="w"> </span>--genome-build<span class="w"> </span>GRCh38<span class="w"> </span>--billing-project<span class="w"> </span>my-billing-project
+</pre></div>
+</div>
+</div></blockquote>
+<p>5.1.2. Imputation using IMPUTE5 (should be ~$4 and takes &lt;20 minutes)</p>
+<p>The example below is for running phasing, without a reference panel. If you want to use the HGDP+1kGP reference panel or
+your own, simply add the <code class="code docutils literal notranslate"><span class="pre">--vcf-ref</span></code> argument <a class="reference external" href="phasing.html">as explained here</a></p>
+<blockquote>
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>imputation<span class="w"> </span>--input-file<span class="w"> </span>gs://my-gcs/bucket/test_data/GWASpy/phasing/shapeit5/phase_common/sim_sim1a_eur_sa_merge.miss_qced.phased_chrCNUMBER.array.shapeit5_common.bcf<span class="w"> </span><span class="se">\</span>
+--vcf-ref<span class="w"> </span>hgdp1kgp<span class="w"> </span>--output-filename<span class="w"> </span>sim_sim1a_eur_sa_merge.miss_qced.phased.imputed<span class="w"> </span>--out-dir<span class="w"> </span>gs://my-gcs/bucket/test_data/GWASpy/imputation<span class="w"> </span><span class="se">\</span>
+--n-samples<span class="w"> </span><span class="m">1989</span><span class="w"> </span>--n-ref-samples<span class="w"> </span><span class="m">4091</span><span class="w"> </span>--billing-project<span class="w"> </span>my-billing-project
+</pre></div>
+</div>
+</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You may need to add <code class="code docutils literal notranslate"><span class="pre">HAIL_GENETICS_HAIL_IMAGE=hailgenetics/python-dill:3.9-slim</span></code> in front of the <code class="code docutils literal notranslate"><span class="pre">phasing</span></code>
+and <code class="code docutils literal notranslate"><span class="pre">imputation</span></code> commands if you are using a Python version other than 3.9, 3.10, or 3.11</p>
+</div>
+<p><strong>5.2. Nextflow</strong></p>
+<p>Before we run the nextflow pipeline, you have to first download the following files and copy them to your bucket:
+(1) common chunks and rare chunks files used to parallelize imputation across genomic regions; (2) genetic map files. SHAPEIT5 repo
+has <a class="reference external" href="https://github.com/odelaneau/shapeit5/tree/main/resources/chunks/b38">chunks files</a> and <a class="reference external" href="https://github.com/odelaneau/shapeit5/tree/main/resources/maps">genetic map files</a>.</p>
+<p>Once you have the files on a Google bucket, you can update the <code class="code docutils literal notranslate"><span class="pre">params.json</span></code> file. Specifically, the things you need
+to update are: <code class="code docutils literal notranslate"><span class="pre">input_vcf</span></code>, <code class="code docutils literal notranslate"><span class="pre">output_filename</span></code>, <code class="code docutils literal notranslate"><span class="pre">out_dir</span></code>, <code class="code docutils literal notranslate"><span class="pre">data_type</span></code>, <code class="code docutils literal notranslate"><span class="pre">common_chunks</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">rare_chunks</span></code>, <code class="code docutils literal notranslate"><span class="pre">genetic_maps</span></code>. If you have one input file per chromosome, set <code class="code docutils literal notranslate"><span class="pre">input_split_by_chrom</span></code> to <code class="code docutils literal notranslate"><span class="pre">true</span></code></p>
+<blockquote>
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="o">{</span>
+<span class="w">    </span><span class="s2">&quot;input_vcf&quot;</span>:<span class="w"> </span><span class="s2">&quot;gs://my-gcs/bucket/test_data/GWASpy/Preimp_QC/sim_sim1a_eur_sa_merge.miss_qced.vcf&quot;</span>,
+<span class="w">    </span><span class="s2">&quot;output_filename&quot;</span>:<span class="w"> </span><span class="s2">&quot;sim_sim1a_eur_sa_merge.miss_qced&quot;</span>,
+<span class="w">    </span><span class="s2">&quot;out_dir&quot;</span>:<span class="w"> </span><span class="s2">&quot;gs://my-gcs/bucket/test_data/GWASpy/nf_phase_impute&quot;</span>,
+<span class="w">    </span><span class="s2">&quot;impute&quot;</span>:<span class="w"> </span>true,
+<span class="w">    </span><span class="s2">&quot;fill_tags&quot;</span>:<span class="w"> </span>true,
+<span class="w">    </span><span class="s2">&quot;input_split_by_chrom&quot;</span>:<span class="w"> </span>false,
+<span class="w">    </span><span class="s2">&quot;vcf_ref&quot;</span>:<span class="w"> </span><span class="s2">&quot;gs://gcp-public-data--gnomad/resources/hgdp_1kg/phased_haplotypes_v2/hgdp1kgp_chrCNUMBER.filtered.SNV_INDEL.phased.shapeit5&quot;</span>,
+<span class="w">    </span><span class="s2">&quot;ref_format&quot;</span>:<span class="w"> </span><span class="s2">&quot;vcf&quot;</span>,
+<span class="w">    </span><span class="s2">&quot;data_type&quot;</span>:<span class="w"> </span><span class="s2">&quot;array&quot;</span>,<span class="w"> </span>//<span class="w"> </span>or<span class="w"> </span>wgs
+<span class="w">    </span><span class="s2">&quot;maf&quot;</span>:<span class="w"> </span><span class="m">0</span>.001,
+<span class="w">    </span><span class="s2">&quot;common_chunks&quot;</span>:<span class="w"> </span><span class="s2">&quot;gs://my-gcs/bucket/chunks/b38/20cM/chunks_chrCNUMBER.txt&quot;</span>,
+<span class="w">    </span><span class="s2">&quot;rare_chunks&quot;</span>:<span class="w"> </span><span class="s2">&quot;gs://my-gcs/bucket/chunks/b38/4cM/chunks_chrCNUMBER.txt&quot;</span>,
+<span class="w">    </span><span class="s2">&quot;genetic_maps&quot;</span>:<span class="w"> </span><span class="s2">&quot;gs://my-gcs/bucket/maps/b38/chrCNUMBER.b38.gmap.gz&quot;</span>
+<span class="o">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Next thing to do is update the <code class="code docutils literal notranslate"><span class="pre">nextflow.config</span></code> file. The only things you need to change are <code class="code docutils literal notranslate"><span class="pre">workDir</span></code> and
+<code class="code docutils literal notranslate"><span class="pre">google.project</span></code>, and sometimes <code class="code docutils literal notranslate"><span class="pre">google.location</span></code></p>
+<blockquote>
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nv">workDir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;gs://my-gcs/bucket/test_data/GWASpy/work&#39;</span>
+
+process<span class="w"> </span><span class="o">{</span>
+<span class="w">  </span><span class="nv">executor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;google-batch&#39;</span>
+<span class="w">  </span><span class="nv">errorStrategy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">{</span><span class="w"> </span>task.exitStatus<span class="o">==</span>null<span class="w"> </span>?<span class="w"> </span><span class="s1">&#39;retry&#39;</span><span class="w"> </span>:<span class="w"> </span><span class="s1">&#39;terminate&#39;</span><span class="w"> </span><span class="o">}</span>
+<span class="w">  </span><span class="nv">maxRetries</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">3</span>
+<span class="o">}</span>
+
+profiles<span class="w"> </span><span class="o">{</span>
+<span class="w">    </span>gbatch<span class="w"> </span><span class="o">{</span>
+<span class="w">      </span>google.project<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;my-batch-billing-project&#39;</span>
+<span class="w">      </span>google.location<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;us-central1&#39;</span>
+<span class="w">      </span>batch.spot<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span>
+<span class="w">    </span><span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Now you can easily run both phasing and imputation using the following command</p>
+<blockquote>
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./nextflow<span class="w"> </span>run<span class="w"> </span>main.nf<span class="w"> </span>-c<span class="w"> </span>nextflow.config<span class="w"> </span>-profile<span class="w"> </span>gbatch<span class="w"> </span>-params-file<span class="w"> </span>params.json
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="imputation.html" class="btn btn-neutral float-left" title="Genotype Imputation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Martin Lab, Broad Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

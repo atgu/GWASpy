@@ -1,86 +1,56 @@
 .. _sec-phasing:
 
-===================
+=================
 Haplotype Phasing
-===================
+=================
 
 Knowing the phase of a haplotype can allow us to impute low frequency variants, this makes haplotype phasing an
 important step before genotype imputation. GWASpy has a module, :code:`phasing`, for performing phasing. Phasing can
-be run with or without a reference panel using either Eagle2 or SHAPEIT4
+be run with or without a reference panel using SHAPEIT5
 
-In GWASpy, the :code:`phasing` is divided into 3 parts: (1) :code:`scatter`; (2) :code:`phase`; (3) :code:`concat`. We
-first split the input file into multiple smaller chunks with overlapping windows between consecutive windows, run
-phasing on each chunk, then concatenate (join) the phased chunks. Running things this way rather than phasing entire
-chromosomes speeds up the time it takes to run phasing since we can parallelize the phasing of each chunk. All 3 steps
-can be run in a single command (i.e. as a pipeline, DEFAULT & RECOMMENDED) or in separate commands either directly from
-the command line or inside a Python script.
+GWASpy can handle both array and WGS data. For array data, the user can pass a VCF/BCF file with all the chromosomes,
+then GWASpy will use SHAPEIT5 to phase the chromosomes in parallel. Since WGS has more variants, phasing will be parallelized across
+multiple chunks in each chromosome. It's also important to note that phasing of WGS data includes phasing common
+variants first, followed by phasing rare variants.
 
-A. Run scatter, phase, and concat in a single command
-########################################################
-You can run the scatter, phase, and concat steps sequentially in a single command. This is the default behaviour in
-GWASpy. Below are examples
+Another important aspect of phasing is the use of a reference panel. In many cases (small sample size), including a reference panel when
+phasing improves accuracy. By default, GWASpy runs phasing without a reference panel, but there is an option to use a
+reference panel as shown below.
 
-#. Command line
+Examples
+########
+
+**1. Without a reference panel**
 
     .. code-block:: sh
 
-        phasing --input-vcf gs://path/to/file.vcf.bgz --out-dir gs://path/to/output/dir --reference GRCh38 --billing-project billing-project
+        phasing --input-vcf gs://path/to/file.vcf.bgz --output-filename outfilename.phased --out-dir gs://path/to/output/dir --genome-build GRCh38 --billing-project my-billing-project
 
-#. Python (inside a Python script)
+**2. HGDP+1KG reference panel**
 
-    .. code-block:: python
+Set :code:`--vcf-ref` to  :code:`hgdp1kgp`
 
-            import gwaspy.phasing as phase
-            phase.phasing.haplotype_phasing(input_vcf = 'gs://path/to/file.vcf.bgz',
-                      vcf_ref = None,
-                      local: bool = False,
-                      billing_project = 'billing-project',
-                      software = 'shapeit',
-                      reference= 'GRCh38',
-                      max_win_size_cm: float = 10.0,
-                      overlap_size_cm: float = 2.0,
-                      scatter_memory: int = 26,
-                      cpu: int = 4,
-                      threads: int = 3,
-                      stages: str = 'scatter,phase,concat',
-                      output_type: str = 'bcf',
-                      out_dir = 'gs://path/to/output/dir')
+    .. code-block:: sh
 
-B. Run scatter, phasing, and concat steps in separate commands.
-###############################################################
-If for whatever reasons you'd like to run the scatter, phase, and concat steps separately, you can make use of the
-:code:`--stages` (command-line) and :code:`stages` (Python script) arguments to specify which stage
-[:code:`scatter`, :code:`phase`, :code:`concat`] you want to run. It's important to note that even though you can run things this way, phase is dependent on results from scatter and concat on results
-from phase i.e. you cannot run phasing without having ran scatter prior.
+        phasing --input-vcf gs://path/to/file.vcf.bgz --output-filename my_outfilename --out-dir gs://path/to/output/dir --genome-build GRCh38 --billing-project my-billing-project --vcf-ref hgdp1kgp
 
-C. Reference panels
-####################
-In some cases, including a reference panel when phasing might improve accuracy. By default, GWASpy runs phasing without
-a reference panel. If the user wants to use a reference panel, there are two options
-
-.. note::
-    If the data set you wish to phase contains more than twice as many samples as the largest reference panel
-    available to you, then using a reference panel is unlikely to give much of a boost in phasing accuracy.
-
-**C1.  HGDP+1KG dataset**
-
-.. code-block:: sh
-
-        phasing --input-vcf gs://path/to/file.vcf.bgz --out-dir gs://path/to/output/dir --reference GRCh38 --billing-project billing-project --vcf-ref hgdp_1kg
-
-**C2. Own reference panel**
-
-Say you have your reference panel files by chromosomes stored in gs://ref_panel/ALL.chr{1..22,X}.vcf,
-you would pass the path to :code:`--vcf-ref` as gs://ref_panel/ALL.chr\ **CNUMBER**\ .vcf,
-GWASpy uses **CNUMBER** as a placeholder for the chromosomes. Then you can run phasing as:
-
-.. code-block:: sh
-
-        phasing --input-vcf gs://path/to/file.vcf.bgz --out-dir gs://path/to/output/dir --reference GRCh38 --billing-project project-name --vcf-ref gs://ref_panel/ALL.chrCNUMBER.vcf
+**3. Own reference panel**
 
 .. note::
     1. If you're using your own reference panel, make sure the files are bgzip compressed.
-    2. Chromosome X reference file must be name X and not 23
+    2. Chromosome X reference file must be named X and not 23
+
+Say you have your reference panel files for each chromosomes stored in gs://ref_panel/ALL.chr{1..22,X}.vcf,
+you would pass the path to :code:`--vcf-ref` as gs://ref_panel/ALL.chr\ **CNUMBER**\ .vcf.
+GWASpy uses **CNUMBER** as a placeholder for the chromosomes. Then you can run phasing as:
+
+    .. code-block:: sh
+
+        phasing --input-vcf gs://path/to/file.vcf.bgz --output-filename outfilename.phased --out-dir gs://path/to/output/dir --genome-build GRCh38 --billing-project my-billing-project --vcf-ref gs://ref_panel/ALL.chrCNUMBER.vcf
+
+.. note::
+    For nextflow users, the idea is the same. The only difference is you have to update the params.json file. Examples
+    are provided in the tutorial section of the documentation
 
 Arguments and options
 #####################
@@ -95,37 +65,25 @@ Arguments and options
      - Path to where VCF file to be phased is
    * - :code:`--vcf-ref`
      - VCF file for reference haplotypes if phasing with a reference panel
+   * - :code:`--pedigree`
+     - Pedigree (PLINK FAM) file
    * - :code:`--local`
      - Type of service. Default is Service backend where jobs are executed on a multi-tenant compute cluster in Google Cloud
    * - :code:`--billing-project`
      - Billing project to be used for the job(s)
-   * - :code:`--software`
-     - Software to use for phasing. Options: [:code:`eagle`, :code:`shapeit`]. Default is :code:`eagle`
-   * - :code:`--reference`
+   * - :code:`--genome-build`
      - Genome reference build. Default is GRCh38. Options: [:code:`GRCh37`, :code:`GRCh38`]
-   * - :code:`--max-win-size-cm`
-     - Maximum window size to use when chunking the input file. Default is 10.0
-   * - :code:`--overlap-size-cm`
-     - Size of overlap between consecutive overlapping windows. Default is 2.0
-   * - :code:`--cpu`
-     - Number of CPUs to use in phasing. Default is 4. [TO BE CHANGED]
-   * - :code:`--scatter-mem`
-     - Memory to use for scattering input into chunks before phasing. [TO BE CHANGED]
-   * - :code:`--threads`
-     - Number of threads to use in phasing. Default is 3. [TO BE CHANGED]
-   * - :code:`--stages`
-     - Process(es) to run. Default is :code:`scatter,phase,concat`
-   * - :code:`--out-type`
-     - Output type. Options: [:code:`bcf`, :code:`vcf`]. Default is :code:`bcf` [HIGHLY RECOMMENDED SINCE BCFs ARE GENERALLY FASTER TO WORK WITH AND TAKE UP LESS SPACE]
+   * - :code:`--data-type`
+     - Array or WGS data. Default is array. Options: [:code:`array`, :code:`wgs`].
+   * - :code:`--fill-tags`
+     - Whether or not to add AC tag required by SHAPEIT5. Including :code:`--fill-tags`, in your command will enable this step
+   * - :code:`--software`
+     - Software to use for phasing. Options: [:code:`beagle`, :code:`shapeit`]. Default is :code:`shapeit`
+   * - :code:`--output-filename`
+     - Output filename without file extension
    * - :code:`--out-dir`
      - Path to where output files will be saved
 
 Output
 ######
-For both Eagle and SHAPEIT, the resulting output is a VCF file per chromosome with phased haplotypes.
-
-
-.. note::
-    By default, Eagle will output a VCF file with phased GT and other fields that were in the unphased VCF, whereas
-    SHAPEIT will ONLY output the GT field. This will result in phased files generated using Eagle being bigger in size
-    than those generate using SHAPEIT.
+The resulting output is a VCF file per chromosome with phased haplotypes.

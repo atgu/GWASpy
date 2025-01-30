@@ -1,4 +1,5 @@
 .. _sec-pca:
+.. _pca:
 
 ============================
 Principal Component Analysis

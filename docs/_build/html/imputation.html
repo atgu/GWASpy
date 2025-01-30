@@ -1,24 +1,26 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Genotype Imputation &mdash; GWASpy 0.1.0 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=eea1f72d" />
+
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Tutorial" href="tutorial.html" />
     <link rel="prev" title="Haplotype Phasing" href="phasing.html" /> 
 </head>
 
@@ -27,11 +29,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> GWASpy
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GWASpy
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -39,16 +45,17 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qb.html">Hail Query and Batch</a></li>
 <li class="toctree-l1"><a class="reference internal" href="preimp_qc.html">Pre-Imputation QC</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pca.html">Principal Component Analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phasing.html">Haplotype Phasing</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Genotype Imputation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#a-run-imputation-concat-in-a-single-command">A. Run imputation+concat in a single command</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#b-run-imputation-and-concat-in-separate-commands">B. Run imputation and concat in separate commands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#arguments-and-options">Arguments and options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#output">Output</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
 </ul>
 
         </div>
@@ -64,8 +71,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Genotype Imputation</li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Genotype Imputation</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/imputation.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -76,55 +83,37 @@
            <div itemprop="articleBody">
              
   <section id="genotype-imputation">
-<span id="sec-imputation"></span><h1>Genotype Imputation<a class="headerlink" href="#genotype-imputation" title="Permalink to this headline"></a></h1>
+<span id="sec-imputation"></span><h1>Genotype Imputation<a class="headerlink" href="#genotype-imputation" title="Link to this heading"></a></h1>
 <p>Genotype imputation is a process of estimating missing genotypes from the haplotype or genotype reference panel. It
 allows you to accurately evaluate the evidence for association at genetic markers that are not directly genotyped.
-GWASpy has a module, <code class="code docutils literal notranslate"><span class="pre">imputation</span></code>, for running imputation using IMPUTE5. Because imputation is a computationally
-intensive task, we run it on multiple chunks in parallel, then merge the imputed chunks together at the end. This is why
-the module is divided into two parts: (1) <code class="code docutils literal notranslate"><span class="pre">impute</span></code>; (2) <code class="code docutils literal notranslate"><span class="pre">concat</span></code>. Below are examples of how to run imputation</p>
-<section id="a-run-imputation-concat-in-a-single-command">
-<h2>A. Run imputation+concat in a single command<a class="headerlink" href="#a-run-imputation-concat-in-a-single-command" title="Permalink to this headline"></a></h2>
-<ol class="arabic">
-<li><p>Command line</p>
+GWASpy has a module, <code class="code docutils literal notranslate"><span class="pre">imputation</span></code>, for running imputation using IMPUTE5. Because imputation can be a computationally
+intensive task, we run it on multiple chunks in parallel, then merge the imputed chunks together at the end. Below are
+examples of how to run imputation using either the HGDP+1kGP or your own reference panel</p>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<p><strong>1. HGDP+1kGP reference panel</strong></p>
 <blockquote>
-<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>imputation --input-vcf gs://path/to/file.vcf.bgz --samples-file gs://path/to/female_samples.txt --out-dir gs://path/to/output/dir --billing-project project-name --run impute --n-samples integer_number_of_samples
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>imputation<span class="w"> </span>--input-file<span class="w"> </span>gs://path/to/file.vcf.bgz<span class="w"> </span>--vcf-ref<span class="w"> </span>hgdp1kgp<span class="w"> </span>--output-filename<span class="w"> </span>my_outfilename<span class="w"> </span>--out-dir<span class="w"> </span>gs://path/to/output/dir<span class="w"> </span>--n-samples<span class="w"> </span><span class="m">1989</span><span class="w"> </span>--n-ref-samples<span class="w"> </span><span class="m">4091</span><span class="w"> </span>--billing-project<span class="w"> </span>my-billing-project
 </pre></div>
 </div>
 </div></blockquote>
-</li>
-<li><p>Python (inside a Python script)</p>
+<p><strong>2. Own reference panel</strong></p>
 <blockquote>
-<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gwaspy.imputation</span> <span class="k">as</span> <span class="nn">impute</span>
-<span class="n">impute</span><span class="o">.</span><span class="n">imputation</span><span class="o">.</span><span class="n">genotype_imputation</span><span class="p">(</span><span class="n">input_vcfs</span> <span class="o">=</span> <span class="s1">&#39;gs://path/to/file.vcf.bgz&#39;</span><span class="p">,</span>
-          <span class="n">females_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">gs</span><span class="p">:</span><span class="o">//</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">female_samples</span><span class="o">.</span><span class="n">txt</span><span class="p">,</span>
-          <span class="n">n_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">integer_number_of_samples</span><span class="p">,</span>
-          <span class="n">n_panel_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4099</span><span class="p">,</span>
-          <span class="n">buffer_region</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">250</span><span class="p">,</span>
-          <span class="n">local</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-          <span class="n">billing_project</span> <span class="o">=</span> <span class="s1">&#39;project-name&#39;</span><span class="p">,</span>
-          <span class="n">memory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;highmem&#39;</span><span class="p">,</span>
-          <span class="n">cpu</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
-          <span class="n">stages</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;impute,concat&#39;</span>
-          <span class="n">output_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bcf&#39;</span><span class="p">,</span>
-          <span class="n">out_dir</span> <span class="o">=</span> <span class="s1">&#39;gs://path/to/output/dir&#39;</span><span class="p">)</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">imputation</span> <span class="o">--</span><span class="nb">input</span><span class="o">-</span><span class="n">file</span> <span class="n">gs</span><span class="p">:</span><span class="o">//</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">file</span><span class="o">.</span><span class="n">vcf</span><span class="o">.</span><span class="n">bgz</span> <span class="o">--</span><span class="n">vcf</span><span class="o">-</span><span class="n">ref</span> <span class="n">gs</span><span class="p">:</span><span class="o">//</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">ref_panel</span><span class="o">/</span><span class="n">ALL</span><span class="o">.</span><span class="n">chrCNUMBER</span><span class="o">.</span><span class="n">vcf</span> <span class="o">--</span><span class="n">output</span><span class="o">-</span><span class="n">filename</span> <span class="n">my_outfilename</span> <span class="o">--</span><span class="n">out</span><span class="o">-</span><span class="nb">dir</span> <span class="n">gs</span><span class="p">:</span><span class="o">//</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">output</span><span class="o">/</span><span class="nb">dir</span> <span class="o">--</span><span class="n">n</span><span class="o">-</span><span class="n">samples</span> <span class="mi">1989</span> <span class="o">--</span><span class="n">n</span><span class="o">-</span><span class="n">ref</span><span class="o">-</span><span class="n">samples</span> <span class="mi">4091</span> <span class="o">--</span><span class="n">billing</span><span class="o">-</span><span class="n">project</span> <span class="n">my</span><span class="o">-</span><span class="n">billing</span><span class="o">-</span><span class="n">project</span>
 </pre></div>
 </div>
 </div></blockquote>
-</li>
-</ol>
-</section>
-<section id="b-run-imputation-and-concat-in-separate-commands">
-<h2>B. Run imputation and concat in separate commands<a class="headerlink" href="#b-run-imputation-and-concat-in-separate-commands" title="Permalink to this headline"></a></h2>
-<p>If you want to run impute or concat as separate steps, you can set the <code class="code docutils literal notranslate"><span class="pre">--stages</span></code> (command-line)/<code class="code docutils literal notranslate"><span class="pre">stages</span></code> (Python script)
-argument as impute or concat. It’s important to note though that if you want to run things this way, the impute step should
-always be run before concat as GWASpy uses results from the <code class="code docutils literal notranslate"><span class="pre">impute</span></code> stage for <code class="code docutils literal notranslate"><span class="pre">concat</span></code></p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>When using your own reference panel, make sure that you use the CNUMBER placeholder in the filename passed to –vcf-ref</p>
+</div>
 </section>
 <section id="arguments-and-options">
-<h2>Arguments and options<a class="headerlink" href="#arguments-and-options" title="Permalink to this headline"></a></h2>
-<table class="colwidths-given docutils align-default">
+<h2>Arguments and options<a class="headerlink" href="#arguments-and-options" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
 <colgroup>
-<col style="width: 23%" />
-<col style="width: 77%" />
+<col style="width: 23.1%" />
+<col style="width: 76.9%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Argument</p></th>
@@ -132,35 +121,29 @@ always be run before concat as GWASpy uses results from the <code class="code do
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--input-vcf</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--input-file</span></code></p></td>
 <td><p>Path to where the VCF for target genotypes paths is</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--samples-file</span></code></p></td>
-<td><p>Text file with list of FEMALE samples, one sample ID each line, that are in the dataset. This is crucial for chromosome X imputation as the data is split by sex</p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--vcf-ref</span></code></p></td>
+<td><p>Reference panel file to use for imputation</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--local</span></code></p></td>
 <td><p>Type of service. Default is Service backend where jobs are executed on a multi-tenant compute cluster in Google Cloud</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--billing-project</span></code></p></td>
-<td><p>Billing project to be used for the job(s)</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--memory</span></code></p></td>
-<td><p>Memory to use for imputation. Options: [<code class="code docutils literal notranslate"><span class="pre">lowmem</span></code>, <code class="code docutils literal notranslate"><span class="pre">standard</span></code>, <code class="code docutils literal notranslate"><span class="pre">highmem</span></code>]. Default is <code class="code docutils literal notranslate"><span class="pre">highmem</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--cpu-concat</span></code></p></td>
-<td><p>CPU to use for the concatenation step. Default is 8</p></td>
+<td><p>Billing project to be used for the jobs</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--n-samples</span></code></p></td>
-<td><p>Total number of samples in your dataset. We use this to estimate some of the job resources like storage.</p></td>
+<td><p>Number of target samples to be imputed. We use this to estimate resources for some of the jobs</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--buffer-region</span></code></p></td>
-<td><p>Buffer region to be used during imputation. This helps prevent imputation quality from deteriorating near the edges of the region. Default is 250 KB</p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--n-ref-samples</span></code></p></td>
+<td><p>Number of reference samples. We use this to estimate resources for some of the jobs</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--stages</span></code></p></td>
-<td><p>Process to run. Default is <code class="code docutils literal notranslate"><span class="pre">impute,concat</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--software</span></code></p></td>
+<td><p>Software to use for phasing. Options: [<code class="code docutils literal notranslate"><span class="pre">beagle5</span></code>, <code class="code docutils literal notranslate"><span class="pre">impute5</span></code>]. Default is <code class="code docutils literal notranslate"><span class="pre">impute5</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--out-type</span></code></p></td>
-<td><p>Output type. Options: [<code class="code docutils literal notranslate"><span class="pre">bcf</span></code>, <code class="code docutils literal notranslate"><span class="pre">vcf</span></code>]. Default is <code class="code docutils literal notranslate"><span class="pre">bcf</span></code> [HIGHLY RECOMMENDED SINCE BCFs ARE GENERALLY MORE EFFICIENT TO WORK WITH AND TAKE UP LESS SPACE]</p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--output-filename</span></code></p></td>
+<td><p>Output filename without file extension</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--out-dir</span></code></p></td>
 <td><p>Path to where output files will be saved</p></td>
@@ -169,13 +152,8 @@ always be run before concat as GWASpy uses results from the <code class="code do
 </table>
 </section>
 <section id="output">
-<h2>Output<a class="headerlink" href="#output" title="Permalink to this headline"></a></h2>
+<h2>Output<a class="headerlink" href="#output" title="Link to this heading"></a></h2>
 <p>The resulting output is a VCF file per chromosome with imputed genotypes.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Concatenating BCFs from imputation by chromosome is slower when the output is VCF compared to a BCF. The size may
-also differ significantly between BCF and VCF.</p>
-</div>
 </section>
 </section>
 
@@ -184,12 +162,13 @@ also differ significantly between BCF and VCF.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="phasing.html" class="btn btn-neutral float-left" title="Haplotype Phasing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tutorial.html" class="btn btn-neutral float-right" title="Tutorial" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Martin Lab, Broad Institute.</p>
+    <p>&#169; Copyright 2024, Martin Lab, Broad Institute.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

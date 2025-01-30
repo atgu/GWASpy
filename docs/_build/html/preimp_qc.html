@@ -1,26 +1,27 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pre-Imputation Quality Control (QC) &mdash; GWASpy 0.1.0 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=eea1f72d" />
+
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Principal Component Analysis" href="pca.html" />
-    <link rel="prev" title="Install GWASpy on GNU/Linux" href="install/linux.html" /> 
+    <link rel="prev" title="Hail Query and Batch" href="qb.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -28,11 +29,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> GWASpy
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GWASpy
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -40,15 +45,17 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qb.html">Hail Query and Batch</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Pre-Imputation QC</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#arguments-and-options">Arguments and options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#output-s">Output(s)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="pca.html">Principal Component Analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phasing.html">Haplotype Phasing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="imputation.html">Genotype Imputation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
 </ul>
 
         </div>
@@ -64,8 +71,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Pre-Imputation Quality Control (QC)</li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Pre-Imputation Quality Control (QC)</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/preimp_qc.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -76,38 +83,18 @@
            <div itemprop="articleBody">
              
   <section id="pre-imputation-quality-control-qc">
-<span id="sec-pre-imputation-qc"></span><h1>Pre-Imputation Quality Control (QC)<a class="headerlink" href="#pre-imputation-quality-control-qc" title="Permalink to this headline"></a></h1>
+<span id="preimp-qc"></span><span id="sec-pre-imputation-qc"></span><h1>Pre-Imputation Quality Control (QC)<a class="headerlink" href="#pre-imputation-quality-control-qc" title="Link to this heading"></a></h1>
 <p>Detecting and correcting issues such as genotyping errors, sample handling errors, population stratification etc
 is important in GWAS. The <code class="code docutils literal notranslate"><span class="pre">preimp_qc</span></code> module addresses these issues and cleans (QC) your data. Below is a flow diagram
 of the filters applied when QC’ing input data:</p>
-<a class="reference internal image-reference" href="_images/qc_workflow.png"><img alt="_images/qc_workflow.png" class="align-center" src="_images/qc_workflow.png" style="width: 500.0px; height: 950.0px;" /></a>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline"></a></h2>
-<p>You can run pre-imputation qc using the <code class="code docutils literal notranslate"><span class="pre">preimp_qc</span></code> module: (1) via the command line; or (2) inside a python script</p>
-<ol class="arabic">
-<li><p>Command line</p>
-<blockquote>
-<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>preimp_qc --dirname data/ --basename sim_sim2a_eur_sa_merge.miss --input-type plink
-</pre></div>
-</div>
-</div></blockquote>
-</li>
-<li><p>Inside a python script</p>
-<blockquote>
-<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gwaspy.preimp_qc</span> <span class="k">as</span> <span class="nn">qc</span>
-<span class="n">qc</span><span class="o">.</span><span class="n">preimp_qc</span><span class="o">.</span><span class="n">preimp_qc</span><span class="p">(</span><span class="n">input_type</span><span class="o">=</span><span class="s2">&quot;plink&quot;</span><span class="p">,</span> <span class="n">dirname</span><span class="o">=</span><span class="s2">&quot;data/&quot;</span><span class="p">,</span> <span class="n">basename</span><span class="o">=</span><span class="s2">&quot;sim_sim2a_eur_sa_merge.miss&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div></blockquote>
-</li>
-</ol>
-</section>
+<a class="reference internal image-reference" href="_images/qc_workflow.png"><img alt="_images/qc_workflow.png" class="align-center" src="_images/qc_workflow.png" style="width: 500.0px; height: 950.0px;" />
+</a>
 <section id="arguments-and-options">
-<h2>Arguments and options<a class="headerlink" href="#arguments-and-options" title="Permalink to this headline"></a></h2>
-<table class="colwidths-given docutils align-default">
+<h2>Arguments and options<a class="headerlink" href="#arguments-and-options" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
 <colgroup>
-<col style="width: 23%" />
-<col style="width: 77%" />
+<col style="width: 23.1%" />
+<col style="width: 76.9%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Argument</p></th>
@@ -139,47 +126,90 @@ of the filters applied when QC’ing input data:</p>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--report</span></code></p></td>
 <td><p>Generate a QC PDF report or not. Default is True</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--pre-geno</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--liftover</span></code></p></td>
+<td><p>Liftover input data to GRCh38 or not, default is False. Running <code class="code docutils literal notranslate"><span class="pre">preimp_qc</span></code> with <code class="code docutils literal notranslate"><span class="pre">--liftover</span></code> will activate liftover</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--pre-geno</span></code></p></td>
 <td><p>include only SNPs with missing-rate &lt; NUM (before ID filter), important for post merge of multiple platforms</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--mind</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--mind</span></code></p></td>
 <td><p>include only IDs with missing-rate &lt; NUM</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--fhet-aut</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--fhet-aut</span></code></p></td>
 <td><p>include only IDs within NUM &lt; FHET &lt; NUM</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--fstat-y</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--fstat-y</span></code></p></td>
 <td><p>include only female IDs with fhet &lt; NUM</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--fstat-x</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--fstat-x</span></code></p></td>
 <td><p>include only male IDs with fhet &gt; NUM</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--geno</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--geno</span></code></p></td>
 <td><p>include only SNPs with missing-rate &lt; NUM</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--midi</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--midi</span></code></p></td>
 <td><p>include only SNPs with missing-rate-difference (case/control) &lt; NUM</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--withpna</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--withpna</span></code></p></td>
 <td><p>include monomorphic (invariant) SNPs</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--maf</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--maf</span></code></p></td>
 <td><p>include only SNPs with MAF &gt;= NUM</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--hwe-th-con</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--hwe-th-con</span></code></p></td>
 <td><p>HWE_controls &lt; NUM</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--hwe-th-cas</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--hwe-th-cas</span></code></p></td>
 <td><p>HWE_cases &lt; NUM</p></td>
 </tr>
 </tbody>
 </table>
 </section>
 <section id="output-s">
-<h2>Output(s)<a class="headerlink" href="#output-s" title="Permalink to this headline"></a></h2>
+<h2>Output(s)<a class="headerlink" href="#output-s" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p>QC’ed file(s) i.e. file with all the variants and/or samples that fail QC filters removed</p></li>
 <li><p>A detailed PDF QC report including pre- and post-QC variant/sample counts, figures such as Manhattan and QQ plots etc.</p></li>
+</ul>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<p>All the code below assumes the user already has a Dataproc cluster running as described in the <a class="reference external" href="qb.html">previous section</a></p>
+<p>You can run pre-imputation qc using the <code class="code docutils literal notranslate"><span class="pre">preimp_qc</span></code> module (1) inside a python script; or (2) via the command line</p>
+<ol class="arabic simple">
+<li><p>Python script - submitting a python script to a cluster from local machine (Highly recommended)</p></li>
+</ol>
+<ul>
+<li><p>First create a python script on your local machine as below</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gwaspy.preimp_qc</span> <span class="k">as</span> <span class="nn">qc</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">preimp_qc</span><span class="o">.</span><span class="n">preimp_qc</span><span class="p">(</span><span class="n">dirname</span><span class="o">=</span><span class="s2">&quot;gs://my-gcs/bucket/test_data/&quot;</span><span class="p">,</span> <span class="n">basename</span><span class="o">=</span><span class="s2">&quot;my_data_basename&quot;</span><span class="p">,</span>
+                       <span class="n">input_type</span><span class="o">=</span><span class="s2">&quot;my_input_type&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Then run the following command to submit the script to the Dataproc cluster named <cite>my-cluster-name</cite></p>
+<blockquote>
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>hailctl<span class="w"> </span>dataproc<span class="w"> </span>submit<span class="w"> </span>my-cluster-name<span class="w"> </span>qc_script.py
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ul>
+<ol class="arabic simple" start="2">
+<li><p>Command line - requires user to SSH’ed to a cluster</p></li>
+</ol>
+<p>Users may encounter <a class="reference external" href="https://hail.zulipchat.com/#narrow/channel/128581-Cloud-support/topic/Running.20GWASpy.20on.20hailctl.20cluster.20-.20file.20not.20found.20exception">this error</a> when trying to run things from the command line</p>
+<ul>
+<li><p>This requires the user to be inside (<cite>gcloud compute ssh</cite>) the Dataproc cluster with GWASpy already installed</p>
+<blockquote>
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>gcloud<span class="w"> </span>compute<span class="w"> </span>ssh<span class="w"> </span><span class="s2">&quot;my-cluster-name-m&quot;</span>
+preimp_qc<span class="w"> </span>--dirname<span class="w"> </span>gs://my-gcs/bucket/test_data/<span class="w"> </span>--basename<span class="w"> </span>my_data_basename<span class="w"> </span>--input-type<span class="w"> </span>my_input_type
+</pre></div>
+</div>
+</div></blockquote>
+</li>
 </ul>
 </section>
 </section>
@@ -188,14 +218,14 @@ of the filters applied when QC’ing input data:</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="install/linux.html" class="btn btn-neutral float-left" title="Install GWASpy on GNU/Linux" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="qb.html" class="btn btn-neutral float-left" title="Hail Query and Batch" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="pca.html" class="btn btn-neutral float-right" title="Principal Component Analysis" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Martin Lab, Broad Institute.</p>
+    <p>&#169; Copyright 2024, Martin Lab, Broad Institute.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

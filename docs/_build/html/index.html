@@ -1,21 +1,22 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GWASpy 0.1 &mdash; GWASpy 0.1.0 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=eea1f72d" />
+
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -27,11 +28,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="#" class="icon icon-home"> GWASpy
+
+          
+          
+          <a href="#" class="icon icon-home">
+            GWASpy
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -39,10 +44,12 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qb.html">Hail Query and Batch</a></li>
 <li class="toctree-l1"><a class="reference internal" href="preimp_qc.html">Pre-Imputation QC</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pca.html">Principal Component Analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phasing.html">Haplotype Phasing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="imputation.html">Genotype Imputation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
 </ul>
 
         </div>
@@ -58,8 +65,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
-      <li>GWASpy 0.1</li>
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">GWASpy 0.1</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -70,24 +77,25 @@
            <div itemprop="articleBody">
              
   <section id="gwaspy-0-1">
-<h1>GWASpy 0.1<a class="headerlink" href="#gwaspy-0-1" title="Permalink to this headline"></a></h1>
+<h1>GWASpy 0.1<a class="headerlink" href="#gwaspy-0-1" title="Link to this heading"></a></h1>
 <p>GWASpy is an open-source Python package for scalable: (1) Pre-imputation QC; (2) Principal Component Analysis; (3) Haplotype phasing; and (4) Genotype
 Imputation. See the <a class="reference external" href="installation.html">installation page</a> to get started
 using GWASpy.</p>
 </section>
 <section id="contents">
-<h1>Contents<a class="headerlink" href="#contents" title="Permalink to this headline"></a></h1>
+<h1>Contents<a class="headerlink" href="#contents" title="Link to this heading"></a></h1>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="install/macosx.html">     Mac OS X</a></li>
-<li class="toctree-l2"><a class="reference internal" href="install/linux.html">     Linux</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qb.html">Hail Query and Batch</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="qb.html#query">Query</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qb.html#id1">Batch</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="preimp_qc.html">Pre-Imputation QC</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="preimp_qc.html#examples">Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="preimp_qc.html#arguments-and-options">Arguments and options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="preimp_qc.html#output-s">Output(s)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preimp_qc.html#examples">Examples</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="pca.html">Principal Component Analysis</a><ul>
@@ -99,18 +107,23 @@ using GWASpy.</p>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="phasing.html">Haplotype Phasing</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="phasing.html#a-run-scatter-phase-and-concat-in-a-single-command">A. Run scatter, phase, and concat in a single command</a></li>
-<li class="toctree-l2"><a class="reference internal" href="phasing.html#b-run-scatter-phasing-and-concat-steps-in-separate-commands">B. Run scatter, phasing, and concat steps in separate commands.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="phasing.html#c-reference-panels">C. Reference panels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phasing.html#examples">Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="phasing.html#arguments-and-options">Arguments and options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="phasing.html#output">Output</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="imputation.html">Genotype Imputation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="imputation.html#a-run-imputation-concat-in-a-single-command">A. Run imputation+concat in a single command</a></li>
-<li class="toctree-l2"><a class="reference internal" href="imputation.html#b-run-imputation-and-concat-in-separate-commands">B. Run imputation and concat in separate commands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imputation.html#examples">Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="imputation.html#arguments-and-options">Arguments and options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="imputation.html#output">Output</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#datasets">1. Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#start-a-dataproc-cluster-with-gwaspy-installed">2. Start a dataproc cluster with GWASpy installed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#pre-imputation-qc">3. Pre-imputation QC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#pca">4. PCA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#phasing-and-imputation">5. Phasing and Imputation</a></li>
 </ul>
 </li>
 </ul>
@@ -127,7 +140,7 @@ using GWASpy.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Martin Lab, Broad Institute.</p>
+    <p>&#169; Copyright 2024, Martin Lab, Broad Institute.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

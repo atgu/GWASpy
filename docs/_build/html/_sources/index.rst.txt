@@ -14,7 +14,9 @@ Contents
     :maxdepth: 2
 
     Installation <installation.rst>
+    Hail Query and Batch <qb.rst>
     Pre-Imputation QC <preimp_qc.rst>
     Principal Component Analysis <pca.rst>
     Haplotype Phasing <phasing.rst>
     Genotype Imputation <imputation.rst>
+    Tutorial <tutorial.rst>

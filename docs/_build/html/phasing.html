@@ -1,21 +1,22 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Haplotype Phasing &mdash; GWASpy 0.1.0 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=eea1f72d" />
+
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -28,11 +29,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> GWASpy
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GWASpy
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -40,17 +45,17 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qb.html">Hail Query and Batch</a></li>
 <li class="toctree-l1"><a class="reference internal" href="preimp_qc.html">Pre-Imputation QC</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pca.html">Principal Component Analysis</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Haplotype Phasing</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#a-run-scatter-phase-and-concat-in-a-single-command">A. Run scatter, phase, and concat in a single command</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#b-run-scatter-phasing-and-concat-steps-in-separate-commands">B. Run scatter, phasing, and concat steps in separate commands.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#c-reference-panels">C. Reference panels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#arguments-and-options">Arguments and options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#output">Output</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="imputation.html">Genotype Imputation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
 </ul>
 
         </div>
@@ -66,8 +71,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Haplotype Phasing</li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Haplotype Phasing</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/phasing.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -78,92 +83,60 @@
            <div itemprop="articleBody">
              
   <section id="haplotype-phasing">
-<span id="sec-phasing"></span><h1>Haplotype Phasing<a class="headerlink" href="#haplotype-phasing" title="Permalink to this headline"></a></h1>
+<span id="sec-phasing"></span><h1>Haplotype Phasing<a class="headerlink" href="#haplotype-phasing" title="Link to this heading"></a></h1>
 <p>Knowing the phase of a haplotype can allow us to impute low frequency variants, this makes haplotype phasing an
 important step before genotype imputation. GWASpy has a module, <code class="code docutils literal notranslate"><span class="pre">phasing</span></code>, for performing phasing. Phasing can
-be run with or without a reference panel using either Eagle2 or SHAPEIT4</p>
-<p>In GWASpy, the <code class="code docutils literal notranslate"><span class="pre">phasing</span></code> is divided into 3 parts: (1) <code class="code docutils literal notranslate"><span class="pre">scatter</span></code>; (2) <code class="code docutils literal notranslate"><span class="pre">phase</span></code>; (3) <code class="code docutils literal notranslate"><span class="pre">concat</span></code>. We
-first split the input file into multiple smaller chunks with overlapping windows between consecutive windows, run
-phasing on each chunk, then concatenate (join) the phased chunks. Running things this way rather than phasing entire
-chromosomes speeds up the time it takes to run phasing since we can parallelize the phasing of each chunk. All 3 steps
-can be run in a single command (i.e. as a pipeline, DEFAULT &amp; RECOMMENDED) or in separate commands either directly from
-the command line or inside a Python script.</p>
-<section id="a-run-scatter-phase-and-concat-in-a-single-command">
-<h2>A. Run scatter, phase, and concat in a single command<a class="headerlink" href="#a-run-scatter-phase-and-concat-in-a-single-command" title="Permalink to this headline"></a></h2>
-<p>You can run the scatter, phase, and concat steps sequentially in a single command. This is the default behaviour in
-GWASpy. Below are examples</p>
-<ol class="arabic">
-<li><p>Command line</p>
+be run with or without a reference panel using SHAPEIT5</p>
+<p>GWASpy can handle both array and WGS data. For array data, the user can pass a VCF/BCF file with all the chromosomes,
+then GWASpy will use SHAPEIT5 to phase the chromosomes in parallel. Since WGS has more variants, phasing will be parallelized across
+multiple chunks in each chromosome. It’s also important to note that phasing of WGS data includes phasing common
+variants first, followed by phasing rare variants.</p>
+<p>Another important aspect of phasing is the use of a reference panel. In many cases (small sample size), including a reference panel when
+phasing improves accuracy. By default, GWASpy runs phasing without a reference panel, but there is an option to use a
+reference panel as shown below.</p>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<p><strong>1. Without a reference panel</strong></p>
 <blockquote>
-<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>phasing --input-vcf gs://path/to/file.vcf.bgz --out-dir gs://path/to/output/dir --reference GRCh38 --billing-project billing-project
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>phasing<span class="w"> </span>--input-vcf<span class="w"> </span>gs://path/to/file.vcf.bgz<span class="w"> </span>--output-filename<span class="w"> </span>outfilename.phased<span class="w"> </span>--out-dir<span class="w"> </span>gs://path/to/output/dir<span class="w"> </span>--genome-build<span class="w"> </span>GRCh38<span class="w"> </span>--billing-project<span class="w"> </span>my-billing-project
 </pre></div>
 </div>
 </div></blockquote>
-</li>
-<li><p>Python (inside a Python script)</p>
+<p><strong>2. HGDP+1KG reference panel</strong></p>
+<p>Set <code class="code docutils literal notranslate"><span class="pre">--vcf-ref</span></code> to  <code class="code docutils literal notranslate"><span class="pre">hgdp1kgp</span></code></p>
 <blockquote>
-<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gwaspy.phasing</span> <span class="k">as</span> <span class="nn">phase</span>
-<span class="n">phase</span><span class="o">.</span><span class="n">phasing</span><span class="o">.</span><span class="n">haplotype_phasing</span><span class="p">(</span><span class="n">input_vcf</span> <span class="o">=</span> <span class="s1">&#39;gs://path/to/file.vcf.bgz&#39;</span><span class="p">,</span>
-          <span class="n">vcf_ref</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-          <span class="n">local</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-          <span class="n">billing_project</span> <span class="o">=</span> <span class="s1">&#39;billing-project&#39;</span><span class="p">,</span>
-          <span class="n">software</span> <span class="o">=</span> <span class="s1">&#39;shapeit&#39;</span><span class="p">,</span>
-          <span class="n">reference</span><span class="o">=</span> <span class="s1">&#39;GRCh38&#39;</span><span class="p">,</span>
-          <span class="n">max_win_size_cm</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">10.0</span><span class="p">,</span>
-          <span class="n">overlap_size_cm</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span>
-          <span class="n">scatter_memory</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">26</span><span class="p">,</span>
-          <span class="n">cpu</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
-          <span class="n">threads</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
-          <span class="n">stages</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;scatter,phase,concat&#39;</span><span class="p">,</span>
-          <span class="n">output_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;bcf&#39;</span><span class="p">,</span>
-          <span class="n">out_dir</span> <span class="o">=</span> <span class="s1">&#39;gs://path/to/output/dir&#39;</span><span class="p">)</span>
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>phasing<span class="w"> </span>--input-vcf<span class="w"> </span>gs://path/to/file.vcf.bgz<span class="w"> </span>--output-filename<span class="w"> </span>my_outfilename<span class="w"> </span>--out-dir<span class="w"> </span>gs://path/to/output/dir<span class="w"> </span>--genome-build<span class="w"> </span>GRCh38<span class="w"> </span>--billing-project<span class="w"> </span>my-billing-project<span class="w"> </span>--vcf-ref<span class="w"> </span>hgdp1kgp
 </pre></div>
 </div>
 </div></blockquote>
-</li>
-</ol>
-</section>
-<section id="b-run-scatter-phasing-and-concat-steps-in-separate-commands">
-<h2>B. Run scatter, phasing, and concat steps in separate commands.<a class="headerlink" href="#b-run-scatter-phasing-and-concat-steps-in-separate-commands" title="Permalink to this headline"></a></h2>
-<p>If for whatever reasons you’d like to run the scatter, phase, and concat steps separately, you can make use of the
-<code class="code docutils literal notranslate"><span class="pre">--stages</span></code> (command-line) and <code class="code docutils literal notranslate"><span class="pre">stages</span></code> (Python script) arguments to specify which stage
-[<code class="code docutils literal notranslate"><span class="pre">scatter</span></code>, <code class="code docutils literal notranslate"><span class="pre">phase</span></code>, <code class="code docutils literal notranslate"><span class="pre">concat</span></code>] you want to run. It’s important to note that even though you can run things this way, phase is dependent on results from scatter and concat on results
-from phase i.e. you cannot run phasing without having ran scatter prior.</p>
-</section>
-<section id="c-reference-panels">
-<h2>C. Reference panels<a class="headerlink" href="#c-reference-panels" title="Permalink to this headline"></a></h2>
-<p>In some cases, including a reference panel when phasing might improve accuracy. By default, GWASpy runs phasing without
-a reference panel. If the user wants to use a reference panel, there are two options</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>If the data set you wish to phase contains more than twice as many samples as the largest reference panel
-available to you, then using a reference panel is unlikely to give much of a boost in phasing accuracy.</p>
-</div>
-<p><strong>C1.  HGDP+1KG dataset</strong></p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>phasing --input-vcf gs://path/to/file.vcf.bgz --out-dir gs://path/to/output/dir --reference GRCh38 --billing-project billing-project --vcf-ref hgdp_1kg
-</pre></div>
-</div>
-<p><strong>C2. Own reference panel</strong></p>
-<p>Say you have your reference panel files by chromosomes stored in gs://ref_panel/ALL.chr{1..22,X}.vcf,
-you would pass the path to <code class="code docutils literal notranslate"><span class="pre">--vcf-ref</span></code> as gs://ref_panel/ALL.chr<strong>CNUMBER</strong>.vcf,
-GWASpy uses <strong>CNUMBER</strong> as a placeholder for the chromosomes. Then you can run phasing as:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>phasing --input-vcf gs://path/to/file.vcf.bgz --out-dir gs://path/to/output/dir --reference GRCh38 --billing-project project-name --vcf-ref gs://ref_panel/ALL.chrCNUMBER.vcf
-</pre></div>
-</div>
+<p><strong>3. Own reference panel</strong></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ol class="arabic simple">
 <li><p>If you’re using your own reference panel, make sure the files are bgzip compressed.</p></li>
-<li><p>Chromosome X reference file must be name X and not 23</p></li>
+<li><p>Chromosome X reference file must be named X and not 23</p></li>
 </ol>
+</div>
+<p>Say you have your reference panel files for each chromosomes stored in gs://ref_panel/ALL.chr{1..22,X}.vcf,
+you would pass the path to <code class="code docutils literal notranslate"><span class="pre">--vcf-ref</span></code> as gs://ref_panel/ALL.chr<strong>CNUMBER</strong>.vcf.
+GWASpy uses <strong>CNUMBER</strong> as a placeholder for the chromosomes. Then you can run phasing as:</p>
+<blockquote>
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>phasing<span class="w"> </span>--input-vcf<span class="w"> </span>gs://path/to/file.vcf.bgz<span class="w"> </span>--output-filename<span class="w"> </span>outfilename.phased<span class="w"> </span>--out-dir<span class="w"> </span>gs://path/to/output/dir<span class="w"> </span>--genome-build<span class="w"> </span>GRCh38<span class="w"> </span>--billing-project<span class="w"> </span>my-billing-project<span class="w"> </span>--vcf-ref<span class="w"> </span>gs://ref_panel/ALL.chrCNUMBER.vcf
+</pre></div>
+</div>
+</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For nextflow users, the idea is the same. The only difference is you have to update the params.json file. Examples
+are provided in the tutorial section of the documentation</p>
 </div>
 </section>
 <section id="arguments-and-options">
-<h2>Arguments and options<a class="headerlink" href="#arguments-and-options" title="Permalink to this headline"></a></h2>
-<table class="colwidths-given docutils align-default">
+<h2>Arguments and options<a class="headerlink" href="#arguments-and-options" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
 <colgroup>
-<col style="width: 23%" />
-<col style="width: 77%" />
+<col style="width: 23.1%" />
+<col style="width: 76.9%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Argument</p></th>
@@ -177,54 +150,39 @@ GWASpy uses <strong>CNUMBER</strong> as a placeholder for the chromosomes. Then 
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--vcf-ref</span></code></p></td>
 <td><p>VCF file for reference haplotypes if phasing with a reference panel</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--local</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--pedigree</span></code></p></td>
+<td><p>Pedigree (PLINK FAM) file</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--local</span></code></p></td>
 <td><p>Type of service. Default is Service backend where jobs are executed on a multi-tenant compute cluster in Google Cloud</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--billing-project</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--billing-project</span></code></p></td>
 <td><p>Billing project to be used for the job(s)</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--software</span></code></p></td>
-<td><p>Software to use for phasing. Options: [<code class="code docutils literal notranslate"><span class="pre">eagle</span></code>, <code class="code docutils literal notranslate"><span class="pre">shapeit</span></code>]. Default is <code class="code docutils literal notranslate"><span class="pre">eagle</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--reference</span></code></p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--genome-build</span></code></p></td>
 <td><p>Genome reference build. Default is GRCh38. Options: [<code class="code docutils literal notranslate"><span class="pre">GRCh37</span></code>, <code class="code docutils literal notranslate"><span class="pre">GRCh38</span></code>]</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--max-win-size-cm</span></code></p></td>
-<td><p>Maximum window size to use when chunking the input file. Default is 10.0</p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--data-type</span></code></p></td>
+<td><p>Array or WGS data. Default is array. Options: [<code class="code docutils literal notranslate"><span class="pre">array</span></code>, <code class="code docutils literal notranslate"><span class="pre">wgs</span></code>].</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--overlap-size-cm</span></code></p></td>
-<td><p>Size of overlap between consecutive overlapping windows. Default is 2.0</p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--fill-tags</span></code></p></td>
+<td><p>Whether or not to add AC tag required by SHAPEIT5. Including <code class="code docutils literal notranslate"><span class="pre">--fill-tags</span></code>, in your command will enable this step</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--cpu</span></code></p></td>
-<td><p>Number of CPUs to use in phasing. Default is 4. [TO BE CHANGED]</p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--software</span></code></p></td>
+<td><p>Software to use for phasing. Options: [<code class="code docutils literal notranslate"><span class="pre">beagle</span></code>, <code class="code docutils literal notranslate"><span class="pre">shapeit</span></code>]. Default is <code class="code docutils literal notranslate"><span class="pre">shapeit</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--scatter-mem</span></code></p></td>
-<td><p>Memory to use for scattering input into chunks before phasing. [TO BE CHANGED]</p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--output-filename</span></code></p></td>
+<td><p>Output filename without file extension</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--threads</span></code></p></td>
-<td><p>Number of threads to use in phasing. Default is 3. [TO BE CHANGED]</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--stages</span></code></p></td>
-<td><p>Process(es) to run. Default is <code class="code docutils literal notranslate"><span class="pre">scatter,phase,concat</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--out-type</span></code></p></td>
-<td><p>Output type. Options: [<code class="code docutils literal notranslate"><span class="pre">bcf</span></code>, <code class="code docutils literal notranslate"><span class="pre">vcf</span></code>]. Default is <code class="code docutils literal notranslate"><span class="pre">bcf</span></code> [HIGHLY RECOMMENDED SINCE BCFs ARE GENERALLY FASTER TO WORK WITH AND TAKE UP LESS SPACE]</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">--out-dir</span></code></p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--out-dir</span></code></p></td>
 <td><p>Path to where output files will be saved</p></td>
 </tr>
 </tbody>
 </table>
 </section>
 <section id="output">
-<h2>Output<a class="headerlink" href="#output" title="Permalink to this headline"></a></h2>
-<p>For both Eagle and SHAPEIT, the resulting output is a VCF file per chromosome with phased haplotypes.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>By default, Eagle will output a VCF file with phased GT and other fields that were in the unphased VCF, whereas
-SHAPEIT will ONLY output the GT field. This will result in phased files generated using Eagle being bigger in size
-than those generate using SHAPEIT.</p>
-</div>
+<h2>Output<a class="headerlink" href="#output" title="Link to this heading"></a></h2>
+<p>The resulting output is a VCF file per chromosome with phased haplotypes.</p>
 </section>
 </section>
 
@@ -239,7 +197,7 @@ than those generate using SHAPEIT.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Martin Lab, Broad Institute.</p>
+    <p>&#169; Copyright 2024, Martin Lab, Broad Institute.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

@@ -1,21 +1,22 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Project PCA (with a reference) &mdash; GWASpy 0.1.0 documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=eea1f72d" />
+
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -28,11 +29,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> GWASpy
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            GWASpy
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -40,6 +45,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../qb.html">Hail Query and Batch</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../preimp_qc.html">Pre-Imputation QC</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../pca.html">Principal Component Analysis</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="normal.html">     Normal PCA</a></li>
@@ -51,6 +57,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../phasing.html">Haplotype Phasing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../imputation.html">Genotype Imputation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial.html">Tutorial</a></li>
 </ul>
 
         </div>
@@ -66,9 +73,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../pca.html">Principal Component Analysis</a> &raquo;</li>
-      <li>Project PCA (with a reference)</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../pca.html">Principal Component Analysis</a></li>
+      <li class="breadcrumb-item active">Project PCA (with a reference)</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/pca/project.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -79,24 +86,25 @@
            <div itemprop="articleBody">
              
   <section id="project-pca-with-a-reference">
-<h1>Project PCA (with a reference)<a class="headerlink" href="#project-pca-with-a-reference" title="Permalink to this headline"></a></h1>
+<h1>Project PCA (with a reference)<a class="headerlink" href="#project-pca-with-a-reference" title="Link to this heading"></a></h1>
 <p>You can leverage reference panel information to see how samples in your data cluster on a “global” scale.
 PCs are computed using 1KG+HGDP dataset as a reference panel, and then samples in the input dataset are projected onto the 1KG+HGDP PC space.
 A random forest classifier model, adopted from gnomAD, is then used to assign population ancestries in the input dataset</p>
 <p>Below is a code on how you can run projection PCA via the command-line or inside a Python script Use</p>
 <ol class="arabic">
-<li><p>Command line</p>
+<li><p>Python (inside a Python script)</p>
 <blockquote>
-<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pca --data-dirname data/ --data-basename 1kg_annotated --out-dir data/ --input-type hail --reference grch37 --pca-type project
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gwaspy.pca</span> <span class="k">as</span> <span class="nn">pca</span>
+<span class="n">pca</span><span class="o">.</span><span class="n">pca</span><span class="o">.</span><span class="n">pca</span><span class="p">(</span><span class="n">data_dirname</span><span class="o">=</span><span class="s2">&quot;gs://my-gcs/bucket/test_data/&quot;</span><span class="p">,</span> <span class="n">data_basename</span><span class="o">=</span><span class="s2">&quot;my_data_basename&quot;</span><span class="p">,</span>
+            <span class="n">out_dir</span><span class="o">=</span><span class="s2">&quot;gs://my-gcs/bucket/test_data/&quot;</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="s2">&quot;my_input_type&quot;</span><span class="p">,</span> <span class="n">reference</span><span class="o">=</span><span class="s2">&quot;GRCh37&quot;</span><span class="p">,</span>
+            <span class="n">pca_type</span><span class="o">=</span><span class="s2">&quot;project&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div></blockquote>
 </li>
-<li><p>Python (inside a Python script)</p>
+<li><p>Command line</p>
 <blockquote>
-<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gwaspy.pca</span> <span class="k">as</span> <span class="nn">pca</span>
-<span class="n">pca</span><span class="o">.</span><span class="n">pca</span><span class="o">.</span><span class="n">pca</span><span class="p">(</span><span class="n">data_dirname</span><span class="o">=</span><span class="s2">&quot;data/&quot;</span><span class="p">,</span> <span class="n">data_basename</span><span class="o">=</span><span class="s2">&quot;1kg_annotated&quot;</span><span class="p">,</span>  <span class="n">out_dir</span><span class="o">=</span><span class="s2">&quot;data/&quot;</span><span class="p">,</span>
-            <span class="n">input_type</span><span class="o">=</span><span class="s2">&quot;hail&quot;</span><span class="p">,</span> <span class="n">reference</span><span class="o">=</span><span class="s2">&quot;GRCh37&quot;</span><span class="p">,</span> <span class="n">pca_type</span><span class="o">=</span><span class="s2">&quot;project&quot;</span><span class="p">)</span>
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pca<span class="w"> </span>--data-dirname<span class="w"> </span>gs://my-gcs/bucket/test_data/<span class="w"> </span>--data-basename<span class="w"> </span>my_data_basename<span class="w"> </span>--out-dir<span class="w"> </span>gs://my-gcs/bucket/test_data/--input-type<span class="w"> </span>my_input_type<span class="w"> </span>--reference<span class="w"> </span>grch37<span class="w"> </span>--pca-type<span class="w"> </span>project
 </pre></div>
 </div>
 </div></blockquote>
@@ -115,7 +123,7 @@ A random forest classifier model, adopted from gnomAD, is then used to assign po
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Martin Lab, Broad Institute.</p>
+    <p>&#169; Copyright 2024, Martin Lab, Broad Institute.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
