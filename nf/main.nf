@@ -9,8 +9,8 @@ include { CONCATENATE_CHUNKS as CONCATENATE_IMPUTED_CHUNKS } from './modules/pha
 
 process CONVERT_REF {
     cpus 8
-    memory { 4.GB * ta    container 'docker.io/lindonkambule/gwaspy_phase_impute:latest'
-sk.attempt }
+    memory { 4.GB * task.attempt }
+    container 'docker.io/lindonkambule/gwaspy_phase_impute:latest'
     tag "convert reference to XCF: chr${chrom}"
 
     input:
@@ -42,23 +42,33 @@ def getChromosome = { str ->
 
 workflow {
     // 1: INPUT FILES
-    // 1.1: input VCF split by chromosome
-    def input_chr_files = params.input.replaceFirst(/CNUMBER/, "*")
-    Channel
-        .fromFilePairs("${input_chr_files}.{bcf,bcf.csi,vcf,vcf.tbi}", size: 2)
-        .map { chr, input_file -> tuple( getChromosome(chr), file(input_file[0]), file(input_file[1]) ) }
-        .set { input_files }
-    input_files.view()
+    // 1.1: input VCF
+    if ( params.input_split_by_chrom ) {
+        def input_chr_files = params.input_vcf.replaceFirst(/CNUMBER/, "*")
+        Channel
+            .fromFilePairs("${input_chr_files}.{bcf,bcf.csi,vcf,vcf.tbi,bgz,bgz.tbi}", size: 2)
+            .map { chr, input_file -> tuple( getChromosome(chr), file(input_file[0]), file(input_file[1]) ) }
+            .set { input_files }
+    } // target files are split by chromosome
+    else {
+        def input_chr_files = params.input_vcf
+        Channel
+            .fromFilePairs("${input_chr_files}.{bcf,bcf.csi,vcf,vcf.tbi,bgz,bgz.tbi}", size: 2)
+            .flatMap { pattern, files -> // for cases when target data has all chromosomes in one file, we create pseudo chromosome files (it's the same file) so we can run things in parallel
+            (1..22).collect { chr -> tuple( "${chr}", file(files[0]),  file(files[1]) ) }
+            }
+            .set { input_files }
+    } // one target file with all chromosomes
+
     // 1.2: reference VCF split by chromosome
-    def reference_chr_files = params.ref.replaceFirst(/CNUMBER/, "*")
+    def reference_chr_files = params.vcf_ref.replaceFirst(/CNUMBER/, "*")
     if ( params.ref_format == "vcf" ) {
         Channel
             .fromFilePairs("${reference_chr_files}.{bcf,bcf.csi}", size: 2)
             .map { chr, ref_file -> tuple( getChromosome(chr), file(ref_file[0]), file(ref_file[1]) ) }
-            .filter { it[0] as Integer > 19 } // FOR TESTING USING FEWER CHROMOSOMES
+            .filter { it[0] as Integer > 20 } // FOR TESTING USING FEWER CHROMOSOMES
             .set { ref_files_vcf }
 
-        // ref_files_vcf.view()
         CONVERT_REF(ref_files_vcf)
         ref_converted_xcf = CONVERT_REF.out
         ref_converted_xcf
@@ -74,8 +84,9 @@ workflow {
 
     // ref_files.view()
     // 1.3: map file split by chromosome
+    def genetic_maps = params.genetic_maps.replaceFirst(/CNUMBER/, "*")
     Channel
-        .fromFilePairs("gs://hgdp-1kg/phasing/maps/b38/chr*.b38.gmap.gz", size: 1)
+        .fromFilePairs("${genetic_maps}", size: 1)
         .map { chr, map_file -> tuple( chr.replaceFirst(/chr/,""), file(map_file[0]) ) }
         .set { genetic_map_files }
 
@@ -108,7 +119,7 @@ workflow {
                     tuple( chrom, input_vcf, input_idx, ref_vcf, ref_idx, ref_bin, ref_fam, map_file ) }
             .set { phase_array_inputs }
 
-        PHASE_ARRAY(phase_array_inputs, params.output_filename, "${params.output_path}/shapeit5/phase_array")
+        PHASE_ARRAY(phase_array_inputs, params.output_filename, "${params.out_dir}/shapeit5/phase_array")
 
         // collect files for imputation
         phased_data = PHASE_ARRAY.out
@@ -127,7 +138,7 @@ workflow {
             .map { chrom, input_vcf, input_index, ref_vcf, ref_idx, ref_bin, ref_fam, map_file, region, chunk_idx ->
                     tuple( chrom, input_vcf, input_index, ref_vcf, ref_idx, ref_bin, ref_fam, map_file, region, chunk_idx ) }
             .set { phase_common_inputs }
-        PHASE_COMMON(phase_common_inputs, params.maf, "${params.output_path}/shapeit5/phase_common/logs")
+        PHASE_COMMON(phase_common_inputs, params.maf, "${params.out_dir}/shapeit5/phase_common/logs")
 
         // 2.2.2 ligate phased common chunks
         // first make sure the phased files are grouped by chromosome and sorted by index
@@ -145,7 +156,7 @@ workflow {
             }
             .set { ligate_common_inputs }
 
-        LIGATE_COMMON(ligate_common_inputs, params.output_filename, "${params.output_path}/shapeit5/phase_common")
+        LIGATE_COMMON(ligate_common_inputs, params.output_filename, "${params.out_dir}/shapeit5/phase_common")
         scaffold_data = LIGATE_COMMON.out
         scaffold_data
             .map { chr, scaffold, scaffold_idx -> tuple(chr, scaffold, scaffold_idx)}
@@ -161,7 +172,7 @@ workflow {
             .set { phase_rare_inputs }
 
         // exit code 139 when running Docker desktop: https://www.nextflow.io/blog/2021/setup-nextflow-on-windows.html
-        PHASE_RARE(phase_rare_inputs, "${params.output_path}/shapeit5/phase_rare/logs")
+        PHASE_RARE(phase_rare_inputs, "${params.out_dir}/shapeit5/phase_rare/logs")
 
          // 2.2.4 concatenate phased rare chunks from 2.2.3
         phased_rare_chunks_data = PHASE_RARE.out
@@ -178,7 +189,7 @@ workflow {
             }
             .set { concatenate_rare_inputs }
 
-        CONCATENATE_PHASED_CHUNKS(concatenate_rare_inputs, "${params.output_path}/shapeit5/phase_rare")
+        CONCATENATE_PHASED_CHUNKS(concatenate_rare_inputs, "${params.out_dir}/shapeit5/phase_rare")
 
         // collect files for imputation
         phased_data = CONCATENATE_PHASED_CHUNKS.out
@@ -195,7 +206,7 @@ workflow {
             .combine(genetic_map_files, by: 0) // chr, map_file
             .combine(rare_variants_chunks, by: 0) // chr, srg, irg, index
             .map { chrom, input_vcf, input_idx, ref_vcf, ref_idx, ref_bin, ref_fam, map_file, srg, irg, chunk_idx ->
-                    tuple( chrom, input_vcf, input_idx, ref_vcf, ref_idx, ref_bin, ref_fam, map_file, srg, irg, chunk_idx, "${params.output_path}/impute5/imputed_chunks/chr${chrom}") }
+                    tuple( chrom, input_vcf, input_idx, ref_vcf, ref_idx, ref_bin, ref_fam, map_file, srg, irg, chunk_idx, "${params.out_dir}/impute5/imputed_chunks/chr${chrom}") }
             .set { impute_data_inputs }
 
         IMPUTE5(impute_data_inputs)
@@ -215,7 +226,7 @@ workflow {
             }
             .set { concatenate_imputed_inputs }
 
-        CONCATENATE_IMPUTED_CHUNKS(concatenate_imputed_inputs, "${params.output_path}/impute5/imputed_merged")
+        CONCATENATE_IMPUTED_CHUNKS(concatenate_imputed_inputs, "${params.out_dir}/impute5/imputed_merged")
 
     }
 }
