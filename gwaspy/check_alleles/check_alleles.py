@@ -95,8 +95,8 @@ def check_alleles_workflow(
 
         return j
 
-    ref_fasta_in = batch.read_input_group(**{'vcf': reference_path,
-                                        'index': f'{reference_path}.fai'})
+    ref_fasta_in = batch.read_input_group(**{'ref_fasta': reference_path,
+                                             'ref_fasta_index': f'{reference_path}.fai'})
     ref_size = round(size(reference_path))
 
     if "CNUMBER" in input_path:  # input VCF is already split by chromosome
