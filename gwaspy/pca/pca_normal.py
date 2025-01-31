@@ -228,7 +228,7 @@ def run_pca_normal(
 
 
     else:
-        print("No sample annotations found. Potting PCs will be skipped")
+        print("No sample annotations found. Plotting PCs will be skipped")
         print('\nSaving PC scores file')
         pcs_ht.export(out_scores_file)
 

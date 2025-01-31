@@ -1,2 +1,2 @@
-from gwaspy.phasing import phasing
-__all__ = ['phasing']
+from gwaspy.phasing import phase
+__all__ = ['phase']

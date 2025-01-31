@@ -40,8 +40,9 @@ setup(name='gwaspy',
               'pca = gwaspy.pca.pca:main',
               'imputation = gwaspy.imputation.impute:main',
               # 'imputation = gwaspy.imputation.imputation:main',
-              'phasing = gwaspy.phasing.phase:main'
+              'phasing = gwaspy.phasing.phase:main',
               # 'phasing = gwaspy.phasing.phasing:main'
+              'checkalleleflips = gwaspy.check_alleles.flips:main'
           ]
       },
       classifiers=classifiers,
