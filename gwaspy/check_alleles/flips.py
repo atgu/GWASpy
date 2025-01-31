@@ -1,172 +1,60 @@
-_author__ = 'Lindo Nkambule'
+__author__ = 'Lindo Nkambule'
 
+import argparse
 import hailtop.batch as hb
-import hailtop.fs as hfs
-
-from hailtop.batch.job import Job
-
-
-def size(file: str):
-    """
-    Convert the size from bytes to GiB
-    :param file: path to file, str
-    :return: file size in GiB
-    """
-    file_info = hfs.stat(file)   # returns a named tuple
-    size_gigs = file_info.size / (1024 * 1024 * 1024)
-
-    return size_gigs
+from gwaspy.check_alleles.check_alleles import check_alleles_workflow
+from typing import Union
 
 
-def check_alleles_workflow(
-        batch: hb.Batch = None,
-        input_path: str = None,
-        reference_path: str = None,
-        output_filename: str = None,
+def run_checks_fix(
+        backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
+        input_vcf: str = None,
+        ref_path: str = None,
         step: str = "check",
         fix_mode: str = "top",
-        output_path: str = None):
+        output_filename: str = None,
+        out_dir: str = None
+):
+    b = hb.Batch(backend=backend,
+                 name=f'GWASpy-{step.upper()}-Alleles')
 
-    def get_stats(
-            b: hb.batch.Batch,
-            job_name: str = None,
-            vcf: hb.ResourceGroup = None,
-            ref_fasta: hb.ResourceGroup = None,
-            output_name: str = None,
-            out_dir: str = None,
-            ncpu: int = 8,
-            memory: str = 'standard',
-            storage: int = None,
-            img: str = 'docker.io/lindonkambule/gwaspy_phase_impute:latest',
-    ) -> Job:
-        j = b.new_job(name=f'Check alleles: {job_name}')
+    check_alleles_workflow(
+        batch=b,
+        input_path=input_vcf,
+        reference_path=ref_path,
+        output_filename=output_filename,
+        step=step,
+        fix_mode=fix_mode,
+        output_path=out_dir
+    )
 
-        j.image(img)
-        j.memory(memory)
-        j.cpu(ncpu)
-        j.storage(f'{storage}Gi')
 
-        j.command(
-            f"""
-            bcftools +fixref {vcf['vcf']} -- -f {ref_fasta['ref_fasta']} > {j.stats}
-            """
-        )
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--input-vcf', type=str, required=True)
+    parser.add_argument('--ref-fasta', type=str, default='gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta')
+    parser.add_argument('--local', action='store_true')
+    parser.add_argument('--billing-project', required=True)
+    parser.add_argument('--step', type=str, default='check', choices=['check', 'fix'])
+    parser.add_argument('--mode', type=str, default='top', choices=['flip', 'flip-all', 'id', 'ref-alt', 'stats', 'swap', 'top'])
+    parser.add_argument('--output-filename', type=str, required=True)
+    parser.add_argument('--out-dir', type=str, required=True)
 
-        b.write_output(j.stats,
-                       f'{out_dir}/check_alleles/{output_name}.stats.txt')
+    args = parser.parse_args()
 
-        return j
+    if args.local:
+        backend = hb.LocalBackend()
+    else:
+        backend = hb.ServiceBackend(billing_project=args.billing_project,
+                                    remote_tmpdir=f'{args.out_dir}/tmp/')
 
-    def fix_alleles(
-            b: hb.batch.Batch,
-            job_name: str = None,
-            vcf: hb.ResourceGroup = None,
-            ref_fasta: hb.ResourceGroup = None,
-            allele_mode: str = "top",
-            output_name: str = None,
-            out_dir: str = None,
-            ncpu: int = 8,
-            memory: str = 'standard',
-            storage: int = None,
-            img: str = 'docker.io/lindonkambule/gwaspy_phase_impute:latest',
-    ) -> Job:
-        j = b.new_job(name=f'Fix alleles: {job_name}')
+    run_checks_fix(
+        backend=backend,
+        input_vcf=args.input_vcf,
+        ref_path=args.ref_fasta,
+        step=args.step,
+        fix_mode=args.mode,
+        output_filename=args.output_filename,
+        out_dir=args.out_dir)
 
-        j.image(img)
-        j.memory(memory)
-        j.cpu(ncpu)
-        j.storage(f'{storage}Gi')
-
-        j.declare_resource_group(
-            fixed_file={
-                'bcf': '{root}.bcf',
-                'bcf.csi': '{root}.bcf.csi'
-            }
-        )
-
-        j.command(
-            f"""
-            bcftools +fixref {vcf['vcf']} -Ob -o {j.fixed_file['bcf']} -- -f {ref_fasta['ref_fasta']} -m {allele_mode}
-            """
-        )
-
-        b.write_output(j.stats,
-                       f'{out_dir}/check_alleles/{output_name}.alleles.fixed')
-
-        return j
-
-    ref_fasta_in = batch.read_input_group(**{'vcf': reference_path,
-                                        'index': f'{reference_path}.fai'})
-    ref_size = round(size(reference_path))
-
-    if "CNUMBER" in input_path:  # input VCF is already split by chromosome
-        for i in range(1, 23):
-            vcf_path = input_path.replace('CNUMBER', str(i))
-            input_idx = f'{vcf_path}.tbi' if hfs.exists(f'{vcf_path}.tbi') else f'{vcf_path}.csi'
-
-            if not hfs.exists(input_idx):
-                raise SystemExit('Input file needs to be indexed (.tbi or .csi). Found none, exiting')
-
-            chrom_vcf = batch.read_input_group(**{'vcf': vcf_path,
-                                                  'index': input_idx})
-            vcf_size = round(size(vcf_path))
-            disk_size = int(round(5.0 + vcf_size + ref_size))
-
-            if step == "check":
-                get_stats(
-                    b=batch,
-                    job_name=vcf_path,
-                    vcf=chrom_vcf,
-                    ref_fasta=ref_fasta_in,
-                    output_name=output_filename,
-                    out_dir=output_path,
-                    storage=disk_size
-                )
-            else:
-                fix_alleles(
-                    b=batch,
-                    job_name=vcf_path,
-                    vcf=chrom_vcf,
-                    ref_fasta=ref_fasta_in,
-                    allele_mode=fix_mode,
-                    output_name=output_filename,
-                    out_dir=output_path,
-                    storage=disk_size
-                )
-
-    else: # one input file with all the chromosomes
-        vcf_path = input_path
-        input_idx = f'{vcf_path}.tbi' if hfs.exists(f'{vcf_path}.tbi') else f'{vcf_path}.csi'
-
-        if not hfs.exists(input_idx):
-            raise SystemExit('Input file needs to be indexed (.tbi or .csi). Found none, exiting')
-
-        chrom_vcf = batch.read_input_group(**{'vcf': input_path,
-                                              'index': input_idx})
-
-        vcf_size = round(size(vcf_path))
-        disk_size = int(round(5.0 + vcf_size + ref_size))
-
-        if step == "check":
-            get_stats(
-                b=batch,
-                job_name=vcf_path,
-                vcf=chrom_vcf,
-                ref_fasta=ref_fasta_in,
-                output_name=output_filename,
-                out_dir=output_path,
-                storage=disk_size
-            )
-        else:
-            fix_alleles(
-                b=batch,
-                job_name=vcf_path,
-                vcf=chrom_vcf,
-                ref_fasta=ref_fasta_in,
-                allele_mode=fix_mode,
-                output_name=output_filename,
-                out_dir=output_path,
-                storage=disk_size
-            )
-
-    batch.run()
+    backend.close()
