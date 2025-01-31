@@ -163,3 +163,8 @@ Now you can easily run both phasing and imputation using the following command
     .. code-block:: sh
 
         ./nextflow run main.nf -c nextflow.config -profile gbatch -params-file params.json
+
+5. Low-coverage WGS imputation using GLIMPSE
+############################################
+
+**COMING VERY SOON**
