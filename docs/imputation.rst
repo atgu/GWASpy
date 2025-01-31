@@ -8,7 +8,7 @@ Genotype imputation is a process of estimating missing genotypes from the haplot
 allows you to accurately evaluate the evidence for association at genetic markers that are not directly genotyped.
 GWASpy has a module, :code:`imputation`, for running imputation using IMPUTE5. Because imputation can be a computationally
 intensive task, we run it on multiple chunks in parallel, then merge the imputed chunks together at the end. Below are
-examples of how to run imputation using either the HGDP+1kGP or your own reference panel
+examples of how to run imputation using either the HGDP+1kGP or your own reference panel.
 
 Examples
 ########
