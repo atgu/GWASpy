@@ -48,11 +48,12 @@ def check_alleles_workflow(
 
         j.command(
             f"""
-            bcftools +fixref {vcf['vcf']} -- -f {ref_fasta['ref_fasta']} > {j.stats}
+            bcftools +fixref {vcf['vcf']} -- -f {ref_fasta['ref_fasta']} > stats.txt
+            mv stats.txt {j.ofile}
             """
         )
 
-        b.write_output(j.stats,
+        b.write_output(j.ofile,
                        f'{out_dir}/check_alleles/{output_name}.stats.txt')
 
         return j
