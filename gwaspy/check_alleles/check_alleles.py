@@ -91,7 +91,7 @@ def check_alleles_workflow(
             """
         )
 
-        b.write_output(j.stats,
+        b.write_output(j.fixed_file,
                        f'{out_dir}/check_alleles/{output_name}.alleles.fixed')
 
         return j
