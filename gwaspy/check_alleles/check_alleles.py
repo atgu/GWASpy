@@ -88,6 +88,7 @@ def check_alleles_workflow(
         j.command(
             f"""
             bcftools +fixref {vcf['vcf']} -Ob -o {j.fixed_file['bcf']} -- -f {ref_fasta['ref_fasta']} -m {allele_mode}
+            bcftools index --force {j.fixed_file['bcf']} --output {j.fixed_file['bcf.csi']} --threads {ncpu}
             """
         )
 
