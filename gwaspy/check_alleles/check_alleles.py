@@ -120,7 +120,7 @@ def check_alleles_workflow(
                     job_name=vcf_path,
                     vcf=chrom_vcf,
                     ref_fasta=ref_fasta_in,
-                    output_name=output_filename,
+                    output_name=f'{output_filename}_chr{i}',
                     out_dir=output_path,
                     storage=disk_size
                 )
@@ -131,7 +131,7 @@ def check_alleles_workflow(
                     vcf=chrom_vcf,
                     ref_fasta=ref_fasta_in,
                     allele_mode=fix_mode,
-                    output_name=output_filename,
+                    output_name=f'{output_filename}_chr{i}',
                     out_dir=output_path,
                     storage=disk_size
                 )
