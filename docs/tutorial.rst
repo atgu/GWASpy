@@ -9,12 +9,20 @@ This is a short tutorial on how to use the different modules of GWASpy.
 1. Datasets
 ###########
 
-We will be using simulated test data (on GRCh37) from RICOPILI. Below is how it can be downloaded and copied to a Google bucket
+We will be using simulated test data (on GRCh37) from RICOPILI for most of the examples. Below is how it can be downloaded and copied to a Google bucket
 
     .. code-block:: sh
 
         wget https://personal.broadinstitute.org/sawasthi/share_links/UzoZK7Yfd7nTzIxHamCh1rSOiIOSdj_gwas-qcerrors.py/sim_sim1a_eur_sa_merge.miss.{bed,bim,fam} .
         gsutil cp sim_sim1a_eur_sa_merge.miss.{bed,bim,fam} gs://my-gcs/bucket/test_data
+
+For low-coverage genotype imputation using GLIMPSE, we will be using the 1X downsampled NA12878 file from the GLIMPSE
+tutorial. Below is how it can be downloaded and copied to a Google bucket
+
+    .. code-block:: sh
+
+        wget wget https://github.com/odelaneau/GLIMPSE/raw/refs/heads/master/tutorial/NA12878_1x_bam/NA12878.{bam,bam.bai} .
+        gsutil cp NA12878.{bam,bam.bai} gs://my-gcs/bucket/test_data
 
 2. Start a dataproc cluster with GWASpy installed
 #################################################
@@ -164,7 +172,32 @@ Now you can easily run both phasing and imputation using the following command
 
         ./nextflow run main.nf -c nextflow.config -profile gbatch -params-file params.json
 
-5. Low-coverage WGS imputation using GLIMPSE
+6. Low-coverage WGS imputation using GLIMPSE
 ############################################
 
+**6.1 Hail Batch** (should be ~$0.5 and takes <10 minutes)
+
+Unlike phasing using IMPUTE5, GLIMPSE takes BAM files as input, and since we usually have one BAM file per sample, the
+input to the imputation module when using GLIMPSE is a TSV file without a header and has two columns: first column with
+sample ID and second column with the actual path to the BAM file. Only one sample/BAM per row is allowed in the TSV.
+Below is an example of a file saved as :code:`gs://my-gcs/bucket/test_data/na12878_test.tsv`
+
+.. list-table::
+   :widths: 15 50
+   :header-rows: 0
+
+   * - NA12878
+     - gs://my-gcs/bucket/test_data/NA12878.bam
+
+
+Once you have saved the TSV to a bucket, you can run GLIMPSE phasing and imputation using the following command
+
+    .. code-block:: sh
+
+        imputation --input-file gs://my-gcs/bucket/test_data/na12878_test.tsv --vcf-ref hgdp1kgp \
+        --output-filename sim_sim1a_eur_sa_merge.miss_qced.phased.imputed \
+        --out-dir gs://my-gcs/bucket/test_data/GWASpy/lowcov_imputation --n-samples 1 --n-ref-samples 4091 \
+        --billing-project my-billing-project --chromosomes 22 --software glimpse2
+
+**6.2. Nextflow**
 **COMING VERY SOON**

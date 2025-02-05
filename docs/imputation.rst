@@ -38,9 +38,11 @@ Arguments and options
    * - Argument
      - Description
    * - :code:`--input-file`
-     - Path to where the VCF for target genotypes paths is
+     - Path to where the VCF or TSV with target VCF/BAM files is
    * - :code:`--vcf-ref`
      - Reference panel file to use for imputation
+   * - :code:`--chromosomes`
+     - Chromosome(s) to run imputation for. Default is :code:`all`
    * - :code:`--local`
      - Type of service. Default is Service backend where jobs are executed on a multi-tenant compute cluster in Google Cloud
    * - :code:`--billing-project`

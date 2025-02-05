@@ -55,7 +55,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#pre-imputation-qc">3. Pre-imputation QC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#pca">4. PCA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#phasing-and-imputation">5. Phasing and Imputation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#low-coverage-wgs-imputation-using-glimpse">5. Low-coverage WGS imputation using GLIMPSE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#low-coverage-wgs-imputation-using-glimpse">6. Low-coverage WGS imputation using GLIMPSE</a></li>
 </ul>
 </li>
 </ul>
@@ -89,10 +89,18 @@
 <p>This is a short tutorial on how to use the different modules of GWASpy.</p>
 <section id="datasets">
 <h2>1. Datasets<a class="headerlink" href="#datasets" title="Link to this heading"></a></h2>
-<p>We will be using simulated test data (on GRCh37) from RICOPILI. Below is how it can be downloaded and copied to a Google bucket</p>
+<p>We will be using simulated test data (on GRCh37) from RICOPILI for most of the examples. Below is how it can be downloaded and copied to a Google bucket</p>
 <blockquote>
 <div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>wget<span class="w"> </span>https://personal.broadinstitute.org/sawasthi/share_links/UzoZK7Yfd7nTzIxHamCh1rSOiIOSdj_gwas-qcerrors.py/sim_sim1a_eur_sa_merge.miss.<span class="o">{</span>bed,bim,fam<span class="o">}</span><span class="w"> </span>.
 gsutil<span class="w"> </span>cp<span class="w"> </span>sim_sim1a_eur_sa_merge.miss.<span class="o">{</span>bed,bim,fam<span class="o">}</span><span class="w"> </span>gs://my-gcs/bucket/test_data
+</pre></div>
+</div>
+</div></blockquote>
+<p>For low-coverage genotype imputation using GLIMPSE, we will be using the 1X downsampled NA12878 file from the GLIMPSE
+tutorial. Below is how it can be downloaded and copied to a Google bucket</p>
+<blockquote>
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>wget<span class="w"> </span>wget<span class="w"> </span>https://github.com/odelaneau/GLIMPSE/raw/refs/heads/master/tutorial/NA12878_1x_bam/NA12878.<span class="o">{</span>bam,bam.bai<span class="o">}</span><span class="w"> </span>.
+gsutil<span class="w"> </span>cp<span class="w"> </span>NA12878.<span class="o">{</span>bam,bam.bai<span class="o">}</span><span class="w"> </span>gs://my-gcs/bucket/test_data
 </pre></div>
 </div>
 </div></blockquote>
@@ -247,8 +255,34 @@ profiles<span class="w"> </span><span class="o">{</span>
 </div></blockquote>
 </section>
 <section id="low-coverage-wgs-imputation-using-glimpse">
-<h2>5. Low-coverage WGS imputation using GLIMPSE<a class="headerlink" href="#low-coverage-wgs-imputation-using-glimpse" title="Link to this heading"></a></h2>
-<p><strong>COMING VERY SOON</strong></p>
+<h2>6. Low-coverage WGS imputation using GLIMPSE<a class="headerlink" href="#low-coverage-wgs-imputation-using-glimpse" title="Link to this heading"></a></h2>
+<p><strong>6.1 Hail Batch</strong> (should be ~$0.5 and takes &lt;10 minutes)</p>
+<p>Unlike phasing using IMPUTE5, GLIMPSE takes BAM files as input, and since we usually have one BAM file per sample, the
+input to the imputation module when using GLIMPSE is a TSV file without a header and has two columns: first column with
+sample ID and second column with the actual path to the BAM file. Only one sample/BAM per row is allowed in the TSV.
+Below is an example of a file saved as <code class="code docutils literal notranslate"><span class="pre">gs://my-gcs/bucket/test_data/na12878_test.tsv</span></code></p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 23.1%" />
+<col style="width: 76.9%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>NA12878</p></td>
+<td><p>gs://my-gcs/bucket/test_data/NA12878.bam</p></td>
+</tr>
+</tbody>
+</table>
+<p>Once you have saved the TSV to a bucket, you can run GLIMPSE phasing and imputation using the following command</p>
+<blockquote>
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>imputation<span class="w"> </span>--input-file<span class="w"> </span>gs://my-gcs/bucket/test_data/na12878_test.tsv<span class="w"> </span>--vcf-ref<span class="w"> </span>hgdp1kgp<span class="w"> </span><span class="se">\</span>
+--output-filename<span class="w"> </span>sim_sim1a_eur_sa_merge.miss_qced.phased.imputed<span class="w"> </span><span class="se">\</span>
+--out-dir<span class="w"> </span>gs://my-gcs/bucket/test_data/GWASpy/lowcov_imputation<span class="w"> </span>--n-samples<span class="w"> </span><span class="m">1</span><span class="w"> </span>--n-ref-samples<span class="w"> </span><span class="m">4091</span><span class="w"> </span><span class="se">\</span>
+--billing-project<span class="w"> </span>my-billing-project<span class="w"> </span>--chromosomes<span class="w"> </span><span class="m">22</span><span class="w"> </span>--software<span class="w"> </span>glimpse2
+</pre></div>
+</div>
+</div></blockquote>
+<p><strong>6.2. Nextflow</strong>
+<strong>COMING VERY SOON</strong></p>
 </section>
 </section>
 
