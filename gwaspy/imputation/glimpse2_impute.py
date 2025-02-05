@@ -65,7 +65,7 @@ def glimpse_phase_impute(
             ncpu: int = 4,
             memory: str = 'standard',
             storage: int = None,
-            img: str = 'docker.io/lindonkambule/gwaspy_phase_impute:latest'
+            img: str = 'docker.io/lindonkambule/gwaspy_glimpse2:with-bcftools-and-updated-info-score'
     ) -> Job:
         j = b.new_job(name=f'extract reference panel sites: {chrom}')  # define job
 
@@ -194,7 +194,8 @@ def glimpse_phase_impute(
                     --input-region {input_region} \
                     --output-region {output_region} \
                     --threads {ncpu} \
-                    --output {j.ref_bin}
+                    --output ref_bin_out
+                    mv ref_bin_out.bin {j.ref_bin}
                     """
                   )
         return j
