@@ -236,7 +236,7 @@ def glimpse_phase_impute(
                     --threads 4 \
                     --output {j.imputed_phased['bcf']}""")
 
-        j.command(f"""bcftools index {j.imputed_phased['bcf']} --output {j.imputed_phased['bcf.csi']} --threads {ncpu}""")
+        j.command(f"""bcftools index -f {j.imputed_phased['bcf']} --output {j.imputed_phased['bcf.csi']} --threads {ncpu}""")
 
         return j
 
