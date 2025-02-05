@@ -236,8 +236,6 @@ def glimpse_phase_impute(
                     --threads 4 \
                     --output {j.imputed_phased['bcf']}""")
 
-        j.command(f"""bcftools index -f {j.imputed_phased['bcf']} --output {j.imputed_phased['bcf.csi']} --threads {ncpu}""")
-
         return j
 
     # 7. Ligate imputed chunks
@@ -272,7 +270,6 @@ def glimpse_phase_impute(
         j.command(f'echo "{imp_chunk_bcf_names}" > chunk_list.txt')
 
         j.command(f"""GLIMPSE2_ligate --input chunk_list.txt --output {j.ligated['bcf']} --threads {ncpu}""")
-        j.command(f"""bcftools index {j.ligated['bcf']} --output {j.ligated['bcf.csi']} --threads {ncpu}""")
 
         b.write_output(j.ligated,
                        f'{out_dir}/glimpse/{output_vcf_name}_{chrom}.phased.imputed')
