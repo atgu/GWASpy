@@ -23,6 +23,7 @@ def glimpse_phase_impute(
         batch: hb.Batch = None,
         bam_files: str = None,
         reference_path: str = None,
+        chromosomes: str = "all",
         output_filename: str = None,
         output_path: str = None):
 
@@ -286,7 +287,10 @@ def glimpse_phase_impute(
     bam_list = [(sample_id, bam_path) for sample_id, bam_path in zip(bams['sample'], bams['path'])]
     bam_sizes = [size(bam_list[s][1]) for s in range(len(bam_list))]
 
-    for i in range(1, 23):
+    chroms = chromosomes.replace(" ", "") # remove spaces if there are any
+    chroms = [i for i in range(1, 23)] if chroms == "all" else chroms.split(",")
+
+    for i in chroms:
         ref_chrom_path = reference_path.replace('CNUMBER', str(i))
         ref_idx = f'{ref_chrom_path}.tbi' if hfs.exists(f'{ref_chrom_path}.tbi') else f'{ref_chrom_path}.csi'
         ref_vcf = batch.read_input_group(**{'vcf': ref_chrom_path,

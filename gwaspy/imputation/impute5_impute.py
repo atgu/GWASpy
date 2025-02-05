@@ -24,6 +24,7 @@ def impute5_imputation(
         batch: hb.Batch = None,
         input_path: str = None,
         reference_path: str = None,
+        chromosomes: str = "all",
         output_filename: str = None,
         n_samples: int = None,
         n_panel_samples: int = 4091,
@@ -117,7 +118,10 @@ def impute5_imputation(
 
         return j
 
-    for i in range(1, 23):
+    chroms = chromosomes.replace(" ", "")  # remove spaces if there are any
+    chroms = [i for i in range(1, 23)] if chroms == "all" else chroms.split(",")
+
+    for i in chroms:
         # read chrom input files
         if "CNUMBER" in input_path:     # input VCF is already split by chromosome
             vcf_path = input_path.replace('CNUMBER', str(i))

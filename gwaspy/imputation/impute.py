@@ -8,8 +8,9 @@ from typing import Union
 
 
 def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
-               input_vcf: str = None,
+               input_file: str = None,
                vcf_ref: str = None,
+               chromosomes: str = "all",
                software: str = 'impute5',
                output_filename: str = None,
                n_samples: int = None,
@@ -34,8 +35,9 @@ def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
         print(f'\nIMPUTING GENOTYPES USING IMPUTE5\n')
         impute5_imputation(
             batch=b,
-            input_path=input_vcf,
+            input_path=input_file,
             reference_path=ref_path,
+            chromosomes=chromosomes,
             output_filename=output_filename,
             n_samples=n_samples,
             n_panel_samples=n_panel_samples,
@@ -44,8 +46,9 @@ def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
     elif software == 'glimpse2':
         glimpse_phase_impute(
             batch=b,
-            bam_files=input_vcf,
+            bam_files=input_file,
             reference_path=ref_path,
+            chromosomes = chromosomes,
             output_filename=output_filename,
             output_path=out_dir
         )
@@ -54,8 +57,9 @@ def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input-vcf', type=str, required=True)
+    parser.add_argument('--input-file', type=str, required=True)
     parser.add_argument('--vcf-ref', type=str, default='hgdp1kgp')
+    parser.add_argument('--chromosomes', type=str, default='all')
     parser.add_argument('--local', action='store_true')
     parser.add_argument('--billing-project', required=True)
     parser.add_argument('--n-samples', type=int, required=True)
@@ -73,8 +77,9 @@ def main():
                                     remote_tmpdir=f'{args.out_dir}/tmp/')
 
     run_impute(backend=backend,
-               input_vcf=args.input_vcf,
+               input_file=args.input_file,
                vcf_ref=args.vcf_ref,
+               chromosomes=args.chromosomes,
                software=args.software,
                output_filename=args.output_filename,
                n_samples=args.n_samples,
