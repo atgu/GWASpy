@@ -181,6 +181,7 @@ def glimpse_phase_impute(
         """Convert the reference panel into GLIMPSE2’s binary file format"""
         j = b.new_job(name=f'create binary ref panel: {input_region}')
         chrom = input_region.split(":")[0]
+        bin_reg_out = input_region.replace(":", "_").replace("-", "_")
 
         j.image(img)
         j.cpu(ncpu)
@@ -195,7 +196,7 @@ def glimpse_phase_impute(
                     --output-region {output_region} \
                     --threads {ncpu} \
                     --output ref_bin_out
-                    mv ref_bin_out.bin {j.ref_bin}
+                    mv ref_bin_out_{bin_reg_out}.bin {j.ref_bin}
                     """
                   )
         return j
