@@ -24,6 +24,10 @@ def read_vcf(dirname: str, basename: str) -> hl.MatrixTable:
         vcf_file = f"{dirname}{basename}.vcf"
 
     hl.import_vcf(vcf_file, force_bgz=True, block_size=16).write('{}GWASpy.preimpQC.mt'.format(dirname), overwrite=True)
+
+    # unset flag to avoid locus_windows: 'locus_expr' global position must be in ascending order when LD pruning
+    # https://hail.zulipchat.com/#narrow/channel/123010-Hail-Query-0.2E2-support/topic/locus_windows.20Error/near/272143278
+    hl._set_flags(no_whole_stage_codegen=None)
     in_mt = hl.read_matrix_table('{}GWASpy.preimpQC.mt'.format(dirname))
 
     # Unlike array data, a VCF might have multi-allelic sites
