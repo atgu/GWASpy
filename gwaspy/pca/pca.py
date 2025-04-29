@@ -5,8 +5,8 @@ import hail as hl
 
 
 def pca(
-        ref_dirname: str = 'gs://hgdp-1kg/hgdp_tgp/datasets_for_others/lindo/ds_without_outliers/',
-        ref_basename: str = 'unrelated',
+        ref_dirname: str = 'gs://gcp-public-data--gnomad/release/3.1/secondary_analyses/hgdp_1kg_v2/pca_results/',
+        ref_basename: str = 'unrelateds_without_outliers',
         ref_info: str = 'gs://hgdp-1kg/hgdp_tgp/gwaspy_pca_ref/hgdp_1kg_sample_info.unrelateds.pca_outliers_removed.with_project.tsv',
         reference: str = 'GRCh38', pca_type: str = None,
         data_dirname: str = None, data_basename: str = None, input_type: str = None,
@@ -52,8 +52,8 @@ def pca(
 def main():
     parser = argparse.ArgumentParser()
     # reference args
-    parser.add_argument('--ref-dirname', default='gs://hgdp-1kg/hgdp_tgp/datasets_for_others/lindo/ds_without_outliers/')
-    parser.add_argument('--ref-basename', default='unrelated')
+    parser.add_argument('--ref-dirname', default='gs://gcp-public-data--gnomad/release/3.1/secondary_analyses/hgdp_1kg_v2/pca_results/')
+    parser.add_argument('--ref-basename', default='unrelateds_without_outliers')
     parser.add_argument('--ref-info', default='gs://hgdp-1kg/hgdp_tgp/gwaspy_pca_ref/hgdp_1kg_sample_info.unrelateds.pca_outliers_removed.with_project.tsv')
     parser.add_argument('--reference', type=str, default='GRCh38')
     parser.add_argument('--pca-type', type=str, default='normal', choices=['normal', 'project', 'joint'])
