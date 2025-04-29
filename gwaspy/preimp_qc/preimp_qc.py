@@ -71,7 +71,8 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
               cr_diff_thresh: Union[int, float] = 0.02, maf_thresh: Union[int, float] = 0.01, withpna: int = 0,
               hwe_th_con_thresh: Union[int, float] = 1e-6, hwe_th_cas_thresh: Union[int, float] = 1e-10,
               hwe_th_all_thresh: Union[int, float] = 1e-06, annotations_file: str = None, report: bool = True,
-              liftover: bool = False, export_type: str = 'hail', out_dir: str = None, reference: str = 'GRCh38'):
+              liftover: bool = False, run_gwas: bool = False, export_type: str = 'hail', out_dir: str = None,
+              reference: str = 'GRCh38'):
     print('\nRunning QC')
 
     global mt, row_filters, filters, data_type, lambda_gc_pos, lambda_gc_pre, n_sig_var_pre, n_sig_var_pos, man_table_results, remove_fields
@@ -286,7 +287,7 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
                              'id_pass'] + remove_fields
     mt_filtered = mt_filtered.drop(*drop_fields)
 
-    if 'is_case' in mt.col:
+    if 'is_case' in mt.col and run_gwas: # only run GWAS when set to True
         gwas_pos, n_sig_var_pos = manhattan(qqtitle='Post-QC QQ Plot', mantitle='Post-QC Manhattan Plot').filter(mt)
         qqplt_pos, lambda_gc_pos, manplt_pos = manhattan(qqtitle='Post-QC QQ Plot',
                                                          mantitle='Post-QC Manhattan Plot').plot(gwas_pos)
@@ -317,7 +318,7 @@ def preimp_qc(input_type: str = None, dirname: str = None, basename: str = None,
                          count_results=results, pre_filter=pre_geno_thresh, id_cr=mind_thresh, fhet_thresh=fhet_aut,
                          var_cr=geno_thresh, miss_diff=cr_diff_thresh, hwe_con=hwe_th_con_thresh,
                          hwe_cas=hwe_th_cas_thresh, hwe_all=hwe_th_all_thresh, data_type=data_type)
-        if 'is_case' in mt.col:
+        if 'is_case' in mt.col and run_gwas:
             doc.manhattan_sec(qq_pre_path=f'{gwaspy_dir}/gwaspy_qq_pre.png', qq_pos_path=f'{gwaspy_dir}/gwaspy_qq_pos.png',
                               man_pre_path=f'{gwaspy_dir}/gwaspy_man_pre.png',
                               man_pos_path=f'{gwaspy_dir}/gwaspy_man_pos.png',
@@ -381,7 +382,7 @@ def main():
     parser.add_argument('--reference', type=str, default='GRCh38')
     parser.add_argument('--report', action='store_false')
     parser.add_argument('--liftover', action='store_true')
-    # parser.add_argument('--qc_round', type=str, required=True)
+    parser.add_argument('--run-gwas', action='store_true')
 
     # required for QC
     parser.add_argument('--pre-geno', type=float, default=0.95,
@@ -407,8 +408,8 @@ def main():
               mind_thresh=arg.mind, fhet_aut=arg.fhet_aut, fstat_x=arg.fstat_x, fstat_y=arg.fstat_y,
               geno_thresh=arg.geno, cr_diff_thresh=arg.midi, maf_thresh=arg.maf, hwe_th_con_thresh=arg.hwe_th_con,
               hwe_th_cas_thresh=arg.hwe_th_cas, hwe_th_all_thresh=arg.hwe_th_all, annotations_file=arg.annotations,
-              report=arg.report, liftover=arg.liftover, export_type=arg.export_type, out_dir=arg.out_dir,
-              reference=arg.reference, withpna=arg.withpna)
+              report=arg.report, liftover=arg.liftover, run_gwas=arg.run_gwas, export_type=arg.export_type,
+              out_dir=arg.out_dir, reference=arg.reference, withpna=arg.withpna)
 
 
 if __name__ == '__main__':
