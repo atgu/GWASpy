@@ -25,14 +25,13 @@ def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
                  name=f'GWASpy-Imputation-{software.upper()}')
 
     if vcf_ref == 'hgdp1kgp':
-        print(f'\nIMPUTING GENOTYPES WITH HGDP+1KGP PANEL\n')
+        print(f'\nIMPUTING GENOTYPES WITH HGDP+1KGP PANEL USING {software.upper()}\n')
         ref_path = 'gs://gcp-public-data--gnomad/resources/hgdp_1kg/phased_haplotypes_v2/hgdp1kgp_chrCNUMBER.filtered.SNV_INDEL.phased.shapeit5.bcf'
     else:
-        print(f'\nIMPUTING GENOTYPES WITH USER-DEFINED REFERENCE PANEL\n')
+        print(f'\nIMPUTING GENOTYPES WITH USER-DEFINED REFERENCE PANEL USING {software.upper()}\n')
         ref_path = vcf_ref
 
     if software == 'impute5':
-        print(f'\nIMPUTING GENOTYPES USING IMPUTE5\n')
         impute5_imputation(
             batch=b,
             input_path=input_file,
@@ -46,7 +45,7 @@ def run_impute(backend: Union[hb.ServiceBackend, hb.LocalBackend] = None,
     elif software == 'glimpse2':
         glimpse_phase_impute(
             batch=b,
-            bam_files=input_file,
+            input_file=input_file,
             reference_path=ref_path,
             chromosomes = chromosomes,
             output_filename=output_filename,
